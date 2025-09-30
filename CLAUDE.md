@@ -516,3 +516,23 @@ For implementation guidance, refer to these packages that follow the EXACT same 
 - All async operations use async/await (not callbacks or Combine)
 - Thread safety via @MainActor and Sendable conformance
 - SwiftUI integration via @Observable macro
+
+## Commit Style Guidelines
+
+**Note: Only apply these rules when explicitly asked to "commit"**
+
+When explicitly asked to commit changes:
+- Generate commit messages automatically based on staged changes without additional user confirmation
+- Commit all changes in a single commit
+- Keep commit messages short - only a few words long
+- Do NOT include "Co-Authored-By" or any references to Claude/AI in commit messages
+
+### Commit Message Format:
+- `[Feature] Add some button` - For new functionality or components
+- `[Bug] Fix some bug` - For bug fixes and corrections
+- `[Clean] Refactored some code` - For refactoring, cleanup, or code improvements
+
+### Examples:
+- `[Feature] Add user dashboard`
+- `[Bug] Fix login validation`
+- `[Clean] Refactor project manager`
