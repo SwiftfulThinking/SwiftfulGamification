@@ -519,13 +519,14 @@ For implementation guidance, refer to these packages that follow the EXACT same 
 
 ## Commit Style Guidelines
 
-**Note: Only apply these rules when explicitly asked to "commit"**
+**CRITICAL: NEVER auto-commit. ONLY commit when the user explicitly says "commit"**
 
 When explicitly asked to commit changes:
 - Generate commit messages automatically based on staged changes without additional user confirmation
 - Commit all changes in a single commit
 - Keep commit messages short - only a few words long
 - Do NOT include "Co-Authored-By" or any references to Claude/AI in commit messages
+- NEVER commit proactively or automatically - wait for explicit "commit" instruction
 
 ### Commit Message Format:
 - `[Feature] Add some button` - For new functionality or components
