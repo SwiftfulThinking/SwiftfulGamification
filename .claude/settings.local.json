@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticatingFirebase/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulStarterProject/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasingRevenueCat/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulLogging/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulLoggingFirebaseAnalytics/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
