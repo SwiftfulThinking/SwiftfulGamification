@@ -7,7 +7,7 @@ public class StreakManager {
     private let logger: GamificationLogger?
     private let remote: RemoteStreakService
     private let local: LocalStreakPersistence
-    private let configuration: StreakConfiguration
+    internal let configuration: StreakConfiguration
 
     public private(set) var currentStreakData: CurrentStreakData?
     private var currentStreakListenerTask: Task<Void, Error>?
@@ -28,6 +28,11 @@ public class StreakManager {
 
     public func logIn(userId: String) async throws {
         addCurrentStreakListener(userId: userId)
+
+        // Calculate streak if using client-side calculation
+        if !configuration.useServerCalculation {
+            calculateStreak(userId: userId)
+        }
     }
 
     public func logOut() {
@@ -71,16 +76,48 @@ public class StreakManager {
         }
     }
 
-    public func addEvent(userId: String, event: StreakEvent) async throws {
+    public func addStreakEvent(userId: String, event: StreakEvent) async throws {
         try await remote.addEvent(userId: userId, event: event)
+
+        // Calculate streak if using client-side calculation
+        if !configuration.useServerCalculation {
+            calculateStreak(userId: userId)
+        }
     }
 
-    public func getAllEvents(userId: String) async throws -> [StreakEvent] {
+    public func getAllStreakEvents(userId: String) async throws -> [StreakEvent] {
         try await remote.getAllEvents(userId: userId)
     }
 
-    public func deleteAllEvents(userId: String) async throws {
+    public func deleteAllStreakEvents(userId: String) async throws {
         try await remote.deleteAllEvents(userId: userId)
+    }
+
+    private func calculateStreak(userId: String) {
+        guard !configuration.useServerCalculation else {
+            logger?.trackEvent(event: Event.calculateStreakSkipped)
+            return
+        }
+
+        logger?.trackEvent(event: Event.calculateStreakStart)
+
+        Task {
+            do {
+                let events = try await remote.getAllEvents(userId: userId)
+
+                let calculatedStreak = StreakCalculator.calculateStreak(
+                    events: events,
+                    configuration: configuration
+                )
+
+                currentStreakData = calculatedStreak
+                saveCurrentStreakLocally()
+
+                logger?.trackEvent(event: Event.calculateStreakSuccess(streak: calculatedStreak))
+            } catch {
+                logger?.trackEvent(event: Event.calculateStreakFail(error: error))
+            }
+        }
     }
 }
 
@@ -93,6 +130,10 @@ extension StreakManager {
         case saveLocalStart(streak: CurrentStreakData?)
         case saveLocalSuccess(streak: CurrentStreakData?)
         case saveLocalFail(error: Error)
+        case calculateStreakSkipped
+        case calculateStreakStart
+        case calculateStreakSuccess(streak: CurrentStreakData)
+        case calculateStreakFail(error: Error)
 
         var eventName: String {
             switch self {
@@ -102,6 +143,10 @@ extension StreakManager {
             case .saveLocalStart:           return "StreakMan_SaveLocal_Start"
             case .saveLocalSuccess:         return "StreakMan_SaveLocal_Success"
             case .saveLocalFail:            return "StreakMan_SaveLocal_Fail"
+            case .calculateStreakSkipped:   return "StreakMan_CalculateStreak_Skipped"
+            case .calculateStreakStart:     return "StreakMan_CalculateStreak_Start"
+            case .calculateStreakSuccess:   return "StreakMan_CalculateStreak_Success"
+            case .calculateStreakFail:      return "StreakMan_CalculateStreak_Fail"
             }
         }
 
@@ -109,7 +154,9 @@ extension StreakManager {
             switch self {
             case .remoteListenerSuccess(streak: let streak), .saveLocalStart(streak: let streak), .saveLocalSuccess(streak: let streak):
                 return streak?.eventParameters
-            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error):
+            case .calculateStreakSuccess(streak: let streak):
+                return streak.eventParameters
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -118,7 +165,7 @@ extension StreakManager {
 
         var type: GamificationLogType {
             switch self {
-            case .remoteListenerFail, .saveLocalFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail:
                 return .severe
             default:
                 return .analytic
