@@ -660,4 +660,88 @@ struct CurrentStreakDataTests {
         // Then: Should not be equal
         #expect(data1 != data2)
     }
+
+    // MARK: - Stale Data Tests
+
+    @Test("isDataStale returns true when updatedAt is nil")
+    func testIsDataStaleWhenUpdatedAtNil() throws {
+        // Given: Streak with no updatedAt
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: nil
+        )
+
+        // Then: Should be stale
+        #expect(data.isDataStale == true)
+    }
+
+    @Test("isDataStale returns false when updated less than 1 hour ago")
+    func testIsDataStaleWhenRecentlyUpdated() throws {
+        // Given: Streak updated 30 minutes ago
+        let thirtyMinutesAgo = Date().addingTimeInterval(-30 * 60)
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: thirtyMinutesAgo
+        )
+
+        // Then: Should not be stale
+        #expect(data.isDataStale == false)
+    }
+
+    @Test("isDataStale returns true when updated over 1 hour ago")
+    func testIsDataStaleWhenOldUpdate() throws {
+        // Given: Streak updated 2 hours ago
+        let twoHoursAgo = Date().addingTimeInterval(-2 * 60 * 60)
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: twoHoursAgo
+        )
+
+        // Then: Should be stale
+        #expect(data.isDataStale == true)
+    }
+
+    @Test("isDataStale boundary: exactly 1 hour ago")
+    func testIsDataStaleBoundary() throws {
+        // Given: Streak updated exactly 1 hour ago
+        let oneHourAgo = Date().addingTimeInterval(-60 * 60)
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: oneHourAgo
+        )
+
+        // Then: Should be stale (> 1 hour threshold)
+        #expect(data.isDataStale == true)
+    }
+
+    @Test("isDataStale with fresh update")
+    func testIsDataStaleWithCurrentUpdate() throws {
+        // Given: Streak updated now
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: Date()
+        )
+
+        // Then: Should not be stale
+        #expect(data.isDataStale == false)
+    }
+
+    @Test("isDataStale with 24 hour old data")
+    func testIsDataStaleWith24HourOldData() throws {
+        // Given: Streak updated 24 hours ago
+        let oneDayAgo = Date().addingTimeInterval(-24 * 60 * 60)
+        let data = CurrentStreakData(
+            streakId: "test",
+            currentStreak: 5,
+            updatedAt: oneDayAgo
+        )
+
+        // Then: Should be stale
+        #expect(data.isDataStale == true)
+    }
 }
