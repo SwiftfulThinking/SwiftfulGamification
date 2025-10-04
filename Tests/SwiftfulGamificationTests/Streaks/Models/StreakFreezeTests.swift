@@ -26,7 +26,6 @@ struct StreakFreezeTests {
         // Then: Should create valid freeze with nil optional fields
         #expect(freeze.id == id)
         #expect(freeze.streakId == streakId)
-        #expect(freeze.userId == nil)
         #expect(freeze.earnedDate == nil)
         #expect(freeze.usedDate == nil)
         #expect(freeze.expiresAt == nil)
@@ -41,7 +40,6 @@ struct StreakFreezeTests {
         #expect(!freeze.id.isEmpty)
         #expect(UUID(uuidString: freeze.id) != nil)
         #expect(freeze.streakId == "workout")
-        #expect(freeze.userId == "user123")
         #expect(freeze.earnedDate != nil)
         #expect(freeze.usedDate == nil)
         #expect(freeze.expiresAt == nil)
@@ -103,7 +101,6 @@ struct StreakFreezeTests {
         let freeze = StreakFreeze(
             id: "freeze-123",
             streakId: "meditation",
-            userId: "user456",
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: expiresAt
@@ -118,7 +115,6 @@ struct StreakFreezeTests {
         // Then: Should use snake_case keys
         #expect(json["id"] as? String == "freeze-123")
         #expect(json["streak_id"] as? String == "meditation")
-        #expect(json["user_id"] as? String == "user456")
         #expect(json["earned_date"] != nil)
         #expect(json["used_date"] != nil)
         #expect(json["expires_at"] != nil)
@@ -138,7 +134,6 @@ struct StreakFreezeTests {
         let freeze = StreakFreeze(
             id: "freeze-789",
             streakId: "reading",
-            userId: "user789",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil
@@ -153,7 +148,6 @@ struct StreakFreezeTests {
         // Then: Should decode all properties correctly
         #expect(decoded.id == "freeze-789")
         #expect(decoded.streakId == "reading")
-        #expect(decoded.userId == "user789")
         #expect(decoded.earnedDate == earnedDate)
         #expect(decoded.usedDate == nil)
         #expect(decoded.expiresAt == nil)
@@ -165,7 +159,6 @@ struct StreakFreezeTests {
         let original = StreakFreeze(
             id: "roundtrip-test",
             streakId: "journaling",
-            userId: "user999",
             earnedDate: Date(timeIntervalSince1970: 1609459200),
             usedDate: Date(timeIntervalSince1970: 1609545600),
             expiresAt: Date(timeIntervalSince1970: 1612137600)
@@ -181,7 +174,6 @@ struct StreakFreezeTests {
         #expect(decoded == original)
         #expect(decoded.id == original.id)
         #expect(decoded.streakId == original.streakId)
-        #expect(decoded.userId == original.userId)
         #expect(decoded.earnedDate == original.earnedDate)
         #expect(decoded.usedDate == original.usedDate)
         #expect(decoded.expiresAt == original.expiresAt)
@@ -373,7 +365,6 @@ struct StreakFreezeTests {
         let freeze = StreakFreeze(
             id: "analytics-test",
             streakId: "meditation",
-            userId: "user789",
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: nil
@@ -384,7 +375,6 @@ struct StreakFreezeTests {
 
         // Then: Should include all fields
         #expect(params["meditation_freeze_id"] as? String == "analytics-test")
-        #expect(params["user_id"] as? String == "user789")
         #expect(params["streak_id"] as? String == "meditation")
         #expect(params["meditation_freeze_is_used"] as? Bool == true)
         #expect(params["meditation_freeze_is_expired"] as? Bool == false)
@@ -435,7 +425,6 @@ struct StreakFreezeTests {
         let freeze1 = StreakFreeze(
             id: "same-id",
             streakId: "cardio",
-            userId: "user123",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil
@@ -443,7 +432,6 @@ struct StreakFreezeTests {
         let freeze2 = StreakFreeze(
             id: "same-id",
             streakId: "cardio",
-            userId: "user123",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil

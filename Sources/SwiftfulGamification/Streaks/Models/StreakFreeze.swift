@@ -12,9 +12,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     /// Unique identifier for the freeze
     public let id: String
 
-    /// User who owns this freeze
-    public let userId: String?
-
     /// Which streak this freeze applies to
     public let streakId: String
 
@@ -32,14 +29,12 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     public init(
         id: String,
         streakId: String,
-        userId: String? = nil,
         earnedDate: Date? = nil,
         usedDate: Date? = nil,
         expiresAt: Date? = nil
     ) {
         self.id = id
         self.streakId = streakId
-        self.userId = userId
         self.earnedDate = earnedDate
         self.usedDate = usedDate
         self.expiresAt = expiresAt
@@ -49,7 +44,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
 
     public enum CodingKeys: String, CodingKey {
         case id
-        case userId = "user_id"
         case streakId = "streak_id"
         case earnedDate = "earned_date"
         case usedDate = "used_date"
@@ -107,7 +101,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
             "\(prefix)is_used": isUsed,
             "\(prefix)is_expired": isExpired,
             "\(prefix)is_available": isAvailable,
-            "user_id": userId ?? "",
             "streak_id": streakId
         ]
 
@@ -126,7 +119,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     public static func mock(
         id: String = UUID().uuidString,
         streakId: String = "workout",
-        userId: String = "user123",
         earnedDate: Date = Date(),
         usedDate: Date? = nil,
         expiresAt: Date? = nil
@@ -134,7 +126,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
         StreakFreeze(
             id: id,
             streakId: streakId,
-            userId: userId,
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: expiresAt
@@ -144,13 +135,11 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     /// Mock unused freeze
     public static func mockUnused(
         id: String = UUID().uuidString,
-        streakId: String = "workout",
-        userId: String = "user123"
+        streakId: String = "workout"
     ) -> Self {
         StreakFreeze(
             id: id,
             streakId: streakId,
-            userId: userId,
             earnedDate: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
             usedDate: nil,
             expiresAt: nil
@@ -160,8 +149,7 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     /// Mock used freeze
     public static func mockUsed(
         id: String = UUID().uuidString,
-        streakId: String = "workout",
-        userId: String = "user123"
+        streakId: String = "workout"
     ) -> Self {
         let earnedDate = Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date()
         let usedDate = Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()
@@ -169,7 +157,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
         return StreakFreeze(
             id: id,
             streakId: streakId,
-            userId: userId,
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: nil
@@ -179,8 +166,7 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
     /// Mock expired freeze (for future flexibility)
     public static func mockExpired(
         id: String = UUID().uuidString,
-        streakId: String = "workout",
-        userId: String = "user123"
+        streakId: String = "workout"
     ) -> Self {
         let earnedDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let expiresAt = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
@@ -188,7 +174,6 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
         return StreakFreeze(
             id: id,
             streakId: streakId,
-            userId: userId,
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: expiresAt
