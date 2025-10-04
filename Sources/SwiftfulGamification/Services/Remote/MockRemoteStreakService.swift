@@ -1,27 +1,22 @@
+//
+//  MockRemoteStreakService.swift
+//  SwiftfulGamification
+//
+//  Created by Nick Sarno on 2025-09-30.
+//
+
 import Foundation
 import Combine
 
 @MainActor
-public class MockStreakService: RemoteStreakService, LocalStreakPersistence {
+public class MockRemoteStreakService: RemoteStreakService {
 
-    @Published private var currentStreak: CurrentStreakData? = nil
+    @Published private var currentStreak: CurrentStreakData?
     private var events: [StreakEvent] = []
 
     public init(streak: CurrentStreakData? = nil) {
         self.currentStreak = streak
     }
-
-    // MARK: - LocalStreakPersistence
-
-    public func getSavedStreakData() -> CurrentStreakData? {
-        return currentStreak
-    }
-
-    public func saveCurrentStreakData(_ streak: CurrentStreakData?) throws {
-        currentStreak = streak
-    }
-
-    // MARK: - RemoteStreakService
 
     public func streamCurrentStreak(userId: String) -> AsyncStream<CurrentStreakData?> {
         AsyncStream { continuation in

@@ -12,8 +12,7 @@ public struct MockStreakServices: StreakServices {
     public let local: LocalStreakPersistence
 
     public init(streak: CurrentStreakData? = nil) {
-        let mockService = MockStreakService(streak: streak)
-        self.remote = mockService
-        self.local = mockService
+        self.remote = MockRemoteStreakService(streak: streak)
+        self.local = MockLocalStreakPersistence(streak: streak)
     }
 }
