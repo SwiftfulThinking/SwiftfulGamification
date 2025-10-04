@@ -65,12 +65,33 @@ public struct StreakCalculator {
             }
         }
 
+        // Track if we've started counting (to handle "today has no event" edge case)
+        var hasStartedStreak = false
+
         for eventDay in qualifyingDays.reversed() {
             if calendar.isDate(eventDay, inSameDayAs: expectedDate) {
                 currentStreak += 1
                 expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
+                hasStartedStreak = true
             } else if eventDay < expectedDate {
-                // Gap found - try to fill with freezes if autoConsumeFreeze is enabled
+                // Gap found - calculate gap size
+                let daysBetween = calendar.dateComponents([.day], from: eventDay, to: expectedDate).day ?? 0
+
+                // EDGE CASE FIX: If we haven't started counting yet (no event today) and gap is only 1 day,
+                // this is the "at risk" state - yesterday's event should still count
+                // BUT: Only if we're checking on the same day as expectedDate (meaning we're still "today")
+                // OR if leeway is enabled (grace period applies)
+                let checkingOnExpectedDay = calendar.isDate(currentDate, inSameDayAs: expectedDate)
+                let leewayApplied = configuration.leewayHours > 0
+
+                if !hasStartedStreak && daysBetween == 1 && (checkingOnExpectedDay || leewayApplied) {
+                    currentStreak += 1
+                    expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
+                    hasStartedStreak = true
+                    continue
+                }
+
+                // Try to fill the gap with freezes if autoConsumeFreeze is enabled
                 if configuration.autoConsumeFreeze {
                     var gapFilled = false
 
@@ -81,6 +102,7 @@ public struct StreakCalculator {
                         currentStreak += 1
                         expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
                         gapFilled = true
+                        hasStartedStreak = true
 
                         // Check if we've now reached the event day
                         if calendar.isDate(eventDay, inSameDayAs: expectedDate) {

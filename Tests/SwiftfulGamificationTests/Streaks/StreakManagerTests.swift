@@ -243,7 +243,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
         // Then: Streak should be updated (calculated from events)
-        #expect(manager.currentStreakData.totalEvents ?? 0 >= 1)
+        #expect(manager.currentStreakData.totalEvents == 1)
     }
 
     @Test("Adding event triggers client calculation when useServerCalculation = false")
@@ -974,10 +974,10 @@ struct StreakManagerTests {
         manager.recalculateStreak(userId: "user123")
         try await Task.sleep(nanoseconds: 150_000_000)
 
-        // Then: Streak should now account for the freeze
-        // Note: Manual freeze marks it used but doesn't create freeze event
-        // So this might not actually save the streak depending on implementation
-        #expect(manager.currentStreakData.currentStreak != nil)
+        // Then: After recalculation, streak should remain broken since manual freeze
+        // doesn't create a freeze event (only auto-consume does that)
+        // Manual freeze just marks it used without filling gaps
+        #expect(manager.currentStreakData.currentStreak == 1) // Still broken, only today counts
     }
 
     @Test("Goal-based streak calculates correctly with multiple events per day (client mode)")
