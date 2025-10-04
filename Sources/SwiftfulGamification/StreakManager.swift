@@ -29,8 +29,10 @@ public class StreakManager {
     public func logIn(userId: String) async throws {
         addCurrentStreakListener(userId: userId)
 
-        // Calculate streak if using client-side calculation
-        if !configuration.useServerCalculation {
+        // Calculate streak based on configuration
+        if configuration.useServerCalculation {
+            try await remote.calculateStreak(userId: userId)
+        } else {
             calculateStreak(userId: userId)
         }
     }
@@ -79,8 +81,10 @@ public class StreakManager {
     public func addStreakEvent(userId: String, event: StreakEvent) async throws {
         try await remote.addEvent(userId: userId, event: event)
 
-        // Calculate streak if using client-side calculation
-        if !configuration.useServerCalculation {
+        // Calculate streak based on configuration
+        if configuration.useServerCalculation {
+            try await remote.calculateStreak(userId: userId)
+        } else {
             calculateStreak(userId: userId)
         }
     }
@@ -107,18 +111,17 @@ public class StreakManager {
         try await remote.getAllStreakFreezes(userId: userId)
     }
 
-    public func recalculateStreak(userId: String) {
-        calculateStreak(userId: userId)
+    public func recalculateStreak(userId: String) async throws {
+        if configuration.useServerCalculation {
+            try await remote.calculateStreak(userId: userId)
+        } else {
+            calculateStreak(userId: userId)
+        }
     }
 
     // MARK: - Private Helpers
 
     private func calculateStreak(userId: String) {
-        guard !configuration.useServerCalculation else {
-            logger?.trackEvent(event: Event.calculateStreakSkipped)
-            return
-        }
-
         logger?.trackEvent(event: Event.calculateStreakStart)
 
         Task {
@@ -172,7 +175,6 @@ extension StreakManager {
         case saveLocalStart(streak: CurrentStreakData?)
         case saveLocalSuccess(streak: CurrentStreakData?)
         case saveLocalFail(error: Error)
-        case calculateStreakSkipped
         case calculateStreakStart
         case calculateStreakSuccess(streak: CurrentStreakData)
         case calculateStreakFail(error: Error)
@@ -186,7 +188,6 @@ extension StreakManager {
             case .saveLocalStart:           return "StreakMan_SaveLocal_Start"
             case .saveLocalSuccess:         return "StreakMan_SaveLocal_Success"
             case .saveLocalFail:            return "StreakMan_SaveLocal_Fail"
-            case .calculateStreakSkipped:   return "StreakMan_CalculateStreak_Skipped"
             case .calculateStreakStart:     return "StreakMan_CalculateStreak_Start"
             case .calculateStreakSuccess:   return "StreakMan_CalculateStreak_Success"
             case .calculateStreakFail:      return "StreakMan_CalculateStreak_Fail"

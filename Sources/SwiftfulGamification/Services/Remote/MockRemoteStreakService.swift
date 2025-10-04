@@ -38,6 +38,11 @@ public class MockRemoteStreakService: RemoteStreakService {
         currentStreak = streak
     }
 
+    public func calculateStreak(userId: String) async throws {
+        // Mock implementation does nothing - server would trigger Cloud Function
+        // The actual calculation happens via the listener when server updates the streak
+    }
+
     public func addEvent(userId: String, event: StreakEvent) async throws {
         events.append(event)
     }
