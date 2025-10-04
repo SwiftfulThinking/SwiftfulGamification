@@ -1224,6 +1224,253 @@ struct StreakCalculatorTests {
         #expect(result.streak.freezesRemaining == 0)
     }
 
+    @Test("autoConsumeFreeze false: Does not consume freezes automatically")
+    func testAutoConsumeFreezeDisabled() throws {
+        // Given: Gap with freezes available, but autoConsumeFreeze = false
+        let now = Date()
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let events = [
+            StreakEvent.mock(timestamp: now),
+            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+        ]
+        let freezes = [
+            StreakFreeze.mockUnused(id: "freeze-1"),
+            StreakFreeze.mockUnused(id: "freeze-2")
+        ]
+        let config = StreakConfiguration(streakId: "workout", autoConsumeFreeze: false)
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: No freezes consumed, streak broken
+        #expect(result.freezeConsumptions.isEmpty)
+        #expect(result.streak.currentStreak == 1) // Only today counts
+        #expect(result.streak.freezesRemaining == 2) // All freezes remain
+    }
+
+    @Test("Ignores used freezes in the list")
+    func testIgnoresUsedFreezes() throws {
+        // Given: Gap with mix of used and unused freezes
+        let now = Date()
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let events = [
+            StreakEvent.mock(timestamp: now),
+            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+        ]
+        let freezes = [
+            StreakFreeze.mockUsed(id: "freeze-used-1"), // Already used
+            StreakFreeze.mockUnused(id: "freeze-available-1"),
+            StreakFreeze.mockUsed(id: "freeze-used-2"), // Already used
+            StreakFreeze.mockUnused(id: "freeze-available-2")
+        ]
+        let config = StreakConfiguration(streakId: "workout", autoConsumeFreeze: true)
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: Only unused freezes consumed (2 gaps, 2 available)
+        #expect(result.freezeConsumptions.count == 2)
+        #expect(result.freezeConsumptions[0].freezeId == "freeze-available-1")
+        #expect(result.freezeConsumptions[1].freezeId == "freeze-available-2")
+        #expect(result.streak.freezesRemaining == 0) // Both available freezes used
+    }
+
+    @Test("Ignores expired freezes in the list")
+    func testIgnoresExpiredFreezes() throws {
+        // Given: Gap with mix of expired and unexpired freezes
+        let now = Date()
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let events = [
+            StreakEvent.mock(timestamp: now),
+            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+        ]
+        let freezes = [
+            StreakFreeze.mockExpired(id: "freeze-expired-1"), // Expired
+            StreakFreeze.mockUnused(id: "freeze-available-1"),
+            StreakFreeze.mockExpired(id: "freeze-expired-2"), // Expired
+            StreakFreeze.mockUnused(id: "freeze-available-2")
+        ]
+        let config = StreakConfiguration(streakId: "workout", autoConsumeFreeze: true)
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: Only non-expired freezes consumed
+        #expect(result.freezeConsumptions.count == 2)
+        #expect(result.freezeConsumptions[0].freezeId == "freeze-available-1")
+        #expect(result.freezeConsumptions[1].freezeId == "freeze-available-2")
+        #expect(result.streak.freezesRemaining == 0)
+    }
+
+    @Test("Handles mix of available, used, and expired freezes")
+    func testHandlesMixOfFreezeStates() throws {
+        // Given: Gap with freezes in all states
+        let now = Date()
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let events = [
+            StreakEvent.mock(timestamp: now),
+            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+        ]
+
+        // Create freezes with different states and earned dates
+        let freezes = [
+            StreakFreeze.mockUsed(id: "freeze-used"),
+            StreakFreeze(id: "freeze-old-available", streakId: "workout",
+                        earnedDate: Date().addingTimeInterval(-86400 * 30)), // Oldest available
+            StreakFreeze.mockExpired(id: "freeze-expired"),
+            StreakFreeze(id: "freeze-new-available", streakId: "workout",
+                        earnedDate: Date().addingTimeInterval(-86400 * 5)), // Newer available
+            StreakFreeze.mockUsed(id: "freeze-used-2")
+        ]
+        let config = StreakConfiguration(streakId: "workout", autoConsumeFreeze: true)
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: Only available freezes consumed, in FIFO order (oldest first)
+        #expect(result.freezeConsumptions.count == 2)
+        #expect(result.freezeConsumptions[0].freezeId == "freeze-old-available") // Oldest first
+        #expect(result.freezeConsumptions[1].freezeId == "freeze-new-available")
+        #expect(result.streak.freezesRemaining == 0) // All available freezes used
+        #expect(result.streak.currentStreak == 3) // 2 gaps filled, streak continues partially
+    }
+
+    @Test("Freeze consumption works with leeway hours")
+    func testFreezeConsumptionWithLeeway() throws {
+        // Given: Gap that exists after leeway calculation
+        let pst = TimeZone(identifier: "America/Los_Angeles")!
+        var calendar = Calendar.current
+        calendar.timeZone = pst
+
+        // Day 1: Jan 1, 2024, 10:00 AM
+        let day1 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 10, minute: 0))!
+
+        // Day 3: Jan 3, 2024, 8:00 AM (outside 6-hour leeway, creates gap on day 2)
+        let day3 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 8, minute: 0))!
+
+        let events = [
+            StreakEvent.mock(timestamp: day1),
+            StreakEvent.mock(timestamp: day3)
+        ]
+        let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
+        let config = StreakConfiguration(streakId: "workout", leewayHours: 6, autoConsumeFreeze: true)
+
+        // Current: Jan 3, 2024, 9:00 AM
+        let current = calendar.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 9, minute: 0))!
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: current,
+            timezone: pst
+        )
+
+        // Then: Freeze fills the gap on day 2
+        #expect(result.freezeConsumptions.count == 1)
+        #expect(result.freezeConsumptions[0].freezeId == "freeze-1")
+        #expect(result.streak.currentStreak == 3) // Day 1, 2 (freeze), 3
+    }
+
+    @Test("Freeze consumption with leeway: No freeze needed within leeway window")
+    func testFreezeNotNeededWithinLeewayWindow() throws {
+        // Given: Event at 2am (within 6-hour leeway)
+        let pst = TimeZone(identifier: "America/Los_Angeles")!
+        var calendar = Calendar.current
+        calendar.timeZone = pst
+
+        // Day 1: Jan 1, 2024, 10:00 AM
+        let day1 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 10, minute: 0))!
+
+        let events = [StreakEvent.mock(timestamp: day1)]
+        let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
+        let config = StreakConfiguration(streakId: "workout", leewayHours: 6, autoConsumeFreeze: true)
+
+        // Current: Jan 2, 2024, 3:00 AM (within 6-hour leeway)
+        let current = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 3, minute: 0))!
+
+        // When: Calculating streak
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: current,
+            timezone: pst
+        )
+
+        // Then: No freeze needed (within leeway window)
+        #expect(result.freezeConsumptions.isEmpty)
+        #expect(result.streak.currentStreak == 1)
+        #expect(result.streak.freezesRemaining == 1) // Freeze not consumed
+    }
+
+    @Test("Freeze consumption across timezone changes")
+    func testFreezeConsumptionAcrossTimezones() throws {
+        // Given: Events logged in different timezones, creating gaps when recalculated in new timezone
+        let pst = TimeZone(identifier: "America/Los_Angeles")!
+        var calendarPST = Calendar.current
+        calendarPST.timeZone = pst
+
+        // Events at 11:00 PM PST each day (which is 2:00 AM EST next day)
+        let events = [
+            // Jan 1, 11:00 PM PST
+            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 23, minute: 0))!),
+            // Jan 2, 11:00 PM PST
+            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 23, minute: 0))!),
+            // Jan 4, 11:00 PM PST (missing Jan 3)
+            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 4, hour: 23, minute: 0))!)
+        ]
+        let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
+        let config = StreakConfiguration(streakId: "workout", autoConsumeFreeze: true)
+
+        // Current: Jan 5, 2024, 1:00 AM PST
+        let current = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 5, hour: 1, minute: 0))!
+
+        // When: Calculating with PST
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: freezes,
+            configuration: config,
+            currentDate: current,
+            timezone: pst
+        )
+
+        // Then: Gap on Jan 3 filled with freeze
+        #expect(result.freezeConsumptions.count == 1)
+        // Current is Jan 5, but no event on Jan 5, so streak ends at Jan 4
+        #expect(result.streak.currentStreak == 2) // Only Jan 3 (freeze) and Jan 4 count from today
+        #expect(result.streak.freezesRemaining == 0)
+    }
+
     // MARK: - Longest Streak Tests
 
     @Test("Calculates longestStreak from event history")
