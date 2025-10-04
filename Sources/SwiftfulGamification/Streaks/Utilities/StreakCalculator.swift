@@ -156,8 +156,26 @@ public struct StreakCalculator {
 
         // STREAK START DATE
         let streakStartDate: Date?
-        if qualifyingDays.count >= currentStreak && currentStreak > 0 {
-            streakStartDate = qualifyingDays[qualifyingDays.count - currentStreak]
+        if currentStreak > 0 {
+            // Calculate start date by walking back from today, accounting for both events and freezes
+            var startDate = calendar.startOfDay(for: currentDate)
+
+            // Apply leeway offset if applicable
+            if configuration.leewayHours > 0 {
+                let components = calendar.dateComponents([.hour], from: startDate, to: currentDate)
+                let hoursSinceMidnight = components.hour ?? 0
+
+                if hoursSinceMidnight <= configuration.leewayHours {
+                    startDate = calendar.date(byAdding: .day, value: -1, to: startDate) ?? startDate
+                }
+            }
+
+            // Walk back (currentStreak - 1) days to find the start
+            if currentStreak > 1 {
+                startDate = calendar.date(byAdding: .day, value: -(currentStreak - 1), to: startDate) ?? startDate
+            }
+
+            streakStartDate = startDate
         } else {
             streakStartDate = nil
         }
