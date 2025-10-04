@@ -11,19 +11,24 @@ import Combine
 @MainActor
 public class MockRemoteStreakService: RemoteStreakService {
 
-    @Published private var currentStreak: CurrentStreakData
-    private var events: [StreakEvent] = []
-    private var freezes: [StreakFreeze] = []
+    @Published private var currentStreaks: [String: CurrentStreakData] = [:]
+    private var events: [String: [StreakEvent]] = [:]
+    private var freezes: [String: [StreakFreeze]] = [:]
 
-    public init(streak: CurrentStreakData) {
-        self.currentStreak = streak
+    public init(streak: CurrentStreakData? = nil) {
+        if let streak = streak {
+            self.currentStreaks[streak.streakId] = streak
+        }
     }
 
-    public func streamCurrentStreak(userId: String) -> AsyncThrowingStream<CurrentStreakData, Error> {
+    public func streamCurrentStreak(userId: String, streakId: String) -> AsyncThrowingStream<CurrentStreakData, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
-                for await value in $currentStreak.values {
-                    continuation.yield(value)
+                // Listen for changes (Combine publisher will emit current value first)
+                for await allStreaks in $currentStreaks.values {
+                    if let streak = allStreaks[streakId] {
+                        continuation.yield(streak)
+                    }
                 }
                 continuation.finish()
             }
@@ -34,39 +39,44 @@ public class MockRemoteStreakService: RemoteStreakService {
         }
     }
 
-    public func updateCurrentStreak(userId: String, streak: CurrentStreakData) async throws {
-        currentStreak = streak
+    public func updateCurrentStreak(userId: String, streakId: String, streak: CurrentStreakData) async throws {
+        currentStreaks[streakId] = streak
     }
 
-    public func calculateStreak(userId: String) async throws {
+    public func calculateStreak(userId: String, streakId: String) async throws {
         // Mock implementation does nothing - server would trigger Cloud Function
         // The actual calculation happens via the listener when server updates the streak
     }
 
-    public func addEvent(userId: String, event: StreakEvent) async throws {
-        events.append(event)
+    public func addEvent(userId: String, streakId: String, event: StreakEvent) async throws {
+        var streakEvents = events[streakId] ?? []
+        streakEvents.append(event)
+        events[streakId] = streakEvents
     }
 
-    public func getAllEvents(userId: String) async throws -> [StreakEvent] {
-        return events
+    public func getAllEvents(userId: String, streakId: String) async throws -> [StreakEvent] {
+        return events[streakId] ?? []
     }
 
-    public func deleteAllEvents(userId: String) async throws {
-        events.removeAll()
+    public func deleteAllEvents(userId: String, streakId: String) async throws {
+        events[streakId] = []
     }
 
     // MARK: - Freeze Management
 
-    public func addStreakFreeze(userId: String, freeze: StreakFreeze) async throws {
-        freezes.append(freeze)
+    public func addStreakFreeze(userId: String, streakId: String, freeze: StreakFreeze) async throws {
+        var streakFreezes = freezes[streakId] ?? []
+        streakFreezes.append(freeze)
+        freezes[streakId] = streakFreezes
     }
 
-    public func useStreakFreeze(userId: String, freezeId: String) async throws {
-        guard let index = freezes.firstIndex(where: { $0.id == freezeId }) else {
+    public func useStreakFreeze(userId: String, streakId: String, freezeId: String) async throws {
+        guard var streakFreezes = freezes[streakId],
+              let index = streakFreezes.firstIndex(where: { $0.id == freezeId }) else {
             throw URLError(.badURL)
         }
 
-        let freeze = freezes[index]
+        let freeze = streakFreezes[index]
         let usedFreeze = StreakFreeze(
             id: freeze.id,
             streakId: freeze.streakId,
@@ -75,10 +85,11 @@ public class MockRemoteStreakService: RemoteStreakService {
             expiresAt: freeze.expiresAt
         )
 
-        freezes[index] = usedFreeze
+        streakFreezes[index] = usedFreeze
+        freezes[streakId] = streakFreezes
     }
 
-    public func getAllStreakFreezes(userId: String) async throws -> [StreakFreeze] {
-        return freezes
+    public func getAllStreakFreezes(userId: String, streakId: String) async throws -> [StreakFreeze] {
+        return freezes[streakId] ?? []
     }
 }

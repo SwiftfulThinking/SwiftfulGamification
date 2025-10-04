@@ -43,7 +43,7 @@ public class StreakManager {
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = Task {
             do {
-                for try await value in remote.streamCurrentStreak(userId: userId) {
+                for try await value in remote.streamCurrentStreak(userId: userId, streakId: configuration.streakId) {
                     self.currentStreakData = value
                     logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
                     logger?.addUserProperties(dict: value.eventParameters, isHighPriority: false)
@@ -69,30 +69,30 @@ public class StreakManager {
     }
 
     public func addStreakEvent(userId: String, event: StreakEvent) async throws {
-        try await remote.addEvent(userId: userId, event: event)
+        try await remote.addEvent(userId: userId, streakId: configuration.streakId, event: event)
         calculateStreak(userId: userId)
     }
 
     public func getAllStreakEvents(userId: String) async throws -> [StreakEvent] {
-        try await remote.getAllEvents(userId: userId)
+        try await remote.getAllEvents(userId: userId, streakId: configuration.streakId)
     }
 
     public func deleteAllStreakEvents(userId: String) async throws {
-        try await remote.deleteAllEvents(userId: userId)
+        try await remote.deleteAllEvents(userId: userId, streakId: configuration.streakId)
     }
 
     // MARK: - Freeze Management
 
     public func addStreakFreeze(userId: String, freeze: StreakFreeze) async throws {
-        try await remote.addStreakFreeze(userId: userId, freeze: freeze)
+        try await remote.addStreakFreeze(userId: userId, streakId: configuration.streakId, freeze: freeze)
     }
 
     public func useStreakFreeze(userId: String, freezeId: String) async throws {
-        try await remote.useStreakFreeze(userId: userId, freezeId: freezeId)
+        try await remote.useStreakFreeze(userId: userId, streakId: configuration.streakId, freezeId: freezeId)
     }
 
     public func getAllStreakFreezes(userId: String) async throws -> [StreakFreeze] {
-        try await remote.getAllStreakFreezes(userId: userId)
+        try await remote.getAllStreakFreezes(userId: userId, streakId: configuration.streakId)
     }
 
     public func recalculateStreak(userId: String) {
@@ -106,7 +106,7 @@ public class StreakManager {
             // Server-side calculation
             Task {
                 do {
-                    try await remote.calculateStreak(userId: userId)
+                    try await remote.calculateStreak(userId: userId, streakId: configuration.streakId)
                 } catch {
                     logger?.trackEvent(event: Event.calculateStreakFail(error: error))
                 }
@@ -117,8 +117,8 @@ public class StreakManager {
 
             Task {
                 do {
-                    let events = try await remote.getAllEvents(userId: userId)
-                    let freezes = try await remote.getAllStreakFreezes(userId: userId)
+                    let events = try await remote.getAllEvents(userId: userId, streakId: configuration.streakId)
+                    let freezes = try await remote.getAllStreakFreezes(userId: userId, streakId: configuration.streakId)
 
                     let (calculatedStreak, freezeConsumptions) = StreakCalculator.calculateStreak(
                         events: events,
@@ -136,16 +136,16 @@ public class StreakManager {
                             isFreeze: true,
                             freezeId: consumption.freezeId
                         )
-                        try await remote.addEvent(userId: userId, event: freezeEvent)
+                        try await remote.addEvent(userId: userId, streakId: configuration.streakId, event: freezeEvent)
 
                         // Mark freeze as used
-                        try await remote.useStreakFreeze(userId: userId, freezeId: consumption.freezeId)
+                        try await remote.useStreakFreeze(userId: userId, streakId: configuration.streakId, freezeId: consumption.freezeId)
 
                         logger?.trackEvent(event: Event.freezeAutoConsumed(freezeId: consumption.freezeId, date: consumption.date))
                     }
 
                     currentStreakData = calculatedStreak
-                    try await remote.updateCurrentStreak(userId: userId, streak: calculatedStreak)
+                    try await remote.updateCurrentStreak(userId: userId, streakId: configuration.streakId, streak: calculatedStreak)
 
                     logger?.trackEvent(event: Event.calculateStreakSuccess(streak: calculatedStreak))
                 } catch {
