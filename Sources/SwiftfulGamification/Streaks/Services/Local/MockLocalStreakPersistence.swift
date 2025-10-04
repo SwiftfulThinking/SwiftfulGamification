@@ -10,19 +10,23 @@ import Foundation
 @MainActor
 public class MockLocalStreakPersistence: LocalStreakPersistence {
 
-    private var currentStreak: CurrentStreakData?
+    private var streaks: [String: CurrentStreakData] = [:]
 
     public init(streak: CurrentStreakData? = nil) {
-        self.currentStreak = streak
-    }
-
-    public func getSavedStreakData() -> CurrentStreakData? {
-        return currentStreak
-    }
-
-    public func saveCurrentStreakData(_ streak: CurrentStreakData?) throws {
         if let streak = streak {
-            currentStreak = streak
+            self.streaks[streak.streakId] = streak
+        }
+    }
+
+    public func getSavedStreakData(streakId: String) -> CurrentStreakData? {
+        return streaks[streakId]
+    }
+
+    public func saveCurrentStreakData(streakId: String, _ streak: CurrentStreakData?) throws {
+        if let streak = streak {
+            streaks[streakId] = streak
+        } else {
+            streaks.removeValue(forKey: streakId)
         }
     }
 }

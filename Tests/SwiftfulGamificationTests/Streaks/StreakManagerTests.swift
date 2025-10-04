@@ -98,9 +98,9 @@ struct StreakManagerTests {
         // When: Initializing manager
         let manager = StreakManager(services: services, configuration: config)
 
-        // Then: Manager loads whatever local returns (current behavior)
-        // This is the actual behavior - manager trusts local cache
-        #expect(manager.currentStreakData.streakId == "reading") // Loads mismatched data
+        // Then: Manager loads blank streak for "workout" since "reading" doesn't match
+        #expect(manager.currentStreakData.streakId == "workout")
+        #expect(manager.currentStreakData.currentStreak == 0)
     }
 
     // MARK: - Login/Logout Tests
@@ -364,7 +364,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 100_000_000) // Wait for save
 
         // Then: Local cache should have updated data
-        let saved = local.getSavedStreakData()
+        let saved = local.getSavedStreakData(streakId: "workout")
         #expect(saved?.currentStreak == 15)
     }
 

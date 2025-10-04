@@ -208,12 +208,12 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     }
 
     /// Indicates if the streak data is stale and may not reflect the current server state
-    /// Data is considered stale if it hasn't been updated in over 1 hour
+    /// Data is considered stale if it hasn't been updated in 1 hour or more
     /// This typically happens when the user is offline or has connectivity issues
     public var isDataStale: Bool {
         guard let updatedAt = updatedAt else { return true }
         let hoursSinceUpdate = Date().timeIntervalSince(updatedAt) / 3600
-        return hoursSinceUpdate > 1
+        return hoursSinceUpdate >= 1
     }
 
     /// Number of days since last event (in user's current timezone)

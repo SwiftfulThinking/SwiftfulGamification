@@ -21,7 +21,7 @@ public class StreakManager {
         self.local = services.local
         self.configuration = configuration
         self.logger = logger
-        self.currentStreakData = local.getSavedStreakData() ?? CurrentStreakData.blank(streakId: configuration.streakId)
+        self.currentStreakData = local.getSavedStreakData(streakId: configuration.streakId) ?? CurrentStreakData.blank(streakId: configuration.streakId)
     }
 
     // MARK: - Public API
@@ -60,7 +60,7 @@ public class StreakManager {
 
         Task {
             do {
-                try local.saveCurrentStreakData(currentStreakData)
+                try local.saveCurrentStreakData(streakId: configuration.streakId, currentStreakData)
                 logger?.trackEvent(event: Event.saveLocalSuccess(streak: currentStreakData))
             } catch {
                 logger?.trackEvent(event: Event.saveLocalFail(error: error))

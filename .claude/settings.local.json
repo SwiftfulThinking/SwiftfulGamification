@@ -14,7 +14,8 @@
       "Bash(swift test:*)",
       "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulFirestore/Sources/SwiftfulFirestore/Core/**)",
       "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulFirestore/Sources/SwiftfulFirestore/Extensions/**)",
-      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulGamificationFirebase/**)"
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulGamificationFirebase/**)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
