@@ -373,17 +373,17 @@ struct StreakFreezeTests {
         // When: Getting event parameters
         let params = freeze.eventParameters
 
-        // Then: Should include all fields
-        #expect(params["meditation_freeze_id"] as? String == "analytics-test")
-        #expect(params["streak_id"] as? String == "meditation")
-        #expect(params["meditation_freeze_is_used"] as? Bool == true)
-        #expect(params["meditation_freeze_is_expired"] as? Bool == false)
-        #expect(params["meditation_freeze_is_available"] as? Bool == false)
-        #expect(params["meditation_freeze_earned_date"] as? Double == earnedDate.timeIntervalSince1970)
-        #expect(params["meditation_freeze_used_date"] as? Double == usedDate.timeIntervalSince1970)
+        // Then: Should include all fields with streak_freeze_ prefix
+        #expect(params["streak_freeze_id"] as? String == "analytics-test")
+        #expect(params["streak_freeze_streak_id"] as? String == "meditation")
+        #expect(params["streak_freeze_is_used"] as? Bool == true)
+        #expect(params["streak_freeze_is_expired"] as? Bool == false)
+        #expect(params["streak_freeze_is_available"] as? Bool == false)
+        #expect(params["streak_freeze_earned_date"] as? Double == earnedDate.timeIntervalSince1970)
+        #expect(params["streak_freeze_used_date"] as? Double == usedDate.timeIntervalSince1970)
     }
 
-    @Test("eventParameters prefixed with streakId_freeze_")
+    @Test("eventParameters prefixed with streak_freeze_")
     func testEventParametersPrefixed() throws {
         // Given: Freeze with specific streakId
         let freeze = StreakFreeze(id: "test", streakId: "running")
@@ -391,11 +391,12 @@ struct StreakFreezeTests {
         // When: Getting event parameters
         let params = freeze.eventParameters
 
-        // Then: Should prefix keys with streakId_freeze_
-        #expect(params["running_freeze_id"] != nil)
-        #expect(params["running_freeze_is_used"] != nil)
-        #expect(params["running_freeze_is_expired"] != nil)
-        #expect(params["running_freeze_is_available"] != nil)
+        // Then: Should prefix all keys with streak_freeze_
+        #expect(params["streak_freeze_id"] as? String == "test")
+        #expect(params["streak_freeze_streak_id"] as? String == "running")
+        #expect(params["streak_freeze_is_used"] != nil)
+        #expect(params["streak_freeze_is_expired"] != nil)
+        #expect(params["streak_freeze_is_available"] != nil)
     }
 
     @Test("eventParameters includes availability status")
@@ -410,10 +411,10 @@ struct StreakFreezeTests {
         let usedParams = used.eventParameters
         let expiredParams = expired.eventParameters
 
-        // Then: Should include correct availability status
-        #expect(availableParams["workout_freeze_is_available"] as? Bool == true)
-        #expect(usedParams["workout_freeze_is_available"] as? Bool == false)
-        #expect(expiredParams["workout_freeze_is_available"] as? Bool == false)
+        // Then: Should include correct availability status with streak_freeze_ prefix
+        #expect(availableParams["streak_freeze_is_available"] as? Bool == true)
+        #expect(usedParams["streak_freeze_is_available"] as? Bool == false)
+        #expect(expiredParams["streak_freeze_is_available"] as? Bool == false)
     }
 
     // MARK: - Equatable Tests

@@ -581,15 +581,15 @@ struct CurrentStreakDataTests {
         // When: Getting event parameters
         let params = data.eventParameters
 
-        // Then: Should include all fields
-        #expect(params["streak_id"] as? String == "meditation")
-        #expect(params["meditation_current_streak"] as? Int == 7)
-        #expect(params["meditation_is_streak_active"] as? Bool != nil)
-        #expect(params["meditation_is_goal_met"] as? Bool != nil)
-        #expect(params["meditation_goal_progress"] as? Double != nil)
+        // Then: Should include all fields with current_streak_ prefix
+        #expect(params["current_streak_streak_id"] as? String == "meditation")
+        #expect(params["current_streak_current_streak"] as? Int == 7)
+        #expect(params["current_streak_is_streak_active"] as? Bool != nil)
+        #expect(params["current_streak_is_goal_met"] as? Bool != nil)
+        #expect(params["current_streak_goal_progress"] as? Double != nil)
     }
 
-    @Test("eventParameters prefixed with streakId")
+    @Test("eventParameters prefixed with current_streak_")
     func testEventParametersPrefixed() throws {
         // Given: Streak with specific streakId
         let data = CurrentStreakData.mock(streakId: "running")
@@ -597,10 +597,11 @@ struct CurrentStreakDataTests {
         // When: Getting event parameters
         let params = data.eventParameters
 
-        // Then: Should prefix keys with streakId
-        #expect(params["running_current_streak"] != nil)
-        #expect(params["running_longest_streak"] != nil)
-        #expect(params["running_is_streak_active"] != nil)
+        // Then: Should prefix all keys with current_streak_
+        #expect(params["current_streak_streak_id"] as? String == "running")
+        #expect(params["current_streak_current_streak"] != nil)
+        #expect(params["current_streak_longest_streak"] != nil)
+        #expect(params["current_streak_is_streak_active"] != nil)
     }
 
     @Test("eventParameters includes computed properties")
@@ -611,10 +612,10 @@ struct CurrentStreakDataTests {
         // When: Getting event parameters
         let params = data.eventParameters
 
-        // Then: Should include computed properties
-        #expect(params["workout_is_streak_active"] as? Bool == true)
-        #expect(params["workout_is_goal_met"] != nil)
-        #expect(params["workout_goal_progress"] != nil)
+        // Then: Should include computed properties with current_streak_ prefix
+        #expect(params["current_streak_is_streak_active"] as? Bool == true)
+        #expect(params["current_streak_is_goal_met"] != nil)
+        #expect(params["current_streak_goal_progress"] != nil)
     }
 
     // MARK: - Equatable Tests

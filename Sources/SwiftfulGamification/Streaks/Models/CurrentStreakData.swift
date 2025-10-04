@@ -245,20 +245,19 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Event parameters for analytics logging
     public var eventParameters: [String: Any] {
         var params: [String: Any] = [
-            "user_id": id,
-            "streak_id": streakId
+            "current_streak_streak_id": streakId
         ]
 
-        if let current = currentStreak { params["\(streakId)_current_streak"] = current }
-        if let longest = longestStreak { params["\(streakId)_longest_streak"] = longest }
-        if let total = totalEvents { params["\(streakId)_total_events"] = total }
-        if let freezes = freezesRemaining { params["\(streakId)_freezes_remaining"] = freezes }
-        if let required = eventsRequiredPerDay { params["\(streakId)_events_required_per_day"] = required }
-        if let today = todayEventCount { params["\(streakId)_today_event_count"] = today }
+        if let current = currentStreak { params["current_streak_current_streak"] = current }
+        if let longest = longestStreak { params["current_streak_longest_streak"] = longest }
+        if let total = totalEvents { params["current_streak_total_events"] = total }
+        if let freezes = freezesRemaining { params["current_streak_freezes_remaining"] = freezes }
+        if let required = eventsRequiredPerDay { params["current_streak_events_required_per_day"] = required }
+        if let today = todayEventCount { params["current_streak_today_event_count"] = today }
 
-        params["\(streakId)_is_streak_active"] = isStreakActive
-        params["\(streakId)_is_goal_met"] = isGoalMet
-        params["\(streakId)_goal_progress"] = goalProgress
+        params["current_streak_is_streak_active"] = isStreakActive
+        params["current_streak_is_goal_met"] = isGoalMet
+        params["current_streak_goal_progress"] = goalProgress
 
         return params
     }

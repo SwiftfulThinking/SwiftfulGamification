@@ -99,15 +99,21 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
     /// Event parameters formatted for analytics logging
     public var eventParameters: [String: Any] {
         var params: [String: Any] = [
-            "event_id": id,
-            "timestamp": timestamp.timeIntervalSince1970,
-            "timezone": timezone,
-            "metadata_count": metadata.count
+            "streak_event_id": id,
+            "streak_event_timestamp": timestamp.timeIntervalSince1970,
+            "streak_event_timezone": timezone,
+            "streak_event_is_freeze": isFreeze,
+            "streak_event_metadata_count": metadata.count
         ]
+
+        // Add freeze_id if this is a freeze event
+        if let freezeId = freezeId {
+            params["streak_event_freeze_id"] = freezeId
+        }
 
         // Add metadata values
         for (key, value) in metadata {
-            params["metadata_\(key)"] = value.anyValue
+            params["streak_event_metadata_\(key)"] = value.anyValue
         }
 
         return params

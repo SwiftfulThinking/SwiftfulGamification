@@ -356,11 +356,11 @@ struct StreakEventTests {
         // When: Getting event parameters
         let params = event.eventParameters
 
-        // Then: Should include all basic fields
-        #expect(params["event_id"] as? String == "analytics-test")
-        #expect(params["timestamp"] as? Double == timestamp.timeIntervalSince1970)
-        #expect(params["timezone"] as? String == "America/Chicago")
-        #expect(params["metadata_count"] as? Int == 1)
+        // Then: Should include all basic fields with streak_event_ prefix
+        #expect(params["streak_event_id"] as? String == "analytics-test")
+        #expect(params["streak_event_timestamp"] as? Double == timestamp.timeIntervalSince1970)
+        #expect(params["streak_event_timezone"] as? String == "America/Chicago")
+        #expect(params["streak_event_metadata_count"] as? Int == 1)
     }
 
     @Test("eventParameters converts metadata correctly")
@@ -381,11 +381,11 @@ struct StreakEventTests {
         // When: Getting event parameters
         let params = event.eventParameters
 
-        // Then: Metadata should be prefixed with "metadata_" and converted to Any
-        #expect(params["metadata_workout_type"] as? String == "cardio")
-        #expect(params["metadata_reps"] as? Int == 50)
-        #expect(params["metadata_completed"] as? Bool == true)
-        #expect(params["metadata_distance"] as? Double == 5.5)
+        // Then: Metadata should be prefixed with "streak_event_metadata_" and converted to Any
+        #expect(params["streak_event_metadata_workout_type"] as? String == "cardio")
+        #expect(params["streak_event_metadata_reps"] as? Int == 50)
+        #expect(params["streak_event_metadata_completed"] as? Bool == true)
+        #expect(params["streak_event_metadata_distance"] as? Double == 5.5)
     }
 
     @Test("eventParameters includes metadata count")
@@ -403,9 +403,9 @@ struct StreakEventTests {
         let emptyParams = emptyEvent.eventParameters
         let multiParams = multiEvent.eventParameters
 
-        // Then: Should include correct metadata count
-        #expect(emptyParams["metadata_count"] as? Int == 0)
-        #expect(multiParams["metadata_count"] as? Int == 3)
+        // Then: Should include correct metadata count with streak_event_ prefix
+        #expect(emptyParams["streak_event_metadata_count"] as? Int == 0)
+        #expect(multiParams["streak_event_metadata_count"] as? Int == 3)
     }
 
     // MARK: - Equatable Tests

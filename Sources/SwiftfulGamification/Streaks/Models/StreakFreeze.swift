@@ -94,21 +94,19 @@ public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
 
     /// Event parameters for analytics logging
     public var eventParameters: [String: Any] {
-        let prefix = "\(streakId)_freeze_"
-
         var params: [String: Any] = [
-            "\(prefix)id": id,
-            "\(prefix)is_used": isUsed,
-            "\(prefix)is_expired": isExpired,
-            "\(prefix)is_available": isAvailable,
-            "streak_id": streakId
+            "streak_freeze_id": id,
+            "streak_freeze_is_used": isUsed,
+            "streak_freeze_is_expired": isExpired,
+            "streak_freeze_is_available": isAvailable,
+            "streak_freeze_streak_id": streakId
         ]
 
         if let earnedDate = earnedDate {
-            params["\(prefix)earned_date"] = earnedDate.timeIntervalSince1970
+            params["streak_freeze_earned_date"] = earnedDate.timeIntervalSince1970
         }
         if let usedDate = usedDate {
-            params["\(prefix)used_date"] = usedDate.timeIntervalSince1970
+            params["streak_freeze_used_date"] = usedDate.timeIntervalSince1970
         }
 
         return params
