@@ -9,7 +9,7 @@ public class StreakManager {
     private let local: LocalStreakPersistence
     internal let configuration: StreakConfiguration
 
-    public private(set) var currentStreakData: CurrentStreakData?
+    public private(set) var currentStreakData: CurrentStreakData
     private var currentStreakListenerTask: Task<Void, Error>?
 
     public init(
@@ -21,7 +21,7 @@ public class StreakManager {
         self.local = services.local
         self.configuration = configuration
         self.logger = logger
-        self.currentStreakData = local.getSavedStreakData()
+        self.currentStreakData = local.getSavedStreakData() ?? CurrentStreakData.blank(streakId: configuration.streakId)
     }
 
     // MARK: - Public API
@@ -34,7 +34,7 @@ public class StreakManager {
     public func logOut() {
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = nil
-        currentStreakData = nil
+        currentStreakData = CurrentStreakData.blank(streakId: configuration.streakId)
     }
 
     private func addCurrentStreakListener(userId: String) {
@@ -46,11 +46,7 @@ public class StreakManager {
                 for try await value in remote.streamCurrentStreak(userId: userId) {
                     self.currentStreakData = value
                     logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
-
-                    if let streak = value {
-                        logger?.addUserProperties(dict: streak.eventParameters, isHighPriority: false)
-                    }
-
+                    logger?.addUserProperties(dict: value.eventParameters, isHighPriority: false)
                     self.saveCurrentStreakLocally()
                 }
             } catch {
@@ -136,7 +132,7 @@ public class StreakManager {
                         let freezeEvent = StreakEvent(
                             id: UUID().uuidString,
                             timestamp: consumption.date,
-                            timezone: currentStreakData?.lastEventTimezone ?? TimeZone.current.identifier,
+                            timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
                             metadata: [
                                 "is_freeze": .bool(true),
                                 "freeze_id": .string(consumption.freezeId)
@@ -166,10 +162,10 @@ extension StreakManager {
 
     enum Event: GamificationLogEvent {
         case remoteListenerStart
-        case remoteListenerSuccess(streak: CurrentStreakData?)
+        case remoteListenerSuccess(streak: CurrentStreakData)
         case remoteListenerFail(error: Error)
-        case saveLocalStart(streak: CurrentStreakData?)
-        case saveLocalSuccess(streak: CurrentStreakData?)
+        case saveLocalStart(streak: CurrentStreakData)
+        case saveLocalSuccess(streak: CurrentStreakData)
         case saveLocalFail(error: Error)
         case calculateStreakStart
         case calculateStreakSuccess(streak: CurrentStreakData)
@@ -193,9 +189,7 @@ extension StreakManager {
 
         var parameters: [String: Any]? {
             switch self {
-            case .remoteListenerSuccess(streak: let streak), .saveLocalStart(streak: let streak), .saveLocalSuccess(streak: let streak):
-                return streak?.eventParameters
-            case .calculateStreakSuccess(streak: let streak):
+            case .remoteListenerSuccess(streak: let streak), .saveLocalStart(streak: let streak), .saveLocalSuccess(streak: let streak), .calculateStreakSuccess(streak: let streak):
                 return streak.eventParameters
             case .freezeAutoConsumed(freezeId: let freezeId, date: let date):
                 return [

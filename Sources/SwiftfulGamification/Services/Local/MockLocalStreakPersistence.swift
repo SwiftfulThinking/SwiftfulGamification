@@ -10,9 +10,9 @@ import Foundation
 @MainActor
 public class MockLocalStreakPersistence: LocalStreakPersistence {
 
-    private var currentStreak: CurrentStreakData?
+    private var currentStreak: CurrentStreakData
 
-    public init(streak: CurrentStreakData? = nil) {
+    public init(streak: CurrentStreakData) {
         self.currentStreak = streak
     }
 
@@ -21,6 +21,8 @@ public class MockLocalStreakPersistence: LocalStreakPersistence {
     }
 
     public func saveCurrentStreakData(_ streak: CurrentStreakData?) throws {
-        currentStreak = streak
+        if let streak = streak {
+            currentStreak = streak
+        }
     }
 }

@@ -11,15 +11,15 @@ import Combine
 @MainActor
 public class MockRemoteStreakService: RemoteStreakService {
 
-    @Published private var currentStreak: CurrentStreakData?
+    @Published private var currentStreak: CurrentStreakData
     private var events: [StreakEvent] = []
     private var freezes: [StreakFreeze] = []
 
-    public init(streak: CurrentStreakData? = nil) {
+    public init(streak: CurrentStreakData) {
         self.currentStreak = streak
     }
 
-    public func streamCurrentStreak(userId: String) -> AsyncThrowingStream<CurrentStreakData?, Error> {
+    public func streamCurrentStreak(userId: String) -> AsyncThrowingStream<CurrentStreakData, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 for await value in $currentStreak.values {
