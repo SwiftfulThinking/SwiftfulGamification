@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import IdentifiableByString
 
 /// Represents a single streak event logged by a user
-public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
+public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     /// Unique identifier for the event
     public let id: String
 

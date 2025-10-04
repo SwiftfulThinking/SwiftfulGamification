@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import IdentifiableByString
 
 /// Represents a streak freeze that can prevent a streak from breaking
-public struct StreakFreeze: Identifiable, Codable, Sendable, Equatable {
+public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     /// Unique identifier for the freeze
     public let id: String
 
