@@ -53,98 +53,34 @@ This package is part of the SwiftfulThinking ecosystem and follows a standardize
 
 ### The Standard Pattern Structure
 
-Based on analysis of SwiftfulAuthenticating, SwiftfulLogging, and SwiftfulPurchasing packages:
+Based on analysis of SwiftfulAuthenticating, SwiftfulLogging, and SwiftfulPurchasing packages.
 
-**NOTE: The following gamification-specific code examples (UserStreak, GamificationService, etc.) are SAMPLE TEMPLATES to illustrate the pattern. They are NOT actual existing code. Refer to the "Related Packages" section below for real implementation examples.**
-
-```
-SwiftfulGamification/ (THIS PACKAGE - Base)
-├── Package.swift (NO external dependencies)
-├── Sources/SwiftfulGamification/
-│   ├── GamificationManager.swift          # Main public API (@MainActor, @Observable)
-│   ├── Services/
-│   │   ├── GamificationService.swift      # Protocol definition (Sendable)
-│   │   └── MockGamificationService.swift  # Mock implementation (actor or @MainActor class)
-│   ├── Models/
-│   │   ├── UserStreak.swift               # Codable, Sendable model
-│   │   ├── StreakFreeze.swift             # Codable, Sendable model
-│   │   └── GamificationLogger.swift       # Logger protocol (optional)
-│   └── Extensions/
-│       └── (utility extensions as needed)
-└── Tests/SwiftfulGamificationTests/
-
-SwiftfulGamificationFirebase/ (SEPARATE SPM - Implementation)
-├── Package.swift
-│   dependencies: [
-│       .package(url: "SwiftfulGamification", "1.0.0"..<"2.0.0"),
-│       .package(url: "firebase-ios-sdk", "12.0.0"..<"13.0.0")
-│   ]
-├── Sources/SwiftfulGamificationFirebase/
-│   ├── FirebaseGamificationService.swift   # Implements GamificationService
-│   └── Extensions/
-│       ├── UserStreak+Firebase.swift       # Conversion extensions
-│       └── StreakFreeze+Firebase.swift     # Conversion extensions
-└── Tests/
-```
-
-### Protocol Definition Pattern
-
-**SAMPLE Service Protocol** (`GamificationService.swift` - NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - Adapt this pattern to your actual gamification requirements
-public protocol GamificationService: Sendable {
-    func getUserStreak(userId: String) async throws -> UserStreak
-    func updateStreak(userId: String, streak: UserStreak) async throws
-    func getStreakFreezes(userId: String) async throws -> [StreakFreeze]
-    func useStreakFreeze(userId: String, freezeId: String) async throws
-    func streamUserStreak(userId: String) -> AsyncStream<UserStreak?>
-}
-```
-
-**For REAL examples of this pattern, see:**
+**For reference examples of this pattern, see:**
 - `AuthService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/Services/AuthService.swift`
 - `LogService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulLogging/Sources/SwiftfulLogging/Services/LogService.swift`
 - `PurchaseService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Services/PurchaseService.swift`
+- `AuthManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/AuthManager.swift`
+- `LogManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulLogging/Sources/SwiftfulLogging/LogManager.swift`
+- `PurchaseManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/PurchaseManager.swift`
+- `MockAuthService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/Services/MockAuthService.swift`
+- `MockPurchaseService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Services/MockPurchaseService.swift`
 
-**Key Requirements:**
+**For Firebase implementation examples, see:**
+- `FirebaseAuthService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticatingFirebase/Sources/SwiftfulAuthenticatingFirebase/FirebaseAuthService.swift`
+- `UserAuthInfo+Firebase.swift` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticatingFirebase/Sources/SwiftfulAuthenticatingFirebase/UserAuthInfo+Firebase.swift`
+- `FirebaseAnalyticsService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulLoggingFirebaseAnalytics/Sources/SwiftfulLoggingFirebaseAnalytics/FirebaseAnalyticsService.swift`
+- `RevenueCatPurchaseService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasingRevenueCat/Sources/SwiftfulPurchasingRevenueCat/RevenueCatPurchaseService.swift`
+
+### Pattern Requirements
+
+**Service Protocols:**
 - `Sendable` conformance for Swift 6 concurrency
 - All methods use `async throws` for async operations
-- Return abstract types (UserStreak, StreakFreeze), never provider types
+- Return abstract types (never provider-specific types)
 - Use `AsyncStream` for reactive data (not Combine publishers)
 - No platform-specific types in signatures
 
-### Model Definition Pattern
-
-**SAMPLE Abstract Data Model** (NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - Adapt this pattern to your actual gamification data models
-public struct UserStreak: Codable, Sendable, Identifiable {
-    public let id: String            // Usually userId
-    public let currentStreak: Int
-    public let longestStreak: Int
-    public let lastActivityDate: Date?
-    public let streakStartDate: Date?
-
-    // Computed properties for business logic
-    public var isStreakActive: Bool { /* ... */ }
-
-    // Mock factory for testing
-    public static func mock(currentStreak: Int = 5) -> Self { /* ... */ }
-
-    // Analytics parameters
-    public var eventParameters: [String: Any] { /* ... */ }
-
-    // Public initializer
-    public init(id: String, currentStreak: Int, ...) { /* ... */ }
-}
-```
-
-**For REAL examples of this pattern, see:**
-- `UserAuthInfo` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/Models/UserAuthInfo.swift`
-- `AnyProduct` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Models/AnyProduct.swift`
-- `PurchasedEntitlement` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Models/PurchasedEntitlement.swift`
-
-**Key Requirements:**
+**Models:**
 - All properties public with explicit types
 - `Codable` for serialization
 - `Sendable` for concurrency safety
@@ -153,57 +89,7 @@ public struct UserStreak: Codable, Sendable, Identifiable {
 - Event parameters for analytics integration
 - CodingKeys with snake_case for API compatibility
 
-### Manager Pattern
-
-**SAMPLE Manager Implementation** (NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - Adapt this pattern to your actual GamificationManager
-@MainActor
-@Observable
-public class GamificationManager {
-    private let logger: GamificationLogger?
-    private let service: GamificationService  // Protocol injection
-
-    public private(set) var currentStreak: UserStreak?
-    private var listener: Task<Void, Error>?
-
-    public init(service: GamificationService, logger: GamificationLogger? = nil) {
-        self.service = service
-        self.logger = logger
-    }
-
-    // Public API methods delegate to service
-    public func getUserStreak(userId: String) async throws -> UserStreak {
-        logger?.trackEvent(event: Event.getStreakStart)
-        do {
-            let streak = try await service.getUserStreak(userId: userId)
-            logger?.trackEvent(event: Event.getStreakSuccess(streak: streak))
-            return streak
-        } catch {
-            logger?.trackEvent(event: Event.getStreakFail(error: error))
-            throw error
-        }
-    }
-
-    // Event tracking enum
-    enum Event: GamificationLogEvent {
-        case getStreakStart
-        case getStreakSuccess(streak: UserStreak)
-        case getStreakFail(error: Error)
-
-        var eventName: String { /* ... */ }
-        var parameters: [String: Any]? { /* ... */ }
-        var type: GamificationLogType { /* ... */ }
-    }
-}
-```
-
-**For REAL examples of this pattern, see:**
-- `AuthManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/AuthManager.swift`
-- `LogManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulLogging/Sources/SwiftfulLogging/LogManager.swift`
-- `PurchaseManager` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/PurchaseManager.swift`
-
-**Key Requirements:**
+**Manager:**
 - `@MainActor` isolation for UI safety
 - `@Observable` for SwiftUI integration
 - Dependency injection via initializer
@@ -211,128 +97,12 @@ public class GamificationManager {
 - Event enum conforming to logger protocol
 - Comprehensive event tracking (start, success, fail)
 
-### Mock Implementation Pattern
-
-**SAMPLE Mock Service** (NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - Adapt this pattern to your actual MockGamificationService
-@MainActor
-public class MockGamificationService: GamificationService {
-    @Published private(set) var currentStreak: UserStreak?
-
-    public init(streak: UserStreak? = nil) {
-        self.currentStreak = streak
-    }
-
-    public func getUserStreak(userId: String) async throws -> UserStreak {
-        guard let streak = currentStreak else {
-            throw URLError(.badURL)
-        }
-        return streak
-    }
-
-    public func streamUserStreak(userId: String) -> AsyncStream<UserStreak?> {
-        AsyncStream { continuation in
-            Task {
-                for await value in $currentStreak.values {
-                    continuation.yield(value)
-                }
-            }
-        }
-    }
-
-    public func updateStreak(userId: String, streak: UserStreak) async throws {
-        currentStreak = streak
-    }
-}
-```
-
-**For REAL examples of this pattern, see:**
-- `MockAuthService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/Services/MockAuthService.swift`
-- `MockPurchaseService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Services/MockPurchaseService.swift`
-
-**Key Requirements:**
+**Mock Services:**
 - Use `@Published` for reactive state
 - AsyncStream from Combine publisher for listeners
 - Maintain stateful behavior (updates persist)
 - No external dependencies
 - Always succeeds (useful for UI testing)
-
-### Firebase Implementation Pattern (in separate package)
-
-**SAMPLE Firebase Service** (FOR SwiftfulGamificationFirebase PACKAGE - NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - This will go in the separate SwiftfulGamificationFirebase package
-import SwiftfulGamification
-import FirebaseFirestore
-
-public struct FirebaseGamificationService: GamificationService {
-    private var collection: CollectionReference {
-        Firestore.firestore().collection("user_streaks")
-    }
-
-    public init() { }
-
-    public func getUserStreak(userId: String) async throws -> UserStreak {
-        let docRef = collection.document(userId)
-        let snapshot = try await docRef.getDocument()
-
-        guard let data = snapshot.data() else {
-            throw URLError(.badServerResponse)
-        }
-
-        return UserStreak(firestoreData: data)  // Extension initializer
-    }
-
-    public func streamUserStreak(userId: String) -> AsyncStream<UserStreak?> {
-        AsyncStream { continuation in
-            let listener = collection.document(userId).addSnapshotListener { snapshot, error in
-                if let data = snapshot?.data() {
-                    continuation.yield(UserStreak(firestoreData: data))
-                } else {
-                    continuation.yield(nil)
-                }
-            }
-
-            continuation.onTermination = { @Sendable _ in
-                listener.remove()
-            }
-        }
-    }
-}
-```
-
-**SAMPLE Conversion Extension** (FOR SwiftfulGamificationFirebase PACKAGE - NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - This extension would be in the Firebase package
-extension UserStreak {
-    init(firestoreData: [String: Any]) {
-        self.init(
-            id: firestoreData["id"] as? String ?? "",
-            currentStreak: firestoreData["current_streak"] as? Int ?? 0,
-            longestStreak: firestoreData["longest_streak"] as? Int ?? 0,
-            lastActivityDate: (firestoreData["last_activity_date"] as? Timestamp)?.dateValue(),
-            streakStartDate: (firestoreData["streak_start_date"] as? Timestamp)?.dateValue()
-        )
-    }
-
-    var firestoreData: [String: Any] {
-        [
-            "id": id,
-            "current_streak": currentStreak,
-            "longest_streak": longestStreak,
-            "last_activity_date": lastActivityDate.map { Timestamp(date: $0) },
-            "streak_start_date": streakStartDate.map { Timestamp(date: $0) }
-        ].compactMapValues { $0 }
-    }
-}
-```
-
-**For REAL examples of this pattern, see:**
-- `FirebaseAuthService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticatingFirebase/Sources/SwiftfulAuthenticatingFirebase/FirebaseAuthService.swift`
-- `UserAuthInfo+Firebase.swift` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticatingFirebase/Sources/SwiftfulAuthenticatingFirebase/UserAuthInfo+Firebase.swift`
-- `FirebaseAnalyticsService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulLoggingFirebaseAnalytics/Sources/SwiftfulLoggingFirebaseAnalytics/FirebaseAnalyticsService.swift`
-- `RevenueCatPurchaseService` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasingRevenueCat/Sources/SwiftfulPurchasingRevenueCat/RevenueCatPurchaseService.swift`
 
 ### Naming Conventions (CRITICAL - Follow Exactly)
 
@@ -360,103 +130,9 @@ extension UserStreak {
    - Protocol: `{Protocol}.swift`
    - Extension: `{Type}+{Provider}.swift` or `{Type}+EXT.swift`
 
-### Logger Protocol Pattern (Optional but Recommended)
-
-**SAMPLE Logger Protocols** (NOT YET IMPLEMENTED):
-```swift
-// EXAMPLE TEMPLATE - Adapt this pattern if you want analytics integration
-@MainActor
-public protocol GamificationLogger {
-    func trackEvent(event: GamificationLogEvent)
-    func addUserProperties(dict: [String: Any], isHighPriority: Bool)
-}
-
-public protocol GamificationLogEvent {
-    var eventName: String { get }
-    var parameters: [String: Any]? { get }
-    var type: GamificationLogType { get }
-}
-
-public enum GamificationLogType: Int, CaseIterable, Sendable {
-    case info = 0
-    case analytic = 1
-    case warning = 2
-    case severe = 3
-}
-```
-
-**For REAL examples of this pattern, see:**
-- `AuthLogger`, `AuthLogEvent`, `AuthLogType` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulAuthenticating/Sources/SwiftfulAuthenticating/Models/PurchaseLogger.swift`
-- `PurchaseLogger`, `PurchaseLogEvent`, `PurchaseLogType` in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulPurchasing/Sources/SwiftfulPurchasing/Models/PurchaseLogger.swift`
-
 ### Integration in SwiftfulStarterProject
 
-**SAMPLE Integration Examples** (NOT YET IMPLEMENTED - These show how you would integrate once the package is built):
-
-**1. Add to Dependencies.swift**:
-```swift
-// EXAMPLE TEMPLATE - This is how you would integrate in SwiftfulStarterProject
-// In Dependencies.init(config:)
-let gamificationManager: GamificationManager
-
-switch config {
-case .mock(isSignedIn: let isSignedIn):
-    gamificationManager = GamificationManager(
-        service: MockGamificationService(streak: .mock()),
-        logger: logManager
-    )
-
-case .dev, .prod:
-    gamificationManager = GamificationManager(
-        service: FirebaseGamificationService(),
-        logger: logManager
-    )
-}
-
-container.register(GamificationManager.self, service: gamificationManager)
-```
-
-**2. Add to CoreInteractor**:
-```swift
-// EXAMPLE TEMPLATE - This is how you would add to CoreInteractor
-@MainActor
-struct CoreInteractor: GlobalInteractor {
-    private let gamificationManager: GamificationManager
-
-    init(container: DependencyContainer) {
-        self.gamificationManager = container.resolve(GamificationManager.self)!
-    }
-
-    var currentStreak: UserStreak? {
-        gamificationManager.currentStreak
-    }
-
-    func updateUserStreak(userId: String) async throws {
-        try await gamificationManager.checkAndUpdateStreak(userId: userId)
-    }
-}
-```
-
-**3. Create type alias**:
-```swift
-// EXAMPLE TEMPLATE - SwiftfulGamification+Alias.swift in SwiftfulStarterProject
-import SwiftfulGamification
-import SwiftfulGamificationFirebase
-
-typealias UserStreak = SwiftfulGamification.UserStreak
-typealias GamificationManager = SwiftfulGamification.GamificationManager
-typealias MockGamificationService = SwiftfulGamification.MockGamificationService
-typealias FirebaseGamificationService = SwiftfulGamificationFirebase.FirebaseGamificationService
-
-// Conform LogManager to GamificationLogger
-extension LogManager: @retroactive GamificationLogger {
-    public func trackEvent(event: any GamificationLogEvent) {
-        trackEvent(eventName: event.eventName, parameters: event.parameters, type: event.type.type)
-    }
-}
-```
-
-**For REAL examples of integration, see:**
+**For examples of integration, see:**
 - How `AuthManager` is set up in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulStarterProject/SwiftfulStarterProject/Root/Dependencies/Dependencies.swift`
 - How `PurchaseManager` is registered in the dependency container
 - Type aliases in `/Users/nicksarno/Documents/documents/GITHUB/SwiftfulStarterProject/SwiftfulStarterProject/Managers/Auth/SwiftfulAuthenticating+Alias.swift`
@@ -501,13 +177,34 @@ For implementation guidance, refer to these packages that follow the EXACT same 
 
 ## Package Structure
 
-- `Package.swift` - SPM manifest with NO external dependencies
-- `Sources/SwiftfulGamification/` - Main library code
-  - `GamificationManager.swift` - Public API manager class
-  - `Services/` - Protocol definitions and mock implementations
-  - `Models/` - Codable, Sendable data models
-  - `Extensions/` - Utility extensions
-- `Tests/SwiftfulGamificationTests/` - Test suite using Swift Testing framework
+```
+SwiftfulGamification/
+├── Package.swift                           # SPM manifest (NO external dependencies)
+├── Sources/SwiftfulGamification/
+│   ├── Shared/
+│   │   └── Models/
+│   │       ├── GamificationLogger.swift           # Logger protocol (optional)
+│   │       └── GamificationDictionaryValue.swift  # Type-safe dictionary values
+│   └── Streaks/
+│       ├── StreakManager.swift                    # Main public API (@MainActor, @Observable)
+│       ├── Services/
+│       │   ├── StreakService.swift                # Service protocols (Sendable)
+│       │   ├── Remote/
+│       │   │   ├── RemoteStreakService.swift      # Remote data protocol
+│       │   │   └── MockRemoteStreakService.swift  # Mock remote implementation
+│       │   └── Local/
+│       │       ├── LocalStreakPersistence.swift   # Local storage protocol
+│       │       └── MockLocalStreakPersistence.swift # Mock local implementation
+│       ├── Models/
+│       │   ├── CurrentStreakData.swift            # User's current streak state
+│       │   ├── StreakEvent.swift                  # Individual streak event
+│       │   ├── StreakFreeze.swift                 # Freeze to prevent streak loss
+│       │   ├── StreakConfiguration.swift          # Streak behavior settings
+│       │   └── StreakStatus.swift                 # Enum: active, atRisk, broken
+│       └── Utilities/
+│           └── StreakCalculator.swift             # Pure calculation logic
+└── Tests/SwiftfulGamificationTests/               # Swift Testing framework tests
+```
 
 ## Architecture Notes
 
@@ -516,6 +213,112 @@ For implementation guidance, refer to these packages that follow the EXACT same 
 - All async operations use async/await (not callbacks or Combine)
 - Thread safety via @MainActor and Sendable conformance
 - SwiftUI integration via @Observable macro
+
+## Implemented Features
+
+### StreakManager
+- **Public API**: `StreakManager.swift` (213 lines)
+  - `@MainActor` + `@Observable` for SwiftUI integration
+  - Lifecycle: `logIn(userId:)`, `logOut()`
+  - Event management: `addStreakEvent()`, `getAllStreakEvents()`, `deleteAllStreakEvents()`
+  - Freeze management: `addStreakFreeze()`, `useStreakFreeze()`, `getAllStreakFreezes()`
+  - Recalculation: `recalculateStreak(userId:)`
+  - Auto-freeze consumption (when configured)
+  - Remote listener with local persistence
+  - Comprehensive analytics tracking (12 events)
+
+### Service Protocols
+- **StreakServices**: Container protocol for dependency injection
+  - `remote: RemoteStreakService` - Remote data operations
+  - `local: LocalStreakPersistence` - Local data storage
+- **MockStreakServices**: Mock implementation for testing
+
+### Data Models
+
+#### CurrentStreakData (388 lines)
+- Core properties: `currentStreak`, `longestStreak`, `lastEventDate`, `streakStartDate`
+- Goal-based: `eventsRequiredPerDay`, `todayEventCount`, `isGoalMet`, `goalProgress`
+- Freeze support: `freezesRemaining`, `freezesNeededToSaveStreak`, `canStreakBeSaved`
+- Status: `status`, `isStreakActive`, `isStreakAtRisk`, `daysSinceLastEvent`
+- Mock factories: `blank()`, `mock()`, `mockActive()`, `mockAtRisk()`, `mockGoalBased()`
+- Analytics: `eventParameters`
+
+#### StreakEvent (170 lines)
+- Properties: `id`, `timestamp`, `timezone`, `isFreeze`, `freezeId`, `metadata`
+- Validation: `isValid`, `isTimestampValid`, `isTimezoneValid`, `isMetadataValid`
+- Mock factories: `mock()`, `mock(date:)`, `mock(daysAgo:)`
+- Analytics: `eventParameters`
+
+#### StreakFreeze (181 lines)
+- Properties: `id`, `streakId`, `earnedDate`, `usedDate`, `expiresAt`
+- Status: `isUsed`, `isExpired`, `isAvailable`
+- Mock factories: `mockUnused()`, `mockUsed()`, `mockExpired()`
+- Analytics: `eventParameters`
+
+#### StreakConfiguration (147 lines)
+- Settings: `streakId`, `eventsRequiredPerDay`, `useServerCalculation`, `leewayHours`, `autoConsumeFreeze`
+- Computed: `isGoalBasedStreak`, `isStrictMode`, `isTravelFriendly`
+- Mock factories: `mockBasic()`, `mockGoalBased()`, `mockLenient()`, `mockTravelFriendly()`, `mockServerCalculation()`
+
+#### StreakStatus (enum)
+- Cases: `noEvents`, `active(daysSinceLastEvent:)`, `atRisk`, `broken(daysSinceLastEvent:)`
+
+### Utilities
+
+#### StreakCalculator (225 lines)
+- **Pure calculation logic** - no side effects
+- Basic mode: 1 event per day = streak continues
+- Goal-based mode: N events required per day
+- Leeway hours: Grace period around midnight (timezone-aware)
+- Auto-freeze consumption: Automatically fill gaps with available freezes
+- Returns: `(streak: CurrentStreakData, freezeConsumptions: [FreezeConsumption])`
+- Edge cases: "at risk" state, no event today, timezone handling
+
+### Logger Integration
+- **GamificationLogger**: Protocol for analytics integration
+- **GamificationLogEvent**: Event protocol with `eventName`, `parameters`, `type`
+- **GamificationLogType**: Enum with `info`, `analytic`, `warning`, `severe`
+- All manager operations tracked with comprehensive events
+
+## Key Implementation Details
+
+### Streak Calculation Logic
+1. **Event Grouping**: Groups events by day (timezone-aware)
+2. **Goal Qualification**: Filters days that meet `eventsRequiredPerDay` threshold
+3. **Current Streak**: Walks backwards from today, checking consecutive days
+4. **Leeway Application**: Extends "today" window by configured hours
+5. **Freeze Auto-Consumption**: Fills gaps with oldest available freezes (FIFO)
+6. **Longest Streak**: Calculates all-time longest consecutive run
+7. **Streak Start Date**: Calculated by walking back from today
+
+### Freeze Behavior
+- **Auto-Consume**: Enabled by default (`autoConsumeFreeze: true`)
+- **FIFO Order**: Oldest freezes consumed first (`earnedDate` sorting)
+- **Gap Filling**: Consumes freezes to fill gaps between events
+- **Event Creation**: Creates `StreakEvent` with `isFreeze: true` for each consumption
+- **Freeze Marking**: Marks freeze as used (`usedDate` set)
+
+### Client vs Server Calculation
+- **Client-side** (default): `StreakCalculator` runs locally, full control
+- **Server-side**: Triggers remote Cloud Function (requires Firebase deployment)
+- Configurable via `StreakConfiguration.useServerCalculation`
+
+### Local Persistence
+- Saves `CurrentStreakData` to local storage on every remote update
+- Loads saved data on `StreakManager` initialization
+- Enables offline functionality and faster app launch
+
+### Analytics Events
+**StreakManager Events:**
+- `StreakMan_RemoteListener_Start/Success/Fail`
+- `StreakMan_SaveLocal_Start/Success/Fail`
+- `StreakMan_CalculateStreak_Start/Success/Fail`
+- `StreakMan_Freeze_AutoConsumed`
+
+**Event Parameters:**
+- All streak data: `current_streak_*` prefix
+- All events: `streak_event_*` prefix
+- All freezes: `streak_freeze_*` prefix
 
 ## Commit Style Guidelines
 
