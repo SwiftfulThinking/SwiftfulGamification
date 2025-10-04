@@ -59,8 +59,8 @@ public class MockRemoteStreakService: RemoteStreakService {
         let freeze = freezes[index]
         let usedFreeze = StreakFreeze(
             id: freeze.id,
-            userId: freeze.userId,
             streakId: freeze.streakId,
+            userId: freeze.userId,
             earnedDate: freeze.earnedDate,
             usedDate: Date(),
             expiresAt: freeze.expiresAt
