@@ -1,5 +1,5 @@
 //
-//  StreakData.swift
+//  CurrentStreakData.swift
 //  SwiftfulGamification
 //
 //  Created by Nick Sarno on 2025-09-30.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a user's current streak status
-public struct StreakData: Identifiable, Codable, Sendable, Equatable {
+public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Unique identifier (typically userId)
     public let id: String
 
@@ -208,7 +208,7 @@ public struct StreakData: Identifiable, Codable, Sendable, Equatable {
         eventsRequiredPerDay: Int = 1,
         todayEventCount: Int = 1
     ) -> Self {
-        StreakData(
+        CurrentStreakData(
             id: id,
             streakId: streakId,
             currentStreak: currentStreak,
@@ -225,9 +225,22 @@ public struct StreakData: Identifiable, Codable, Sendable, Equatable {
         )
     }
 
+    /// Blank streak data (no events, zero streak)
+    public static func blank(id: String) -> Self {
+        CurrentStreakData(
+            id: id,
+            currentStreak: 0,
+            longestStreak: 0,
+            totalEvents: 0,
+            freezesRemaining: 0,
+            eventsRequiredPerDay: 1,
+            todayEventCount: 0
+        )
+    }
+
     /// Mock with no events
     public static func mockEmpty(id: String = "user123", streakId: String = "workout") -> Self {
-        StreakData(
+        CurrentStreakData(
             id: id,
             streakId: streakId,
             currentStreak: 0,
@@ -245,7 +258,7 @@ public struct StreakData: Identifiable, Codable, Sendable, Equatable {
         streakId: String = "workout",
         currentStreak: Int = 7
     ) -> Self {
-        StreakData(
+        CurrentStreakData(
             id: id,
             streakId: streakId,
             currentStreak: currentStreak,
@@ -269,7 +282,7 @@ public struct StreakData: Identifiable, Codable, Sendable, Equatable {
         currentStreak: Int = 5
     ) -> Self {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-        return StreakData(
+        return CurrentStreakData(
             id: id,
             streakId: streakId,
             currentStreak: currentStreak,
@@ -293,7 +306,7 @@ public struct StreakData: Identifiable, Codable, Sendable, Equatable {
         eventsRequiredPerDay: Int = 3,
         todayEventCount: Int = 1
     ) -> Self {
-        StreakData(
+        CurrentStreakData(
             id: id,
             streakId: streakId,
             currentStreak: 4,
