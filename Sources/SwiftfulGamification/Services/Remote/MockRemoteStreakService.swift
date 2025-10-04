@@ -33,6 +33,10 @@ public class MockRemoteStreakService: RemoteStreakService {
         }
     }
 
+    public func updateCurrentStreak(userId: String, streak: CurrentStreakData) async throws {
+        currentStreak = streak
+    }
+
     public func addEvent(userId: String, event: StreakEvent) async throws {
         events.append(event)
     }

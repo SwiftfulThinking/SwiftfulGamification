@@ -52,7 +52,7 @@ public class StreakManager {
                     logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
 
                     if let streak = value {
-                        logger?.addUserProperties(dict: streak.eventParameters, isHighPriority: true)
+                        logger?.addUserProperties(dict: streak.eventParameters, isHighPriority: false)
                     }
 
                     self.saveCurrentStreakLocally()
@@ -138,7 +138,7 @@ public class StreakManager {
                     let freezeEvent = StreakEvent(
                         id: UUID().uuidString,
                         timestamp: consumption.date,
-                        timezone: TimeZone.current.identifier,
+                        timezone: currentStreakData?.lastEventTimezone ?? TimeZone.current.identifier,
                         metadata: [
                             "is_freeze": .bool(true),
                             "freeze_id": .string(consumption.freezeId)
@@ -153,7 +153,7 @@ public class StreakManager {
                 }
 
                 currentStreakData = calculatedStreak
-                saveCurrentStreakLocally()
+                try await remote.updateCurrentStreak(userId: userId, streak: calculatedStreak)
 
                 logger?.trackEvent(event: Event.calculateStreakSuccess(streak: calculatedStreak))
             } catch {
