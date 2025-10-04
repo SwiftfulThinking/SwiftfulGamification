@@ -19,12 +19,13 @@ public class MockRemoteStreakService: RemoteStreakService {
         self.currentStreak = streak
     }
 
-    public func streamCurrentStreak(userId: String) -> AsyncStream<CurrentStreakData?> {
-        AsyncStream { continuation in
+    public func streamCurrentStreak(userId: String) -> AsyncThrowingStream<CurrentStreakData?, Error> {
+        AsyncThrowingStream { continuation in
             let task = Task {
                 for await value in $currentStreak.values {
                     continuation.yield(value)
                 }
+                continuation.finish()
             }
 
             continuation.onTermination = { @Sendable _ in

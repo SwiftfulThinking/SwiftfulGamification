@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 public protocol RemoteStreakService: Sendable {
-    func streamCurrentStreak(userId: String) -> AsyncStream<CurrentStreakData?>
+    func streamCurrentStreak(userId: String) -> AsyncThrowingStream<CurrentStreakData?, Error>
     func updateCurrentStreak(userId: String, streak: CurrentStreakData) async throws
     func addEvent(userId: String, event: StreakEvent) async throws
     func getAllEvents(userId: String) async throws -> [StreakEvent]

@@ -46,15 +46,19 @@ public class StreakManager {
 
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = Task {
-            for await value in remote.streamCurrentStreak(userId: userId) {
-                self.currentStreakData = value
-                logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
+            do {
+                for try await value in remote.streamCurrentStreak(userId: userId) {
+                    self.currentStreakData = value
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
 
-                if let streak = value {
-                    logger?.addUserProperties(dict: streak.eventParameters, isHighPriority: false)
+                    if let streak = value {
+                        logger?.addUserProperties(dict: streak.eventParameters, isHighPriority: false)
+                    }
+
+                    self.saveCurrentStreakLocally()
                 }
-
-                self.saveCurrentStreakLocally()
+            } catch {
+                logger?.trackEvent(event: Event.remoteListenerFail(error: error))
             }
         }
     }
@@ -164,6 +168,7 @@ extension StreakManager {
     enum Event: GamificationLogEvent {
         case remoteListenerStart
         case remoteListenerSuccess(streak: CurrentStreakData?)
+        case remoteListenerFail(error: Error)
         case saveLocalStart(streak: CurrentStreakData?)
         case saveLocalSuccess(streak: CurrentStreakData?)
         case saveLocalFail(error: Error)
@@ -177,6 +182,7 @@ extension StreakManager {
             switch self {
             case .remoteListenerStart:      return "StreakMan_RemoteListener_Start"
             case .remoteListenerSuccess:    return "StreakMan_RemoteListener_Success"
+            case .remoteListenerFail:       return "StreakMan_RemoteListener_Fail"
             case .saveLocalStart:           return "StreakMan_SaveLocal_Start"
             case .saveLocalSuccess:         return "StreakMan_SaveLocal_Success"
             case .saveLocalFail:            return "StreakMan_SaveLocal_Fail"
@@ -199,7 +205,7 @@ extension StreakManager {
                     "freeze_id": freezeId,
                     "frozen_date": date.timeIntervalSince1970
                 ]
-            case .saveLocalFail(error: let error), .calculateStreakFail(error: let error):
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -208,7 +214,7 @@ extension StreakManager {
 
         var type: GamificationLogType {
             switch self {
-            case .saveLocalFail, .calculateStreakFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail:
                 return .severe
             default:
                 return .analytic
