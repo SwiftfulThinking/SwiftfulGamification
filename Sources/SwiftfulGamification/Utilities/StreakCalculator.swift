@@ -9,21 +9,25 @@ import Foundation
 
 public struct StreakCalculator {
 
+    public typealias FreezeConsumption = (freezeId: String, date: Date)
+
     /// Calculates streak data from a list of events
     /// - Parameters:
     ///   - events: All events for the user
+    ///   - freezes: Available freezes for auto-consumption
     ///   - configuration: Streak configuration
     ///   - currentDate: Current date (for testing, defaults to Date())
     ///   - timezone: Timezone for calculations (defaults to current)
-    /// - Returns: Calculated CurrentStreakData
+    /// - Returns: Tuple of (calculated streak, array of freeze consumptions with dates)
     public static func calculateStreak(
         events: [StreakEvent],
+        freezes: [StreakFreeze] = [],
         configuration: StreakConfiguration,
         currentDate: Date = Date(),
         timezone: TimeZone = .current
-    ) -> CurrentStreakData {
+    ) -> (streak: CurrentStreakData, freezeConsumptions: [FreezeConsumption]) {
         guard !events.isEmpty else {
-            return CurrentStreakData.blank(streakId: configuration.streakId)
+            return (CurrentStreakData.blank(streakId: configuration.streakId), [])
         }
 
         var calendar = Calendar.current
@@ -45,9 +49,11 @@ public struct StreakCalculator {
             qualifyingDays = eventsByDay.keys.sorted()
         }
 
-        // CALCULATE CURRENT STREAK (walk backwards from today)
+        // CALCULATE CURRENT STREAK (walk backwards from today) with freeze support
         var currentStreak = 0
         var expectedDate = calendar.startOfDay(for: currentDate)
+        var freezeConsumptions: [FreezeConsumption] = []
+        var availableFreezes = freezes.filter { $0.isAvailable }.sorted { ($0.earnedDate ?? Date.distantPast) < ($1.earnedDate ?? Date.distantPast) }
 
         // Apply leeway: Extend "today" window
         if configuration.leewayHours > 0 {
@@ -64,7 +70,33 @@ public struct StreakCalculator {
                 currentStreak += 1
                 expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
             } else if eventDay < expectedDate {
-                break  // Gap found
+                // Gap found - try to fill with freezes if autoConsumeFreeze is enabled
+                if configuration.autoConsumeFreeze {
+                    var gapFilled = false
+
+                    // Check if we can fill the gap with a freeze
+                    while eventDay < expectedDate && !availableFreezes.isEmpty {
+                        let freeze = availableFreezes.removeFirst()
+                        freezeConsumptions.append((freezeId: freeze.id, date: expectedDate))
+                        currentStreak += 1
+                        expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
+                        gapFilled = true
+
+                        // Check if we've now reached the event day
+                        if calendar.isDate(eventDay, inSameDayAs: expectedDate) {
+                            currentStreak += 1
+                            expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
+                            break
+                        }
+                    }
+
+                    // If we couldn't fill the entire gap, streak is broken
+                    if !calendar.isDate(eventDay, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: expectedDate) ?? expectedDate) && !gapFilled {
+                        break
+                    }
+                } else {
+                    break  // Gap found, no freeze auto-consume
+                }
             }
         }
 
@@ -108,7 +140,10 @@ public struct StreakCalculator {
             streakStartDate = nil
         }
 
-        return CurrentStreakData(
+        // COUNT REMAINING FREEZES
+        let freezesRemaining = availableFreezes.count
+
+        let streak = CurrentStreakData(
             streakId: configuration.streakId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
@@ -116,12 +151,14 @@ public struct StreakCalculator {
             lastEventTimezone: lastEvent?.timezone,
             streakStartDate: streakStartDate,
             totalEvents: events.count,
-            freezesRemaining: nil,
+            freezesRemaining: freezesRemaining,
             createdAt: events.first?.timestamp,
             updatedAt: currentDate,
             eventsRequiredPerDay: configuration.eventsRequiredPerDay,
             todayEventCount: todayEventCount
         )
+
+        return (streak, freezeConsumptions)
     }
 
     /// Gets the count of events logged today
