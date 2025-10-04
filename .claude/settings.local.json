@@ -10,7 +10,8 @@
       "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulLoggingFirebaseAnalytics/**)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(swift build)"
+      "Bash(swift build)",
+      "Bash(swift test:*)"
     ],
     "deny": [],
     "ask": []
