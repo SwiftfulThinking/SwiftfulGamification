@@ -124,7 +124,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     /// Is the streak currently active (last event was today or yesterday)?
     public var isStreakActive: Bool {
-        guard let lastEventDate = lastEventDate else { return false }
+        guard lastEventDate != nil else { return false }
         guard let daysSince = daysSinceLastEvent else { return false }
         return daysSince <= 1
     }
