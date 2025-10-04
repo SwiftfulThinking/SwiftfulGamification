@@ -183,6 +183,15 @@ public struct StreakCalculator {
         // COUNT REMAINING FREEZES
         let freezesRemaining = availableFreezes.count
 
+        // GET RECENT EVENTS (last 10 days, accounting for leeway)
+        let recentEvents = getRecentEvents(
+            events: events,
+            days: 10,
+            timezone: timezone,
+            leewayHours: configuration.leewayHours,
+            currentDate: currentDate
+        )
+
         let streak = CurrentStreakData(
             streakId: configuration.streakId,
             currentStreak: currentStreak,
@@ -195,7 +204,8 @@ public struct StreakCalculator {
             createdAt: events.first?.timestamp,
             updatedAt: currentDate,
             eventsRequiredPerDay: configuration.eventsRequiredPerDay,
-            todayEventCount: todayEventCount
+            todayEventCount: todayEventCount,
+            recentEvents: recentEvents
         )
 
         return (streak, freezeConsumptions)
@@ -220,5 +230,84 @@ public struct StreakCalculator {
         return events.filter { event in
             calendar.isDate(event.timestamp, inSameDayAs: todayStart)
         }.count
+    }
+
+    /// Gets recent events from the last X calendar days (accounting for leeway)
+    /// - Parameters:
+    ///   - events: All events
+    ///   - days: Number of calendar days to look back
+    ///   - timezone: Timezone for day calculation
+    ///   - leewayHours: Leeway hours for day boundary adjustment
+    ///   - currentDate: Current date
+    /// - Returns: Events from the last X calendar days, sorted by timestamp
+    ///
+    /// This function ensures we get events for X complete calendar days, accounting for leeway.
+    /// For example, with 3 hours leeway and 10 days:
+    /// - An event at 1 AM on Day 11 counts as Day 10
+    /// - We look back 10 days + leeway hours to ensure we capture all events
+    private static func getRecentEvents(
+        events: [StreakEvent],
+        days: Int,
+        timezone: TimeZone,
+        leewayHours: Int,
+        currentDate: Date
+    ) -> [StreakEvent] {
+        var calendar = Calendar.current
+        calendar.timeZone = timezone
+
+        let todayStart = calendar.startOfDay(for: currentDate)
+
+        // Calculate cutoff date: go back {days} calendar days
+        guard var cutoffDate = calendar.date(byAdding: .day, value: -days, to: todayStart) else {
+            return []
+        }
+
+        // Subtract leeway hours from cutoff to ensure we capture events that fall
+        // within the leeway window at the start of the cutoff day
+        if leewayHours > 0 {
+            cutoffDate = calendar.date(byAdding: .hour, value: -leewayHours, to: cutoffDate) ?? cutoffDate
+        }
+
+        // Filter events that fall within our date range
+        let recentEvents = events.filter { $0.timestamp >= cutoffDate }
+
+        // Group by calendar day (accounting for leeway) and only include the last {days} unique days
+        let eventsByDay = Dictionary(grouping: recentEvents) { event -> Date in
+            let eventDay = calendar.startOfDay(for: event.timestamp)
+
+            // If event is within leeway hours after midnight, count it as previous day
+            if leewayHours > 0 {
+                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+                if hoursSinceMidnight <= leewayHours {
+                    return calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
+                }
+            }
+
+            return eventDay
+        }
+
+        // Get the last {days} unique calendar days
+        let lastDays = Set(eventsByDay.keys.sorted().suffix(days))
+
+        // Return events that fall on those days
+        return recentEvents
+            .filter { event in
+                let eventDay = calendar.startOfDay(for: event.timestamp)
+                let adjustedDay: Date
+
+                if leewayHours > 0 {
+                    let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+                    if hoursSinceMidnight <= leewayHours {
+                        adjustedDay = calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
+                    } else {
+                        adjustedDay = eventDay
+                    }
+                } else {
+                    adjustedDay = eventDay
+                }
+
+                return lastDays.contains(adjustedDay)
+            }
+            .sorted { $0.timestamp < $1.timestamp }
     }
 }

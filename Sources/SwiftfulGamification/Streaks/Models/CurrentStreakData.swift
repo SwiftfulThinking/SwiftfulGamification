@@ -50,6 +50,9 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Goal-based: number of events logged today
     public let todayEventCount: Int?
 
+    /// Recent events for calendar display (last 10 days)
+    public let recentEvents: [StreakEvent]?
+
     // MARK: - Initialization
 
     public init(
@@ -64,7 +67,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
         eventsRequiredPerDay: Int? = nil,
-        todayEventCount: Int? = nil
+        todayEventCount: Int? = nil,
+        recentEvents: [StreakEvent]? = nil
     ) {
         self.streakId = streakId
         self.currentStreak = currentStreak
@@ -78,6 +82,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         self.updatedAt = updatedAt
         self.eventsRequiredPerDay = eventsRequiredPerDay
         self.todayEventCount = todayEventCount
+        self.recentEvents = recentEvents
     }
 
     // MARK: - Codable
@@ -95,6 +100,73 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         case updatedAt = "updated_at"
         case eventsRequiredPerDay = "events_required_per_day"
         case todayEventCount = "today_event_count"
+        case recentEvents = "recent_events"
+    }
+
+    // MARK: - Calendar Day Helpers
+
+    /// Get calendar days with events from recent events
+    /// - Parameters:
+    ///   - timezone: Timezone for day calculations (default: current)
+    ///   - leewayHours: Leeway hours to apply (default: 0)
+    /// - Returns: Array of dates (start of day) where events occurred
+    public func getCalendarDaysWithEvents(
+        timezone: TimeZone = .current,
+        leewayHours: Int = 0
+    ) -> [Date] {
+        guard let recentEvents = recentEvents, !recentEvents.isEmpty else {
+            return []
+        }
+
+        var calendar = Calendar.current
+        calendar.timeZone = timezone
+
+        // Group events by calendar day, accounting for leeway
+        let eventDays = Dictionary(grouping: recentEvents) { event -> Date in
+            let eventDay = calendar.startOfDay(for: event.timestamp)
+
+            // If leeway, adjust the day boundary
+            if leewayHours > 0 {
+                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+
+                // If event is within leeway hours after midnight, count it as previous day
+                if hoursSinceMidnight <= leewayHours {
+                    return calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
+                }
+            }
+
+            return eventDay
+        }.keys.sorted()
+
+        return Array(eventDays)
+    }
+
+    /// Get calendar days with events for the current week (Sunday to Saturday)
+    /// - Parameters:
+    ///   - timezone: Timezone for day calculations (default: current)
+    ///   - leewayHours: Leeway hours to apply (default: 0)
+    /// - Returns: Array of dates (start of day) where events occurred this week
+    public func getCalendarDaysWithEventsThisWeek(
+        timezone: TimeZone = .current,
+        leewayHours: Int = 0
+    ) -> [Date] {
+        var calendar = Calendar.current
+        calendar.timeZone = timezone
+        calendar.firstWeekday = 1 // Sunday
+
+        let now = Date()
+
+        // Get the start of the current week (Sunday)
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else {
+            return []
+        }
+
+        let allDays = getCalendarDaysWithEvents(timezone: timezone, leewayHours: leewayHours)
+
+        // Filter to only days within this week
+        return allDays.filter { day in
+            day >= weekInterval.start && day <= now
+        }
     }
 
     // MARK: - Computed Properties
