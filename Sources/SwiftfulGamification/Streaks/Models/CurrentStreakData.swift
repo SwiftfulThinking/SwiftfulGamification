@@ -149,6 +149,56 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         return components.day
     }
 
+    /// Number of freezes needed to save the current streak
+    /// Returns nil if streak is not broken or cannot be calculated
+    /// Returns 0 if streak is active (no freezes needed)
+    /// Returns the gap size if streak can potentially be saved with freezes
+    public var freezesNeededToSaveStreak: Int? {
+        guard let daysSince = daysSinceLastEvent else { return nil }
+
+        // If last event was today or yesterday, streak is not broken
+        if daysSince <= 1 {
+            return 0
+        }
+
+        // Gap size is daysSince - 1 (e.g., last event 3 days ago = 2 day gap)
+        return daysSince - 1
+    }
+
+    /// Can the streak be saved with available freezes?
+    /// - Returns true if the streak is active (no freeze needed) OR if enough freezes are available to fill the gap
+    /// - Returns false if streak is broken and insufficient freezes available
+    public var canStreakBeSaved: Bool {
+        guard let freezesNeeded = freezesNeededToSaveStreak else { return false }
+
+        // No freezes needed (streak is active)
+        if freezesNeeded == 0 {
+            return true
+        }
+
+        // Check if we have enough freezes to fill the gap
+        let available = freezesRemaining ?? 0
+        return available >= freezesNeeded
+    }
+
+    /// Should the user be prompted to use a freeze?
+    /// Returns true when:
+    /// - Streak is broken (daysSince >= 2)
+    /// - At least one freeze is available
+    /// - Enough freezes exist to save the streak
+    public var shouldPromptFreezeUsage: Bool {
+        guard let daysSince = daysSinceLastEvent else { return false }
+        guard let freezesNeeded = freezesNeededToSaveStreak else { return false }
+
+        // Only prompt if streak is actually broken
+        if daysSince < 2 {
+            return false
+        }
+
+        // Only prompt if we can actually save it
+        return canStreakBeSaved && freezesNeeded > 0
+    }
+
     /// Goal-based: Has today's goal been met?
     public var isGoalMet: Bool {
         guard let required = eventsRequiredPerDay, required > 1 else {
