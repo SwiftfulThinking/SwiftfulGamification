@@ -133,10 +133,8 @@ public class StreakManager {
                             id: UUID().uuidString,
                             timestamp: consumption.date,
                             timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
-                            metadata: [
-                                "is_freeze": .bool(true),
-                                "freeze_id": .string(consumption.freezeId)
-                            ]
+                            isFreeze: true,
+                            freezeId: consumption.freezeId
                         )
                         try await remote.addEvent(userId: userId, event: freezeEvent)
 

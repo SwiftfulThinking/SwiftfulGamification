@@ -505,9 +505,7 @@ struct StreakManagerTests {
 
         // And: Freeze events should be created
         let events = try await remote.getAllEvents(userId: "user123")
-        let freezeEvents = events.filter { event in
-            event.metadata["is_freeze"] == .bool(true)
-        }
+        let freezeEvents = events.filter { $0.isFreeze }
         #expect(freezeEvents.count == 2)
 
         // And: Logger should track auto-consumption

@@ -18,7 +18,13 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
     /// Timezone identifier where the event was logged (e.g., "America/New_York")
     public let timezone: String
 
-    /// Custom metadata associated with this event
+    /// Whether this event represents a freeze being used (vs actual user activity)
+    public let isFreeze: Bool
+
+    /// The freeze ID if this event represents a freeze being used (nil for regular events)
+    public let freezeId: String?
+
+    /// Custom metadata associated with this event (for developer-defined data)
     public let metadata: [String: GamificationDictionaryValue]
 
     // MARK: - Initialization
@@ -27,11 +33,15 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
         id: String = UUID().uuidString,
         timestamp: Date = Date(),
         timezone: String = TimeZone.current.identifier,
+        isFreeze: Bool = false,
+        freezeId: String? = nil,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) {
         self.id = id
         self.timestamp = timestamp
         self.timezone = timezone
+        self.isFreeze = isFreeze
+        self.freezeId = freezeId
         self.metadata = metadata
     }
 
@@ -41,6 +51,8 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
         case id
         case timestamp
         case timezone
+        case isFreeze = "is_freeze"
+        case freezeId = "freeze_id"
         case metadata
     }
 
@@ -107,12 +119,16 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
         id: String = UUID().uuidString,
         timestamp: Date = Date(),
         timezone: String = TimeZone.current.identifier,
+        isFreeze: Bool = false,
+        freezeId: String? = nil,
         metadata: [String: GamificationDictionaryValue] = ["action": "test"]
     ) -> Self {
         StreakEvent(
             id: id,
             timestamp: timestamp,
             timezone: timezone,
+            isFreeze: isFreeze,
+            freezeId: freezeId,
             metadata: metadata
         )
     }
@@ -121,12 +137,16 @@ public struct StreakEvent: Identifiable, Codable, Sendable, Equatable {
     public static func mock(
         date: Date,
         timezone: String = TimeZone.current.identifier,
+        isFreeze: Bool = false,
+        freezeId: String? = nil,
         metadata: [String: GamificationDictionaryValue] = ["action": "test"]
     ) -> Self {
         StreakEvent(
             id: UUID().uuidString,
             timestamp: date,
             timezone: timezone,
+            isFreeze: isFreeze,
+            freezeId: freezeId,
             metadata: metadata
         )
     }
