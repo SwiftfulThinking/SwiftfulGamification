@@ -766,6 +766,58 @@ struct StreakCalculatorTests {
         #expect(resultJST.streak.totalEvents == 5)
     }
 
+    @Test("Goal-based streak across timezone change")
+    func testGoalBasedStreakAcrossTimezoneChange() throws {
+        // Given: User logs 3 events/day in PST, then calculation switches to EST
+        let pst = TimeZone(identifier: "America/Los_Angeles")!
+        var calendarPST = Calendar.current
+        calendarPST.timeZone = pst
+
+        var events: [StreakEvent] = []
+
+        // Jan 1-3: 3 events per day in PST (morning, afternoon, evening)
+        for day in 1...3 {
+            let morning = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: day, hour: 8, minute: 0))!
+            let afternoon = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: day, hour: 14, minute: 0))!
+            let evening = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: day, hour: 20, minute: 0))!
+
+            events.append(StreakEvent.mock(timestamp: morning))
+            events.append(StreakEvent.mock(timestamp: afternoon))
+            events.append(StreakEvent.mock(timestamp: evening))
+        }
+
+        let config = StreakConfiguration(streakId: "workout", eventsRequiredPerDay: 3)
+
+        // Current: Jan 3, 2024, 11:00 PM PST
+        let current = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 23, minute: 0))!
+
+        // When: Calculating with PST (original timezone)
+        let resultPST = StreakCalculator.calculateStreak(
+            events: events,
+            configuration: config,
+            currentDate: current,
+            timezone: pst
+        )
+
+        // When: Calculating with EST (user moved timezones)
+        let est = TimeZone(identifier: "America/New_York")!
+        let resultEST = StreakCalculator.calculateStreak(
+            events: events,
+            configuration: config,
+            currentDate: current,
+            timezone: est
+        )
+
+        // Then: PST should show 3-day streak (all days have 3+ events in PST grouping)
+        #expect(resultPST.streak.currentStreak == 3)
+
+        // EST: Events may be regrouped across midnight boundaries
+        // But should still recognize all 9 events
+        #expect(resultEST.streak.totalEvents == 9)
+        // EST grouping might result in different streak count due to timezone shift
+        // Some evening PST events (8pm PST = 11pm EST) could cross into next day in EST
+    }
+
     // MARK: - DST Transition Tests
 
     @Test("Handles spring forward DST transition")
