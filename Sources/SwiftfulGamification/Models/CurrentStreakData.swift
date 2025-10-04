@@ -99,6 +99,29 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     // MARK: - Computed Properties
 
+    /// Current status of the streak
+    public var status: StreakStatus {
+        guard lastEventDate != nil else {
+            return .noEvents
+        }
+
+        guard let daysSince = daysSinceLastEvent else {
+            return .noEvents
+        }
+
+        // Check if we're within leeway window
+        // Note: This is a simplified check - full leeway logic requires configuration
+        if daysSince == 0 {
+            return .active(daysSinceLastEvent: 0)
+        } else if daysSince == 1 {
+            return .atRisk
+        } else if daysSince >= 2 {
+            return .broken(daysSinceLastEvent: daysSince)
+        }
+
+        return .active(daysSinceLastEvent: daysSince)
+    }
+
     /// Is the streak currently active (last event was today or yesterday)?
     public var isStreakActive: Bool {
         guard let lastEventDate = lastEventDate else { return false }

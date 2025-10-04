@@ -107,6 +107,10 @@ public class StreakManager {
         try await remote.getAllStreakFreezes(userId: userId)
     }
 
+    public func recalculateStreak(userId: String) {
+        calculateStreak(userId: userId)
+    }
+
     // MARK: - Private Helpers
 
     private func calculateStreak(userId: String) {
