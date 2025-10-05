@@ -7,10 +7,11 @@
 
 import Foundation
 import SwiftData
+import IdentifiableByString
 
 /// Represents a single progress item tracked by a user
 @Model
-public final class ProgressItem: @unchecked Sendable {
+public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
     /// Unique identifier for the progress item
     @Attribute(.unique) public var id: String
 
