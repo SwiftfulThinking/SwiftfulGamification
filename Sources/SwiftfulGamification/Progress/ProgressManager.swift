@@ -75,13 +75,20 @@ public class ProgressManager {
 
         logger?.trackEvent(event: Event.updateProgressStart(id: id, value: value))
 
+        // Check if new value is higher than existing local value (progress never decreases)
+        let existingLocal = local.getProgressItem(id: id)
+        if let existingValue = existingLocal?.value, value < existingValue {
+            logger?.trackEvent(event: Event.updateProgressSuccess(id: id, value: value))
+            return // Ignore updates that would decrease progress
+        }
+
         // Optimistic update: Update cache immediately
         progressCache[id] = value
 
         let item = ProgressItem(
             id: id,
             value: value,
-            dateCreated: local.getProgressItem(id: id)?.dateCreated ?? Date(),
+            dateCreated: existingLocal?.dateCreated ?? Date(),
             dateModified: Date()
         )
 
@@ -205,15 +212,32 @@ public class ProgressManager {
     private func handleProgressUpdates(_ updates: AsyncThrowingStream<ProgressItem, Error>) async {
         do {
             for try await item in updates {
-                // Update cache
-                progressCache[item.id] = item.value
+                // Check if local value is higher than remote (progress should never decrease)
+                if let currentValue = progressCache[item.id], currentValue > item.value {
+                    // Local is ahead - update remote with local value
+                    let correctedItem = ProgressItem(
+                        id: item.id,
+                        value: currentValue,
+                        dateCreated: item.dateCreated,
+                        dateModified: Date()
+                    )
 
-                // Save locally
-                do {
-                    try local.saveProgressItem(item)
-                    logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
-                } catch {
-                    logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                    do {
+                        try await remote.updateProgress(userId: userId ?? "", item: correctedItem)
+                        logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
+                    } catch {
+                        logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                    }
+                } else {
+                    // Remote is equal or ahead - update local
+                    progressCache[item.id] = item.value
+
+                    do {
+                        try local.saveProgressItem(item)
+                        logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
+                    } catch {
+                        logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                    }
                 }
             }
         } catch {
