@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SwiftfulGamification is a Swift Package Manager (SPM) library for iOS (15+) and macOS (10.15+) that implements gamification features (streaks, streak freezes) for iOS apps. This package follows the **SwiftfulThinking Provider Pattern Architecture** - a dependency-agnostic design where the base package defines protocols and abstract models, while separate implementation packages (like SwiftfulGamificationFirebase) provide concrete implementations for specific backends.
+SwiftfulGamification is a Swift Package Manager (SPM) library for iOS (15+) and macOS (10.15+) that implements gamification features (streaks, streak freezes, experience points) for iOS apps. This package follows the **SwiftfulThinking Provider Pattern Architecture** - a dependency-agnostic design where the base package defines protocols and abstract models, while separate implementation packages (like SwiftfulGamificationFirebase) provide concrete implementations for specific backends.
 
 ## Building and Testing
 
@@ -185,24 +185,40 @@ SwiftfulGamification/
 │   │   └── Models/
 │   │       ├── GamificationLogger.swift           # Logger protocol (optional)
 │   │       └── GamificationDictionaryValue.swift  # Type-safe dictionary values
-│   └── Streaks/
-│       ├── StreakManager.swift                    # Main public API (@MainActor, @Observable)
+│   ├── Streaks/
+│   │   ├── StreakManager.swift                    # Main public API (@MainActor, @Observable)
+│   │   ├── Services/
+│   │   │   ├── StreakService.swift                # Service protocols (Sendable)
+│   │   │   ├── Remote/
+│   │   │   │   ├── RemoteStreakService.swift      # Remote data protocol
+│   │   │   │   └── MockRemoteStreakService.swift  # Mock remote implementation
+│   │   │   └── Local/
+│   │   │       ├── LocalStreakPersistence.swift   # Local storage protocol
+│   │   │       └── MockLocalStreakPersistence.swift # Mock local implementation
+│   │   ├── Models/
+│   │   │   ├── CurrentStreakData.swift            # User's current streak state
+│   │   │   ├── StreakEvent.swift                  # Individual streak event
+│   │   │   ├── StreakFreeze.swift                 # Freeze to prevent streak loss
+│   │   │   ├── StreakConfiguration.swift          # Streak behavior settings
+│   │   │   └── StreakStatus.swift                 # Enum: active, atRisk, broken
+│   │   └── Utilities/
+│   │       └── StreakCalculator.swift             # Pure calculation logic
+│   └── ExperiencePoints/
+│       ├── ExperiencePointsManager.swift          # Main public API (@MainActor, @Observable)
 │       ├── Services/
-│       │   ├── StreakService.swift                # Service protocols (Sendable)
+│       │   ├── ExperiencePointsService.swift      # Service protocols (Sendable)
 │       │   ├── Remote/
-│       │   │   ├── RemoteStreakService.swift      # Remote data protocol
-│       │   │   └── MockRemoteStreakService.swift  # Mock remote implementation
+│       │   │   ├── RemoteExperiencePointsService.swift      # Remote data protocol
+│       │   │   └── MockRemoteExperiencePointsService.swift  # Mock remote implementation
 │       │   └── Local/
-│       │       ├── LocalStreakPersistence.swift   # Local storage protocol
-│       │       └── MockLocalStreakPersistence.swift # Mock local implementation
+│       │       ├── LocalExperiencePointsPersistence.swift   # Local storage protocol
+│       │       └── MockLocalExperiencePointsPersistence.swift # Mock local implementation
 │       ├── Models/
-│       │   ├── CurrentStreakData.swift            # User's current streak state
-│       │   ├── StreakEvent.swift                  # Individual streak event
-│       │   ├── StreakFreeze.swift                 # Freeze to prevent streak loss
-│       │   ├── StreakConfiguration.swift          # Streak behavior settings
-│       │   └── StreakStatus.swift                 # Enum: active, atRisk, broken
+│       │   ├── CurrentExperiencePointsData.swift  # User's current XP state
+│       │   ├── ExperiencePointsEvent.swift        # Individual XP event
+│       │   └── ExperiencePointsConfiguration.swift # XP behavior settings
 │       └── Utilities/
-│           └── StreakCalculator.swift             # Pure calculation logic
+│           └── ExperiencePointsCalculator.swift   # Pure calculation logic
 └── Tests/SwiftfulGamificationTests/               # Swift Testing framework tests
 ```
 
@@ -319,6 +335,86 @@ SwiftfulGamification/
 - All streak data: `current_streak_*` prefix
 - All events: `streak_event_*` prefix
 - All freezes: `streak_freeze_*` prefix
+
+### ExperiencePointsManager
+- **Public API**: `ExperiencePointsManager.swift` (179 lines)
+  - `@MainActor` + `@Observable` for SwiftUI integration
+  - Lifecycle: `logIn(userId:)`, `logOut()`
+  - Event management: `addExperiencePoints()`, `getAllExperiencePointsEvents()`, `deleteAllExperiencePointsEvents()`
+  - Metadata filtering: `getAllExperiencePointsEvents(forField:equalTo:)` - Get XP events filtered by metadata
+  - Recalculation: `recalculateExperiencePoints(userId:)`
+  - Client-side and server-side calculation support
+  - Remote listener with local persistence
+  - Comprehensive analytics tracking (9 events)
+
+### Service Protocols
+- **ExperiencePointsServices**: Container protocol for dependency injection
+  - `remote: RemoteExperiencePointsService` - Remote data operations
+  - `local: LocalExperiencePointsPersistence` - Local data storage
+- **MockExperiencePointsServices**: Mock implementation for testing
+
+### Data Models
+
+#### CurrentExperiencePointsData (289 lines)
+- Core properties: `totalPoints`, `totalEvents`, `todayEventCount`, `lastEventDate`
+- Recent data: `recentEvents` (last 10 days of events)
+- Timestamps: `createdAt`, `updatedAt`
+- Calendar helpers: `getCalendarDaysWithEvents()`, `getCalendarDaysWithEventsThisWeek()`, `getTodayTotalPoints()`
+- Computed: `isDataStale`, `daysSinceLastEvent`
+- Mock factories: `blank()`, `mock()`, `mockEmpty()`, `mockActive()`, `mockWithRecentEvents()`
+- Analytics: `eventParameters`
+
+#### ExperiencePointsEvent (157 lines)
+- Properties: `id`, `experienceId`, `timestamp`, `points`, `metadata`
+- Validation: `isValid`, `isIdValid`, `isTimestampValid`, `isMetadataValid`, `isPointsValid`
+- Mock factories: `mock()`, `mock(date:)`, `mock(daysAgo:)`
+- Analytics: `eventParameters`
+
+#### ExperiencePointsConfiguration (55 lines)
+- Settings: `experienceId`, `useServerCalculation`
+- Mock factories: `mock()`, `mockBasic()`, `mockServerCalculation()`
+
+### Utilities
+
+#### ExperiencePointsCalculator (152 lines)
+- **Pure calculation logic** - no side effects
+- Simple accumulation: Sums all event points
+- `calculateExperiencePoints()` - Main calculation method
+- `getTodayEventCount()` - Timezone-aware today count
+- `getRecentEvents()` - Last 10 days of events
+- `getTotalPointsForMetadata()` - Sum points filtered by metadata field
+- `getEventsForMetadata()` - Get events filtered by metadata field
+- Returns: `CurrentExperiencePointsData`
+
+### Key Implementation Details
+
+#### XP Calculation Logic
+1. **Simple Summation**: Total points = sum of all event points
+2. **Event Counting**: Tracks total events and today's event count
+3. **Recent Events**: Maintains last 10 calendar days of events
+4. **Metadata Filtering**: Query events by custom metadata fields
+5. **Timezone Awareness**: Day calculations respect user timezone
+
+#### Client vs Server Calculation
+- **Client-side** (default): `ExperiencePointsCalculator` runs locally
+- **Server-side**: Triggers remote Cloud Function (requires Firebase deployment)
+- Configurable via `ExperiencePointsConfiguration.useServerCalculation`
+
+#### Local Persistence
+- Saves `CurrentExperiencePointsData` to local storage on every remote update
+- Uses `FileManagerExperiencePointsPersistence` for production
+- Loads saved data on `ExperiencePointsManager` initialization
+- Enables offline functionality and faster app launch
+
+#### Analytics Events
+**ExperiencePointsManager Events:**
+- `XPMan_RemoteListener_Start/Success/Fail`
+- `XPMan_SaveLocal_Start/Success/Fail`
+- `XPMan_CalculateXP_Start/Success/Fail`
+
+**Event Parameters:**
+- All XP data: `current_xp_*` prefix
+- All events: `xp_event_*` prefix
 
 ## Commit Style Guidelines
 
