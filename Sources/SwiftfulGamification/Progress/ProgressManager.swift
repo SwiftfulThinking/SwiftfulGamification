@@ -190,23 +190,53 @@ public class ProgressManager {
         logger?.trackEvent(event: Event.remoteListenerStart)
 
         remoteListenerTask?.cancel()
-        remoteListenerTask = Task {
-            do {
-                for try await item in remote.streamProgressUpdates(userId: userId) {
-                    // Update cache
-                    self.progressCache[item.id] = item.value
 
-                    // Save locally
-                    do {
-                        try self.local.saveProgressItem(item)
-                        logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
-                    } catch {
-                        logger?.trackEvent(event: Event.saveLocalFail(error: error))
-                    }
+        let (updates, deletions) = remote.streamProgressUpdates(userId: userId)
+
+        Task { @MainActor in
+            await handleProgressUpdates(updates)
+        }
+
+        Task { @MainActor in
+            await handleProgressDeletions(deletions)
+        }
+    }
+
+    private func handleProgressUpdates(_ updates: AsyncThrowingStream<ProgressItem, Error>) async {
+        do {
+            for try await item in updates {
+                // Update cache
+                progressCache[item.id] = item.value
+
+                // Save locally
+                do {
+                    try local.saveProgressItem(item)
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
+                } catch {
+                    logger?.trackEvent(event: Event.saveLocalFail(error: error))
                 }
-            } catch {
-                logger?.trackEvent(event: Event.remoteListenerFail(error: error))
             }
+        } catch {
+            logger?.trackEvent(event: Event.remoteListenerFail(error: error))
+        }
+    }
+
+    private func handleProgressDeletions(_ deletions: AsyncThrowingStream<String, Error>) async {
+        do {
+            for try await id in deletions {
+                // Remove from cache
+                progressCache.removeValue(forKey: id)
+
+                // Delete locally
+                do {
+                    try local.deleteProgressItem(id: id)
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(id: id))
+                } catch {
+                    logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                }
+            }
+        } catch {
+            logger?.trackEvent(event: Event.remoteListenerFail(error: error))
         }
     }
 }

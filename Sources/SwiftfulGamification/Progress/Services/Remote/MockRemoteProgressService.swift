@@ -21,8 +21,11 @@ public class MockRemoteProgressService: RemoteProgressService {
         return Array(progressItems.values)
     }
 
-    public func streamProgressUpdates(userId: String) -> AsyncThrowingStream<ProgressItem, Error> {
-        AsyncThrowingStream { continuation in
+    public func streamProgressUpdates(userId: String) -> (
+        updates: AsyncThrowingStream<ProgressItem, Error>,
+        deletions: AsyncThrowingStream<String, Error>
+    ) {
+        let updates = AsyncThrowingStream<ProgressItem, Error> { continuation in
             let task = Task {
                 // Listen for changes (Combine publisher will emit updates)
                 for await items in $progressItems.values {
@@ -37,6 +40,13 @@ public class MockRemoteProgressService: RemoteProgressService {
                 task.cancel()
             }
         }
+
+        let deletions = AsyncThrowingStream<String, Error> { continuation in
+            // Mock doesn't track deletions separately
+            continuation.onTermination = { @Sendable _ in }
+        }
+
+        return (updates, deletions)
     }
 
     public func updateProgress(userId: String, item: ProgressItem) async throws {
