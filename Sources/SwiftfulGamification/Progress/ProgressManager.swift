@@ -336,6 +336,8 @@ extension ProgressManager {
             switch self {
             case .bulkLoadFail, .remoteListenerFail, .saveLocalFail, .updateProgressFail, .deleteProgressFail, .deleteAllProgressFail:
                 return .severe
+            case .remoteListenerSuccess, .saveLocalSuccess:
+                return .info // Don't track as analytics - could fire thousands of times
             default:
                 return .analytic
             }
