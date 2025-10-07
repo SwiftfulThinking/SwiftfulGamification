@@ -14,19 +14,19 @@ public class MockLocalStreakPersistence: LocalStreakPersistence {
 
     public init(streak: CurrentStreakData? = nil) {
         if let streak = streak {
-            self.streaks[streak.streakId] = streak
+            self.streaks[streak.streakKey] = streak
         }
     }
 
-    public func getSavedStreakData(streakId: String) -> CurrentStreakData? {
-        return streaks[streakId]
+    public func getSavedStreakData(streakKey: String) -> CurrentStreakData? {
+        return streaks[streakKey]
     }
 
-    public func saveCurrentStreakData(streakId: String, _ streak: CurrentStreakData?) throws {
+    public func saveCurrentStreakData(streakKey: String, _ streak: CurrentStreakData?) throws {
         if let streak = streak {
-            streaks[streakId] = streak
+            streaks[streakKey] = streak
         } else {
-            streaks.removeValue(forKey: streakId)
+            streaks.removeValue(forKey: streakKey)
         }
     }
 }

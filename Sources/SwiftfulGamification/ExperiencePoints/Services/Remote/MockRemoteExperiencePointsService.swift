@@ -16,16 +16,16 @@ public class MockRemoteExperiencePointsService: RemoteExperiencePointsService {
 
     public init(data: CurrentExperiencePointsData? = nil) {
         if let data = data {
-            self.currentData[data.experienceId] = data
+            self.currentData[data.experienceKey] = data
         }
     }
 
-    public func streamCurrentExperiencePoints(userId: String, experienceId: String) -> AsyncThrowingStream<CurrentExperiencePointsData, Error> {
+    public func streamCurrentExperiencePoints(userId: String, experienceKey: String) -> AsyncThrowingStream<CurrentExperiencePointsData, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 // Listen for changes (Combine publisher will emit current value first)
                 for await allData in $currentData.values {
-                    if let data = allData[experienceId] {
+                    if let data = allData[experienceKey] {
                         continuation.yield(data)
                     }
                 }
@@ -38,26 +38,26 @@ public class MockRemoteExperiencePointsService: RemoteExperiencePointsService {
         }
     }
 
-    public func updateCurrentExperiencePoints(userId: String, experienceId: String, data: CurrentExperiencePointsData) async throws {
-        currentData[experienceId] = data
+    public func updateCurrentExperiencePoints(userId: String, experienceKey: String, data: CurrentExperiencePointsData) async throws {
+        currentData[experienceKey] = data
     }
 
-    public func calculateExperiencePoints(userId: String, experienceId: String) async throws {
+    public func calculateExperiencePoints(userId: String, experienceKey: String) async throws {
         // Mock implementation does nothing - server would trigger Cloud Function
         // The actual calculation happens via the listener when server updates the data
     }
 
-    public func addEvent(userId: String, experienceId: String, event: ExperiencePointsEvent) async throws {
-        var experienceEvents = events[experienceId] ?? []
+    public func addEvent(userId: String, experienceKey: String, event: ExperiencePointsEvent) async throws {
+        var experienceEvents = events[experienceKey] ?? []
         experienceEvents.append(event)
-        events[experienceId] = experienceEvents
+        events[experienceKey] = experienceEvents
     }
 
-    public func getAllEvents(userId: String, experienceId: String) async throws -> [ExperiencePointsEvent] {
-        return events[experienceId] ?? []
+    public func getAllEvents(userId: String, experienceKey: String) async throws -> [ExperiencePointsEvent] {
+        return events[experienceKey] ?? []
     }
 
-    public func deleteAllEvents(userId: String, experienceId: String) async throws {
-        events[experienceId] = []
+    public func deleteAllEvents(userId: String, experienceKey: String) async throws {
+        events[experienceKey] = []
     }
 }

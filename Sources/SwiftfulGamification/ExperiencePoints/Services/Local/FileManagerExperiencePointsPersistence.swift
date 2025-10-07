@@ -12,13 +12,13 @@ public struct FileManagerExperiencePointsPersistence: LocalExperiencePointsPersi
 
     public init() { }
 
-    public func getSavedExperiencePointsData(experienceId: String) -> CurrentExperiencePointsData? {
-        let key = "current_xp_\(experienceId)"
+    public func getSavedExperiencePointsData(experienceKey: String) -> CurrentExperiencePointsData? {
+        let key = "current_xp_\(experienceKey)"
         return try? FileManager.getDocument(key: key)
     }
 
-    public func saveCurrentExperiencePointsData(experienceId: String, _ data: CurrentExperiencePointsData?) throws {
-        let key = "current_xp_\(experienceId)"
+    public func saveCurrentExperiencePointsData(experienceKey: String, _ data: CurrentExperiencePointsData?) throws {
+        let key = "current_xp_\(experienceKey)"
         try FileManager.saveDocument(key: key, value: data)
     }
 }

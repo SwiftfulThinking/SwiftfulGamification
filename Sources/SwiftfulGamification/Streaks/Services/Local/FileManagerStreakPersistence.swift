@@ -12,13 +12,13 @@ public struct FileManagerStreakPersistence: LocalStreakPersistence {
 
     public init() { }
 
-    public func getSavedStreakData(streakId: String) -> CurrentStreakData? {
-        let key = "current_streak_\(streakId)"
+    public func getSavedStreakData(streakKey: String) -> CurrentStreakData? {
+        let key = "current_streak_\(streakKey)"
         return try? FileManager.getDocument(key: key)
     }
 
-    public func saveCurrentStreakData(streakId: String, _ streak: CurrentStreakData?) throws {
-        let key = "current_streak_\(streakId)"
+    public func saveCurrentStreakData(streakKey: String, _ streak: CurrentStreakData?) throws {
+        let key = "current_streak_\(streakKey)"
         try FileManager.saveDocument(key: key, value: streak)
     }
 }

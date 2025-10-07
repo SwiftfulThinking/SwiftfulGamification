@@ -23,7 +23,7 @@ public struct ExperiencePointsCalculator {
         timezone: TimeZone = .current
     ) -> CurrentExperiencePointsData {
         guard !events.isEmpty else {
-            return CurrentExperiencePointsData.blank(experienceId: configuration.experienceId)
+            return CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
         }
 
         // CALCULATE TOTAL POINTS
@@ -48,7 +48,7 @@ public struct ExperiencePointsCalculator {
         )
 
         return CurrentExperiencePointsData(
-            experienceId: configuration.experienceId,
+            experienceKey: configuration.experienceKey,
             totalPoints: totalPoints,
             totalEvents: events.count,
             todayEventCount: todayEventCount,

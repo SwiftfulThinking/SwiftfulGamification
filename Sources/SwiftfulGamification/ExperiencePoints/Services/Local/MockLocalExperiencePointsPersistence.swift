@@ -14,19 +14,19 @@ public class MockLocalExperiencePointsPersistence: LocalExperiencePointsPersiste
 
     public init(data: CurrentExperiencePointsData? = nil) {
         if let data = data {
-            self.data[data.experienceId] = data
+            self.data[data.experienceKey] = data
         }
     }
 
-    public func getSavedExperiencePointsData(experienceId: String) -> CurrentExperiencePointsData? {
-        return data[experienceId]
+    public func getSavedExperiencePointsData(experienceKey: String) -> CurrentExperiencePointsData? {
+        return data[experienceKey]
     }
 
-    public func saveCurrentExperiencePointsData(experienceId: String, _ xpData: CurrentExperiencePointsData?) throws {
+    public func saveCurrentExperiencePointsData(experienceKey: String, _ xpData: CurrentExperiencePointsData?) throws {
         if let xpData = xpData {
-            data[experienceId] = xpData
+            data[experienceKey] = xpData
         } else {
-            data.removeValue(forKey: experienceId)
+            data.removeValue(forKey: experienceKey)
         }
     }
 }

@@ -9,13 +9,13 @@ import Foundation
 
 /// Represents a user's current experience points status
 public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equatable {
-    /// Identifiable conformance - uses experienceId
+    /// Identifiable conformance - uses experienceKey
     public var id: String {
-        experienceId
+        experienceKey
     }
 
     /// Experience identifier (e.g., "main", "battle", "quest")
-    public let experienceId: String
+    public let experienceKey: String
 
     /// Total experience points accumulated
     public let totalPoints: Int?
@@ -41,7 +41,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     // MARK: - Initialization
 
     public init(
-        experienceId: String,
+        experienceKey: String,
         totalPoints: Int? = nil,
         totalEvents: Int? = nil,
         todayEventCount: Int? = nil,
@@ -50,7 +50,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         updatedAt: Date? = nil,
         recentEvents: [ExperiencePointsEvent]? = nil
     ) {
-        self.experienceId = experienceId
+        self.experienceKey = experienceKey
         self.totalPoints = totalPoints
         self.totalEvents = totalEvents
         self.todayEventCount = todayEventCount
@@ -63,7 +63,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     // MARK: - Codable
 
     public enum CodingKeys: String, CodingKey {
-        case experienceId = "experience_id"
+        case experienceKey = "experience_id"
         case totalPoints = "total_points"
         case totalEvents = "total_events"
         case todayEventCount = "today_event_count"
@@ -180,7 +180,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Event parameters for analytics logging
     public var eventParameters: [String: Any] {
         var params: [String: Any] = [
-            "current_xp_experience_id": experienceId
+            "current_xp_experience_id": experienceKey
         ]
 
         if let total = totalPoints { params["current_xp_total_points"] = total }
@@ -196,7 +196,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     // MARK: - Mock Factory
 
     public static func mock(
-        experienceId: String = "main",
+        experienceKey: String = "main",
         totalPoints: Int = 1500,
         totalEvents: Int = 25,
         todayEventCount: Int = 3,
@@ -205,7 +205,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         updatedAt: Date = Date()
     ) -> Self {
         CurrentExperiencePointsData(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             totalPoints: totalPoints,
             totalEvents: totalEvents,
             todayEventCount: todayEventCount,
@@ -216,9 +216,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     }
 
     /// Blank XP data (no events, zero points)
-    public static func blank(experienceId: String) -> Self {
+    public static func blank(experienceKey: String) -> Self {
         CurrentExperiencePointsData(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             totalPoints: 0,
             totalEvents: 0,
             todayEventCount: 0
@@ -226,9 +226,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     }
 
     /// Mock with no events
-    public static func mockEmpty(experienceId: String = "main") -> Self {
+    public static func mockEmpty(experienceKey: String = "main") -> Self {
         CurrentExperiencePointsData(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             totalPoints: 0,
             totalEvents: 0,
             todayEventCount: 0
@@ -237,11 +237,11 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
     /// Mock with active XP earning
     public static func mockActive(
-        experienceId: String = "main",
+        experienceKey: String = "main",
         totalPoints: Int = 2500
     ) -> Self {
         CurrentExperiencePointsData(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             totalPoints: totalPoints,
             totalEvents: 50,
             todayEventCount: 5,
@@ -253,17 +253,17 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
     /// Mock with recent activity
     public static func mockWithRecentEvents(
-        experienceId: String = "main",
+        experienceKey: String = "main",
         eventCount: Int = 10
     ) -> Self {
         let events = (0..<eventCount).map { daysAgo in
-            ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceId: experienceId, points: 100 + daysAgo * 10)
+            ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceKey: experienceKey, points: 100 + daysAgo * 10)
         }
 
         let totalPoints = events.reduce(0) { $0 + $1.points }
 
         return CurrentExperiencePointsData(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             totalPoints: totalPoints,
             totalEvents: eventCount,
             todayEventCount: 1,

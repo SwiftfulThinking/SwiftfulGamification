@@ -27,7 +27,7 @@ public struct StreakCalculator {
         timezone: TimeZone = .current
     ) -> (streak: CurrentStreakData, freezeConsumptions: [FreezeConsumption]) {
         guard !events.isEmpty else {
-            return (CurrentStreakData.blank(streakId: configuration.streakId), [])
+            return (CurrentStreakData.blank(streakKey: configuration.streakKey), [])
         }
 
         var calendar = Calendar.current
@@ -193,7 +193,7 @@ public struct StreakCalculator {
         )
 
         let streak = CurrentStreakData(
-            streakId: configuration.streakId,
+            streakKey: configuration.streakKey,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
             lastEventDate: lastEvent?.timestamp,

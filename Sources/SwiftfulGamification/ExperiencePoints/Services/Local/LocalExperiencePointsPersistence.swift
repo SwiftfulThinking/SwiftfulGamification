@@ -9,6 +9,6 @@ import Foundation
 
 @MainActor
 public protocol LocalExperiencePointsPersistence {
-    func getSavedExperiencePointsData(experienceId: String) -> CurrentExperiencePointsData?
-    func saveCurrentExperiencePointsData(experienceId: String, _ data: CurrentExperiencePointsData?) throws
+    func getSavedExperiencePointsData(experienceKey: String) -> CurrentExperiencePointsData?
+    func saveCurrentExperiencePointsData(experienceKey: String, _ data: CurrentExperiencePointsData?) throws
 }

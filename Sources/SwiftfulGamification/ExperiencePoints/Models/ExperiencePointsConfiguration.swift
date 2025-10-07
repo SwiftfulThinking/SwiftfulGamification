@@ -10,7 +10,7 @@ import Foundation
 /// Configuration for experience points behavior
 public struct ExperiencePointsConfiguration: Codable, Sendable, Equatable {
     /// Experience identifier (e.g., "main", "battle", "quest")
-    public let experienceId: String
+    public let experienceKey: String
 
     /// Enable server-side calculation via Cloud Function (requires Firebase deployment)
     public let useServerCalculation: Bool
@@ -18,44 +18,44 @@ public struct ExperiencePointsConfiguration: Codable, Sendable, Equatable {
     // MARK: - Initialization
 
     public init(
-        experienceId: String,
+        experienceKey: String,
         useServerCalculation: Bool = false
     ) {
-        self.experienceId = experienceId
+        self.experienceKey = experienceKey
         self.useServerCalculation = useServerCalculation
     }
 
     // MARK: - Codable
 
     public enum CodingKeys: String, CodingKey {
-        case experienceId = "experience_id"
+        case experienceKey = "experience_id"
         case useServerCalculation = "use_server_calculation"
     }
 
     // MARK: - Mock Factory
 
     public static func mock(
-        experienceId: String = "main",
+        experienceKey: String = "main",
         useServerCalculation: Bool = false
     ) -> Self {
         ExperiencePointsConfiguration(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             useServerCalculation: useServerCalculation
         )
     }
 
     /// Mock for basic configuration (default settings)
-    public static func mockBasic(experienceId: String = "main") -> Self {
+    public static func mockBasic(experienceKey: String = "main") -> Self {
         ExperiencePointsConfiguration(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             useServerCalculation: false
         )
     }
 
     /// Mock with server-side calculation enabled
-    public static func mockServerCalculation(experienceId: String = "main") -> Self {
+    public static func mockServerCalculation(experienceKey: String = "main") -> Self {
         ExperiencePointsConfiguration(
-            experienceId: experienceId,
+            experienceKey: experienceKey,
             useServerCalculation: true
         )
     }

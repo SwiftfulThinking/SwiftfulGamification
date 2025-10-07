@@ -14,7 +14,7 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     public let id: String
 
     /// Which streak this freeze applies to
-    public let streakId: String
+    public let streakKey: String
 
     /// When the freeze was earned
     public let earnedDate: Date?
@@ -29,13 +29,13 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public init(
         id: String,
-        streakId: String,
+        streakKey: String,
         earnedDate: Date? = nil,
         usedDate: Date? = nil,
         expiresAt: Date? = nil
     ) {
         self.id = id
-        self.streakId = streakId
+        self.streakKey = streakKey
         self.earnedDate = earnedDate
         self.usedDate = usedDate
         self.expiresAt = expiresAt
@@ -45,7 +45,7 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public enum CodingKeys: String, CodingKey {
         case id
-        case streakId = "streak_id"
+        case streakKey = "streak_id"
         case earnedDate = "earned_date"
         case usedDate = "used_date"
         case expiresAt = "expires_at"
@@ -100,7 +100,7 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
             "streak_freeze_is_used": isUsed,
             "streak_freeze_is_expired": isExpired,
             "streak_freeze_is_available": isAvailable,
-            "streak_freeze_streak_id": streakId
+            "streak_freeze_streak_id": streakKey
         ]
 
         if let earnedDate = earnedDate {
@@ -117,14 +117,14 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public static func mock(
         id: String = UUID().uuidString,
-        streakId: String = "workout",
+        streakKey: String = "workout",
         earnedDate: Date = Date(),
         usedDate: Date? = nil,
         expiresAt: Date? = nil
     ) -> Self {
         StreakFreeze(
             id: id,
-            streakId: streakId,
+            streakKey: streakKey,
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: expiresAt
@@ -134,11 +134,11 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     /// Mock unused freeze
     public static func mockUnused(
         id: String = UUID().uuidString,
-        streakId: String = "workout"
+        streakKey: String = "workout"
     ) -> Self {
         StreakFreeze(
             id: id,
-            streakId: streakId,
+            streakKey: streakKey,
             earnedDate: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
             usedDate: nil,
             expiresAt: nil
@@ -148,14 +148,14 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     /// Mock used freeze
     public static func mockUsed(
         id: String = UUID().uuidString,
-        streakId: String = "workout"
+        streakKey: String = "workout"
     ) -> Self {
         let earnedDate = Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date()
         let usedDate = Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
-            streakId: streakId,
+            streakKey: streakKey,
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: nil
@@ -165,14 +165,14 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     /// Mock expired freeze (for future flexibility)
     public static func mockExpired(
         id: String = UUID().uuidString,
-        streakId: String = "workout"
+        streakKey: String = "workout"
     ) -> Self {
         let earnedDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let expiresAt = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
-            streakId: streakId,
+            streakKey: streakKey,
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: expiresAt

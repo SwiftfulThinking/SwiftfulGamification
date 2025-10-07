@@ -9,6 +9,6 @@ import Foundation
 
 @MainActor
 public protocol LocalStreakPersistence {
-    func getSavedStreakData(streakId: String) -> CurrentStreakData?
-    func saveCurrentStreakData(streakId: String, _ streak: CurrentStreakData?) throws
+    func getSavedStreakData(streakKey: String) -> CurrentStreakData?
+    func saveCurrentStreakData(streakKey: String, _ streak: CurrentStreakData?) throws
 }

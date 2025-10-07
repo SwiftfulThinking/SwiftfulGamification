@@ -10,7 +10,7 @@ import Foundation
 /// Configuration for streak behavior
 public struct StreakConfiguration: Codable, Sendable, Equatable {
     /// Streak identifier (e.g., "workout", "reading")
-    public let streakId: String
+    public let streakKey: String
 
     /// Number of events required per day to maintain streak (1 = basic streak, >1 = goal-based)
     public let eventsRequiredPerDay: Int
@@ -27,7 +27,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     // MARK: - Initialization
 
     public init(
-        streakId: String,
+        streakKey: String,
         eventsRequiredPerDay: Int = 1,
         useServerCalculation: Bool = false,
         leewayHours: Int = 0,
@@ -37,7 +37,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         precondition(leewayHours >= 0, "leewayHours must be >= 0")
         precondition(leewayHours <= 24, "leewayHours must be <= 24")
 
-        self.streakId = streakId
+        self.streakKey = streakKey
         self.eventsRequiredPerDay = eventsRequiredPerDay
         self.useServerCalculation = useServerCalculation
         self.leewayHours = leewayHours
@@ -47,7 +47,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     // MARK: - Codable
 
     public enum CodingKeys: String, CodingKey {
-        case streakId = "streak_id"
+        case streakKey = "streak_id"
         case eventsRequiredPerDay = "events_required_per_day"
         case useServerCalculation = "use_server_calculation"
         case leewayHours = "leeway_hours"
@@ -74,14 +74,14 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     // MARK: - Mock Factory
 
     public static func mock(
-        streakId: String = "workout",
+        streakKey: String = "workout",
         eventsRequiredPerDay: Int = 1,
         useServerCalculation: Bool = false,
         leewayHours: Int = 0,
         autoConsumeFreeze: Bool = true
     ) -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: useServerCalculation,
             leewayHours: leewayHours,
@@ -90,9 +90,9 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for basic streak (default settings)
-    public static func mockBasic(streakId: String = "workout") -> Self {
+    public static func mockBasic(streakKey: String = "workout") -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 0,
@@ -101,9 +101,9 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for goal-based streak
-    public static func mockGoalBased(streakId: String = "workout", eventsRequiredPerDay: Int = 3) -> Self {
+    public static func mockGoalBased(streakKey: String = "workout", eventsRequiredPerDay: Int = 3) -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: false,
             leewayHours: 0,
@@ -112,9 +112,9 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for lenient streak (with grace period)
-    public static func mockLenient(streakId: String = "workout", leewayHours: Int = 3) -> Self {
+    public static func mockLenient(streakKey: String = "workout", leewayHours: Int = 3) -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: leewayHours,
@@ -123,9 +123,9 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for travel-friendly streak
-    public static func mockTravelFriendly(streakId: String = "workout") -> Self {
+    public static func mockTravelFriendly(streakKey: String = "workout") -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 24,
@@ -134,9 +134,9 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock with server-side calculation enabled
-    public static func mockServerCalculation(streakId: String = "workout") -> Self {
+    public static func mockServerCalculation(streakKey: String = "workout") -> Self {
         StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakKey,
             eventsRequiredPerDay: 1,
             useServerCalculation: true,
             leewayHours: 0,
