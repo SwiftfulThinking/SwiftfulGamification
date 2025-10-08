@@ -17,7 +17,7 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
         container.mainContext
     }
     
-    init() {
+    public init() {
         // swiftlint:disable:next force_try
         self.container = try! ModelContainer(for: ProgressItem.self)
     }
