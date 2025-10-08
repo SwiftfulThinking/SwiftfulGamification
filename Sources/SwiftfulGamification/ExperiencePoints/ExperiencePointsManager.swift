@@ -88,9 +88,18 @@ public class ExperiencePointsManager {
             points: points,
             metadata: metadata
         )
-        try await remote.addEvent(userId: userId, experienceKey: configuration.experienceKey, event: event)
-        calculateExperiencePoints(userId: userId)
-        return event
+
+        logger?.trackEvent(event: Event.addExperiencePointsStart(event: event))
+
+        do {
+            try await remote.addEvent(userId: userId, experienceKey: configuration.experienceKey, event: event)
+            logger?.trackEvent(event: Event.addExperiencePointsSuccess(event: event))
+            calculateExperiencePoints(userId: userId)
+            return event
+        } catch {
+            logger?.trackEvent(event: Event.addExperiencePointsFail(error: error))
+            throw error
+        }
     }
 
     public func getAllExperiencePointsEvents() async throws -> [ExperiencePointsEvent] {
@@ -181,6 +190,9 @@ extension ExperiencePointsManager {
         case calculateXPStart
         case calculateXPSuccess(data: CurrentExperiencePointsData)
         case calculateXPFail(error: Error)
+        case addExperiencePointsStart(event: ExperiencePointsEvent)
+        case addExperiencePointsSuccess(event: ExperiencePointsEvent)
+        case addExperiencePointsFail(error: Error)
 
         var eventName: String {
             switch self {
@@ -193,6 +205,9 @@ extension ExperiencePointsManager {
             case .calculateXPStart:         return "XPMan_CalculateXP_Start"
             case .calculateXPSuccess:       return "XPMan_CalculateXP_Success"
             case .calculateXPFail:          return "XPMan_CalculateXP_Fail"
+            case .addExperiencePointsStart: return "XPMan_AddExperiencePoints_Start"
+            case .addExperiencePointsSuccess: return "XPMan_AddExperiencePoints_Success"
+            case .addExperiencePointsFail:  return "XPMan_AddExperiencePoints_Fail"
             }
         }
 
@@ -200,7 +215,9 @@ extension ExperiencePointsManager {
             switch self {
             case .remoteListenerSuccess(data: let data), .saveLocalStart(data: let data), .saveLocalSuccess(data: let data), .calculateXPSuccess(data: let data):
                 return data.eventParameters
-            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateXPFail(error: let error):
+            case .addExperiencePointsStart(event: let event), .addExperiencePointsSuccess(event: let event):
+                return event.eventParameters
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateXPFail(error: let error), .addExperiencePointsFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -209,7 +226,7 @@ extension ExperiencePointsManager {
 
         var type: GamificationLogType {
             switch self {
-            case .remoteListenerFail, .saveLocalFail, .calculateXPFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateXPFail, .addExperiencePointsFail:
                 return .severe
             default:
                 return .info
