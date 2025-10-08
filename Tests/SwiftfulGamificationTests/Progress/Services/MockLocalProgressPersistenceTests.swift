@@ -256,4 +256,67 @@ struct MockLocalProgressPersistenceTests {
         let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.isEmpty)
     }
+
+    // MARK: - ProgressKey Filtering Tests
+
+    @Test("getAllProgressItems filters by progressKey")
+    func testGetAllProgressItemsFiltersByProgressKey() throws {
+        // Given: Persistence with items from different progressKeys
+        let items = [
+            ProgressItem(id: "item1", progressKey: "world_1", value: 0.3),
+            ProgressItem(id: "item2", progressKey: "world_1", value: 0.7),
+            ProgressItem(id: "item3", progressKey: "world_2", value: 0.5),
+            ProgressItem(id: "item4", progressKey: "world_2", value: 0.9)
+        ]
+        let persistence = MockLocalProgressPersistence(items: items)
+
+        // When: Getting items for specific progressKey
+        let world1Items = persistence.getAllProgressItems(progressKey: "world_1")
+        let world2Items = persistence.getAllProgressItems(progressKey: "world_2")
+
+        // Then: Should return only items for that progressKey
+        #expect(world1Items.count == 2)
+        #expect(world1Items.allSatisfy { $0.progressKey == "world_1" })
+        #expect(world2Items.count == 2)
+        #expect(world2Items.allSatisfy { $0.progressKey == "world_2" })
+    }
+
+    @Test("Items with same id but different progressKey are separate")
+    func testSameIdDifferentProgressKeyAreSeparate() throws {
+        // Given: Persistence with items having same id but different progressKeys
+        let items = [
+            ProgressItem(id: "level_1", progressKey: "world_1", value: 0.5),
+            ProgressItem(id: "level_1", progressKey: "world_2", value: 0.8)
+        ]
+        let persistence = MockLocalProgressPersistence(items: items)
+
+        // When: Getting items for each progressKey
+        let world1Item = persistence.getProgressItem(progressKey: "world_1", id: "level_1")
+        let world2Item = persistence.getProgressItem(progressKey: "world_2", id: "level_1")
+
+        // Then: Should return different items
+        #expect(world1Item?.value == 0.5)
+        #expect(world2Item?.value == 0.8)
+        #expect(world1Item?.compositeId == "world_1_level_1")
+        #expect(world2Item?.compositeId == "world_2_level_1")
+    }
+
+    @Test("deleteAllProgressItems only deletes items for specified progressKey")
+    func testDeleteAllProgressItemsFiltersByProgressKey() throws {
+        // Given: Persistence with items from different progressKeys
+        let items = [
+            ProgressItem(id: "item1", progressKey: "world_1", value: 0.3),
+            ProgressItem(id: "item2", progressKey: "world_2", value: 0.7)
+        ]
+        let persistence = MockLocalProgressPersistence(items: items)
+
+        // When: Deleting all items for world_1
+        try persistence.deleteAllProgressItems(progressKey: "world_1")
+
+        // Then: Should only delete world_1 items
+        let world1Items = persistence.getAllProgressItems(progressKey: "world_1")
+        let world2Items = persistence.getAllProgressItems(progressKey: "world_2")
+        #expect(world1Items.isEmpty)
+        #expect(world2Items.count == 1)
+    }
 }

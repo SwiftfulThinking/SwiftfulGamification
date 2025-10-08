@@ -246,4 +246,175 @@ struct ProgressItemTests {
         #expect(params["progress_date_created"] is Double)
         #expect(params["progress_date_modified"] is Double)
     }
+
+    // MARK: - Metadata Tests
+
+    @Test("Metadata validates valid keys")
+    func testMetadataValidatesValidKeys() throws {
+        // Given: Item with valid metadata keys
+        let item = ProgressItem(
+            id: "test",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: [
+                "valid_key": .string("value"),
+                "key123": .int(42),
+                "KEY_NAME": .double(3.14),
+                "some_long_key_123": .bool(true)
+            ]
+        )
+
+        // Then: Should be valid
+        #expect(item.isValid == true)
+        #expect(item.isMetadataValid == true)
+    }
+
+    @Test("Metadata invalidates keys with special characters")
+    func testMetadataInvalidatesSpecialCharacters() throws {
+        // Given: Item with invalid metadata key (contains hyphen)
+        let item = ProgressItem(
+            id: "test",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: ["invalid-key": .string("value")]
+        )
+
+        // Then: Should be invalid
+        #expect(item.isValid == false)
+        #expect(item.isMetadataValid == false)
+    }
+
+    @Test("Metadata invalidates keys with spaces")
+    func testMetadataInvalidatesSpaces() throws {
+        // Given: Item with invalid metadata key (contains space)
+        let item = ProgressItem(
+            id: "test",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: ["invalid key": .string("value")]
+        )
+
+        // Then: Should be invalid
+        #expect(item.isValid == false)
+        #expect(item.isMetadataValid == false)
+    }
+
+    @Test("Metadata encodes and decodes correctly")
+    func testMetadataEncodesDecodes() throws {
+        // Given: Item with various metadata types
+        let original = ProgressItem(
+            id: "metadata_test",
+            progressKey: "default",
+            value: 0.75,
+            dateCreated: Date(timeIntervalSince1970: 1609459200),
+            dateModified: Date(timeIntervalSince1970: 1609545600),
+            metadata: [
+                "string_key": .string("test_value"),
+                "int_key": .int(42),
+                "double_key": .double(3.14),
+                "bool_key": .bool(true)
+            ]
+        )
+
+        // When: Encoding then decoding
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(original)
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(ProgressItem.self, from: data)
+
+        // Then: Should preserve all metadata
+        #expect(decoded.metadata["string_key"] == .string("test_value"))
+        #expect(decoded.metadata["int_key"] == .int(42))
+        #expect(decoded.metadata["double_key"] == .double(3.14))
+        #expect(decoded.metadata["bool_key"] == .bool(true))
+    }
+
+    @Test("Metadata appears in eventParameters")
+    func testMetadataInEventParameters() throws {
+        // Given: Item with metadata
+        let item = ProgressItem(
+            id: "test",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: [
+                "world": .string("world_1"),
+                "level": .int(5),
+                "completed": .bool(true)
+            ]
+        )
+
+        // When: Getting event parameters
+        let params = item.eventParameters
+
+        // Then: Should include metadata with progress_metadata_ prefix
+        #expect(params["progress_metadata_world"] as? String == "world_1")
+        #expect(params["progress_metadata_level"] as? Int == 5)
+        #expect(params["progress_metadata_completed"] as? Bool == true)
+    }
+
+    @Test("Empty metadata is valid")
+    func testEmptyMetadataIsValid() throws {
+        // Given: Item with empty metadata
+        let item = ProgressItem(
+            id: "test",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: [:]
+        )
+
+        // Then: Should be valid
+        #expect(item.isValid == true)
+        #expect(item.isMetadataValid == true)
+    }
+
+    // MARK: - ProgressKey and CompositeId Tests
+
+    @Test("CompositeId generated correctly from progressKey and id")
+    func testCompositeIdGeneration() throws {
+        // Given: Item with known progressKey and id
+        let item = ProgressItem(
+            id: "item_123",
+            progressKey: "world_1",
+            value: 0.5
+        )
+
+        // Then: CompositeId should be progressKey_id
+        #expect(item.compositeId == "world_1_item_123")
+    }
+
+    @Test("Items with same id but different progressKey have different compositeId")
+    func testDifferentProgressKeysDifferentCompositeId() throws {
+        // Given: Items with same id but different progressKeys
+        let item1 = ProgressItem(id: "level_1", progressKey: "world_1", value: 0.5)
+        let item2 = ProgressItem(id: "level_1", progressKey: "world_2", value: 0.8)
+
+        // Then: Should have different composite IDs
+        #expect(item1.compositeId == "world_1_level_1")
+        #expect(item2.compositeId == "world_2_level_1")
+        #expect(item1.compositeId != item2.compositeId)
+    }
+
+    @Test("ProgressKey is stored separately from id")
+    func testProgressKeyStoredSeparately() throws {
+        // Given: Item with specific progressKey
+        let item = ProgressItem(
+            id: "test_id",
+            progressKey: "custom_key",
+            value: 0.75
+        )
+
+        // Then: Both should be accessible independently
+        #expect(item.id == "test_id")
+        #expect(item.progressKey == "custom_key")
+    }
 }

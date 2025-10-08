@@ -15,11 +15,13 @@ import Foundation
 class MockGamificationLogger: GamificationLogger {
     var trackedEvents: [String] = []
     var trackedParameters: [[String: Any]] = []
+    var eventTypes: [GamificationLogType] = []
     var userProperties: [[String: Any]] = []
     var highPriorityFlags: [Bool] = []
 
     func trackEvent(event: any GamificationLogEvent) {
         trackedEvents.append(event.eventName)
+        eventTypes.append(event.type)
         if let params = event.parameters {
             trackedParameters.append(params)
         }
@@ -33,6 +35,7 @@ class MockGamificationLogger: GamificationLogger {
     func reset() {
         trackedEvents.removeAll()
         trackedParameters.removeAll()
+        eventTypes.removeAll()
         userProperties.removeAll()
         highPriorityFlags.removeAll()
     }
@@ -660,6 +663,96 @@ struct StreakManagerTests {
         // Then: Save events should be logged
         #expect(logger.trackedEvents.contains("StreakMan_SaveLocal_Start"))
         #expect(logger.trackedEvents.contains("StreakMan_SaveLocal_Success"))
+    }
+
+    @Test("addStreakFreeze logs start and success events")
+    func testAddStreakFreezeLogsEvents() async throws {
+        // Given: Manager with logger
+        let logger = MockGamificationLogger()
+        let services = MockStreakServices(streak: .mock())
+        let config = StreakConfiguration(streakKey: "workout")
+        let manager = StreakManager(services: services, configuration: config, logger: logger)
+        try await manager.logIn(userId: "user123")
+
+        logger.trackedEvents.removeAll()
+
+        // When: Adding a freeze
+        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
+        try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
+
+        // Then: Should log start and success events
+        #expect(logger.trackedEvents.contains("StreakMan_AddStreakFreeze_Start"))
+        #expect(logger.trackedEvents.contains("StreakMan_AddStreakFreeze_Success"))
+    }
+
+    @Test("addStreakFreeze success event is marked as analytic")
+    func testAddStreakFreezeSuccessIsAnalytic() async throws {
+        // Given: Manager with logger
+        let logger = MockGamificationLogger()
+        let services = MockStreakServices(streak: .mock())
+        let config = StreakConfiguration(streakKey: "workout")
+        let manager = StreakManager(services: services, configuration: config, logger: logger)
+        try await manager.logIn(userId: "user123")
+
+        logger.trackedEvents.removeAll()
+        logger.eventTypes.removeAll()
+
+        // When: Adding a freeze successfully
+        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
+        try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
+
+        // Then: Success event should be marked as .analytic
+        let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_AddStreakFreeze_Success")
+        #expect(successIndex != nil)
+        if let index = successIndex {
+            #expect(logger.eventTypes[index] == .analytic)
+        }
+    }
+
+    @Test("useStreakFreeze logs start and success events")
+    func testUseStreakFreezeLogsEvents() async throws {
+        // Given: Manager with freeze available
+        let logger = MockGamificationLogger()
+        let services = MockStreakServices(streak: .mock())
+        let remote = services.remote as! MockRemoteStreakService
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        let config = StreakConfiguration(streakKey: "workout")
+        let manager = StreakManager(services: services, configuration: config, logger: logger)
+        try await manager.logIn(userId: "user123")
+
+        logger.trackedEvents.removeAll()
+
+        // When: Using a freeze
+        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+
+        // Then: Should log start and success events
+        #expect(logger.trackedEvents.contains("StreakMan_UseStreakFreeze_Start"))
+        #expect(logger.trackedEvents.contains("StreakMan_UseStreakFreeze_Success"))
+    }
+
+    @Test("useStreakFreeze success event is marked as analytic")
+    func testUseStreakFreezeSuccessIsAnalytic() async throws {
+        // Given: Manager with freeze available
+        let logger = MockGamificationLogger()
+        let services = MockStreakServices(streak: .mock())
+        let remote = services.remote as! MockRemoteStreakService
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        let config = StreakConfiguration(streakKey: "workout")
+        let manager = StreakManager(services: services, configuration: config, logger: logger)
+        try await manager.logIn(userId: "user123")
+
+        logger.trackedEvents.removeAll()
+        logger.eventTypes.removeAll()
+
+        // When: Using a freeze successfully
+        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+
+        // Then: Success event should be marked as .analytic
+        let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_UseStreakFreeze_Success")
+        #expect(successIndex != nil)
+        if let index = successIndex {
+            #expect(logger.eventTypes[index] == .analytic)
+        }
     }
 
     // MARK: - Edge Case Tests

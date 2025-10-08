@@ -98,6 +98,262 @@ struct ProgressManagerTests {
         #expect(value == 0.5)
     }
 
+    // MARK: - getProgressItem Tests
+
+    @Test("getProgressItem returns full ProgressItem")
+    func testGetProgressItemReturnsFull() async throws {
+        // Given: Manager with item
+        let item = ProgressItem.mock(id: "item1", value: 0.75)
+        let services = MockProgressServices(items: [item])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Getting progress item
+        let result = manager.getProgressItem(id: "item1")
+
+        // Then: Should return full ProgressItem
+        #expect(result != nil)
+        #expect(result?.id == "item1")
+        #expect(result?.value == 0.75)
+    }
+
+    @Test("getProgressItem returns nil for non-existent id")
+    func testGetProgressItemReturnsNil() throws {
+        // Given: Manager with no items
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // When: Getting non-existent item
+        let result = manager.getProgressItem(id: "non_existent")
+
+        // Then: Should return nil
+        #expect(result == nil)
+    }
+
+    // MARK: - getAllProgress Tests
+
+    @Test("getAllProgress returns dictionary of values")
+    func testGetAllProgressReturnsDictionary() async throws {
+        // Given: Manager with multiple items
+        let items = [
+            ProgressItem.mock(id: "item1", value: 0.3),
+            ProgressItem.mock(id: "item2", value: 0.7),
+            ProgressItem.mock(id: "item3", value: 0.5)
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Getting all progress
+        let result = manager.getAllProgress()
+
+        // Then: Should return dictionary with all values
+        #expect(result.count == 3)
+        #expect(result["item1"] == 0.3)
+        #expect(result["item2"] == 0.7)
+        #expect(result["item3"] == 0.5)
+    }
+
+    @Test("getAllProgress returns empty dictionary when no items")
+    func testGetAllProgressReturnsEmpty() throws {
+        // Given: Manager with no items
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // When: Getting all progress
+        let result = manager.getAllProgress()
+
+        // Then: Should return empty dictionary
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - getAllProgressItems Tests
+
+    @Test("getAllProgressItems returns all ProgressItem objects")
+    func testGetAllProgressItemsReturnsAll() async throws {
+        // Given: Manager with multiple items
+        let items = [
+            ProgressItem.mock(id: "item1", value: 0.3),
+            ProgressItem.mock(id: "item2", value: 0.7)
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Getting all progress items
+        let result = manager.getAllProgressItems()
+
+        // Then: Should return all ProgressItem objects
+        #expect(result.count == 2)
+        #expect(result.contains(where: { $0.id == "item1" }))
+        #expect(result.contains(where: { $0.id == "item2" }))
+    }
+
+    @Test("getAllProgressItems returns empty array when no items")
+    func testGetAllProgressItemsReturnsEmpty() throws {
+        // Given: Manager with no items
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // When: Getting all progress items
+        let result = manager.getAllProgressItems()
+
+        // Then: Should return empty array
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - getProgressItems filtering Tests
+
+    @Test("getProgressItems filters by metadata field value")
+    func testGetProgressItemsFiltersByMetadata() async throws {
+        // Given: Manager with items having different metadata
+        let items = [
+            ProgressItem(
+                id: "level1",
+                progressKey: "default",
+                value: 0.5,
+                metadata: ["world": .string("world1"), "type": .string("level")]
+            ),
+            ProgressItem(
+                id: "level2",
+                progressKey: "default",
+                value: 0.8,
+                metadata: ["world": .string("world1"), "type": .string("level")]
+            ),
+            ProgressItem(
+                id: "level3",
+                progressKey: "default",
+                value: 0.3,
+                metadata: ["world": .string("world2"), "type": .string("level")]
+            )
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Filtering by world = "world1"
+        let result = manager.getProgressItems(forMetadataField: "world", equalTo: .string("world1"))
+
+        // Then: Should return only items from world1
+        #expect(result.count == 2)
+        #expect(result.contains(where: { $0.id == "level1" }))
+        #expect(result.contains(where: { $0.id == "level2" }))
+        #expect(!result.contains(where: { $0.id == "level3" }))
+    }
+
+    @Test("getProgressItems returns empty array when no matches")
+    func testGetProgressItemsReturnsEmptyWhenNoMatches() async throws {
+        // Given: Manager with items
+        let items = [
+            ProgressItem(
+                id: "item1",
+                progressKey: "default",
+                value: 0.5,
+                metadata: ["category": .string("A")]
+            )
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Filtering by non-existent value
+        let result = manager.getProgressItems(forMetadataField: "category", equalTo: .string("B"))
+
+        // Then: Should return empty array
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - getMaxProgress Tests
+
+    @Test("getMaxProgress returns max value for filtered items")
+    func testGetMaxProgressReturnsMax() async throws {
+        // Given: Manager with items having different values in same category
+        let items = [
+            ProgressItem(
+                id: "level1",
+                progressKey: "default",
+                value: 0.5,
+                metadata: ["world": .string("world1")]
+            ),
+            ProgressItem(
+                id: "level2",
+                progressKey: "default",
+                value: 0.9,
+                metadata: ["world": .string("world1")]
+            ),
+            ProgressItem(
+                id: "level3",
+                progressKey: "default",
+                value: 0.3,
+                metadata: ["world": .string("world1")]
+            ),
+            ProgressItem(
+                id: "level4",
+                progressKey: "default",
+                value: 1.0,
+                metadata: ["world": .string("world2")]
+            )
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Getting max progress for world1
+        let result = manager.getMaxProgress(forMetadataField: "world", equalTo: .string("world1"))
+
+        // Then: Should return max value from world1 (0.9)
+        #expect(result == 0.9)
+    }
+
+    @Test("getMaxProgress returns 0.0 when no items match")
+    func testGetMaxProgressReturnsZeroWhenNoMatches() async throws {
+        // Given: Manager with items
+        let items = [
+            ProgressItem(
+                id: "item1",
+                progressKey: "default",
+                value: 0.5,
+                metadata: ["category": .string("A")]
+            )
+        ]
+        let services = MockProgressServices(items: items)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // Give async init time to load cache
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Getting max for non-existent category
+        let result = manager.getMaxProgress(forMetadataField: "category", equalTo: .string("B"))
+
+        // Then: Should return 0.0
+        #expect(result == 0.0)
+    }
+
+    @Test("getMaxProgress returns 0.0 when manager has no items")
+    func testGetMaxProgressReturnsZeroWhenEmpty() throws {
+        // Given: Manager with no items
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+
+        // When: Getting max progress
+        let result = manager.getMaxProgress(forMetadataField: "any", equalTo: .string("value"))
+
+        // Then: Should return 0.0
+        #expect(result == 0.0)
+    }
+
     // MARK: - Login Tests
 
     @Test("logIn performs bulk load")
@@ -321,6 +577,90 @@ struct ProgressManagerTests {
         #expect(logger.trackedEvents.contains("ProgressMan_AddProgress_Success"))
     }
 
+    @Test("addProgress merges metadata with existing metadata")
+    func testAddProgressMergesMetadata() async throws {
+        // Given: Manager with item that has metadata
+        let existingItem = ProgressItem(
+            id: "item1",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: ["key1": .string("value1"), "key2": .int(42)]
+        )
+        let services = MockProgressServices(items: [existingItem])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Give async init time to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Updating with new metadata
+        try await manager.addProgress(
+            id: "item1",
+            value: 0.7,
+            metadata: ["key2": .int(99), "key3": .string("new")]
+        )
+
+        // Then: Should merge metadata (new values overwrite old ones)
+        let updated = manager.getProgressItem(id: "item1")
+        #expect(updated?.metadata["key1"] == .string("value1")) // Preserved
+        #expect(updated?.metadata["key2"] == .int(99)) // Overwritten
+        #expect(updated?.metadata["key3"] == .string("new")) // Added
+    }
+
+    @Test("addProgress with nil metadata preserves existing metadata")
+    func testAddProgressNilMetadataPreservesExisting() async throws {
+        // Given: Manager with item that has metadata
+        let existingItem = ProgressItem(
+            id: "item1",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: ["key1": .string("value1")]
+        )
+        let services = MockProgressServices(items: [existingItem])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Give async init time to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Updating without providing metadata
+        try await manager.addProgress(id: "item1", value: 0.7, metadata: nil)
+
+        // Then: Should preserve existing metadata
+        let updated = manager.getProgressItem(id: "item1")
+        #expect(updated?.metadata["key1"] == .string("value1"))
+    }
+
+    @Test("addProgress with empty metadata preserves existing metadata")
+    func testAddProgressEmptyMetadataPreservesExisting() async throws {
+        // Given: Manager with item that has metadata
+        let existingItem = ProgressItem(
+            id: "item1",
+            progressKey: "default",
+            value: 0.5,
+            dateCreated: Date(),
+            dateModified: Date(),
+            metadata: ["key1": .string("value1")]
+        )
+        let services = MockProgressServices(items: [existingItem])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Give async init time to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Updating with empty metadata dictionary
+        try await manager.addProgress(id: "item1", value: 0.7, metadata: [:])
+
+        // Then: Should preserve existing metadata
+        let updated = manager.getProgressItem(id: "item1")
+        #expect(updated?.metadata["key1"] == .string("value1"))
+    }
+
     // MARK: - deleteProgress Tests
 
     @Test("deleteProgress requires login")
@@ -514,5 +854,81 @@ struct ProgressManagerTests {
         // Then: Should log delete all events
         #expect(logger.trackedEvents.contains("ProgressMan_DeleteAllProgress_Start"))
         #expect(logger.trackedEvents.contains("ProgressMan_DeleteAllProgress_Success"))
+    }
+
+    // MARK: - Progress Decrease Prevention Tests
+
+    @Test("addProgress does not decrease existing progress value")
+    func testAddProgressDoesNotDecrease() async throws {
+        // Given: Manager with existing progress
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Add initial progress
+        try await manager.addProgress(id: "item1", value: 0.8)
+
+        // Wait for cache to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Adding lower value
+        try await manager.addProgress(id: "item1", value: 0.5)
+
+        // Wait for update
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Then: Should keep higher value
+        let item = manager.getProgressItem(id: "item1")
+        #expect(item?.value == 0.8)
+    }
+
+    @Test("addProgress updates when new value is higher")
+    func testAddProgressUpdatesWhenHigher() async throws {
+        // Given: Manager with existing progress
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Add initial progress
+        try await manager.addProgress(id: "item1", value: 0.5)
+
+        // Wait for cache to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Adding higher value
+        try await manager.addProgress(id: "item1", value: 0.9)
+
+        // Wait for update
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Then: Should update to higher value
+        let item = manager.getProgressItem(id: "item1")
+        #expect(item?.value == 0.9)
+    }
+
+    @Test("Remote listener respects local higher value")
+    func testRemoteListenerRespectsLocalValue() async throws {
+        // Given: Manager with local progress
+        let services = MockProgressServices(items: [])
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
+        try await manager.logIn(userId: "user123")
+
+        // Add high value locally
+        try await manager.addProgress(id: "item1", value: 0.9)
+
+        // Wait for cache to load
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // When: Remote sends lower value
+        let remote = services.remote as! MockRemoteProgressService
+        let lowerItem = ProgressItem(id: "item1", progressKey: "default", value: 0.6)
+        try await remote.addProgress(userId: "user123", progressKey: "default", item: lowerItem)
+
+        // Wait for listener update
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then: Should keep local higher value
+        let item = manager.getProgressItem(id: "item1")
+        #expect(item?.value == 0.9)
     }
 }
