@@ -38,6 +38,9 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
     /// UTC timestamp when the progress item was last modified
     public var dateModified: Date
 
+    /// Custom metadata associated with this item (for developer-defined data and filtering)
+    public var metadata: [String: GamificationDictionaryValue]
+
     // MARK: - Initialization
 
     public init(
@@ -45,7 +48,8 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
         progressKey: String,
         value: Double,
         dateCreated: Date = Date(),
-        dateModified: Date = Date()
+        dateModified: Date = Date(),
+        metadata: [String: GamificationDictionaryValue] = [:]
     ) {
         self.id = id
         self.progressKey = progressKey
@@ -53,13 +57,14 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
         self.value = value
         self.dateCreated = dateCreated
         self.dateModified = dateModified
+        self.metadata = metadata
     }
 
     // MARK: - Validation
 
     /// Validates that the progress data is within acceptable bounds
     public var isValid: Bool {
-        isIdValid && isValueValid
+        isIdValid && isValueValid && isMetadataValid
     }
 
     /// Checks if ID is non-empty
@@ -70,6 +75,20 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
     /// Checks if value is between 0.0 and 1.0 (inclusive)
     public var isValueValid: Bool {
         value >= 0.0 && value <= 1.0
+    }
+
+    /// Checks if metadata keys are safe for Firestore (alphanumeric + underscore only)
+    public var isMetadataValid: Bool {
+        let validKeyPattern = "^[a-zA-Z0-9_]+$"
+        let regex = try? NSRegularExpression(pattern: validKeyPattern)
+
+        for key in metadata.keys {
+            let range = NSRange(location: 0, length: key.utf16.count)
+            if regex?.firstMatch(in: key, range: range) == nil {
+                return false
+            }
+        }
+        return true
     }
 
     // MARK: - Mock Factory
@@ -101,6 +120,7 @@ extension ProgressItem: Codable {
         case value
         case dateCreated = "date_created"
         case dateModified = "date_modified"
+        case metadata
     }
 
     public convenience init(from decoder: Decoder) throws {
@@ -110,8 +130,9 @@ extension ProgressItem: Codable {
         let value = try container.decode(Double.self, forKey: .value)
         let dateCreated = try container.decode(Date.self, forKey: .dateCreated)
         let dateModified = try container.decode(Date.self, forKey: .dateModified)
+        let metadata = try container.decodeIfPresent([String: GamificationDictionaryValue].self, forKey: .metadata) ?? [:]
 
-        self.init(id: id, progressKey: progressKey, value: value, dateCreated: dateCreated, dateModified: dateModified)
+        self.init(id: id, progressKey: progressKey, value: value, dateCreated: dateCreated, dateModified: dateModified, metadata: metadata)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -122,6 +143,7 @@ extension ProgressItem: Codable {
         try container.encode(value, forKey: .value)
         try container.encode(dateCreated, forKey: .dateCreated)
         try container.encode(dateModified, forKey: .dateModified)
+        try container.encode(metadata, forKey: .metadata)
     }
 }
 
@@ -130,13 +152,21 @@ extension ProgressItem: Codable {
 extension ProgressItem {
     /// Event parameters formatted for analytics logging
     public var eventParameters: [String: Any] {
-        [
+        var params: [String: Any] = [
             "progress_id": id,
             "progress_composite_id": compositeId,
             "progress_key": progressKey,
             "progress_value": value,
             "progress_date_created": dateCreated.timeIntervalSince1970,
-            "progress_date_modified": dateModified.timeIntervalSince1970
+            "progress_date_modified": dateModified.timeIntervalSince1970,
+            "progress_metadata_count": metadata.count
         ]
+
+        // Add metadata values
+        for (key, value) in metadata {
+            params["progress_metadata_\(key)"] = value.anyValue
+        }
+
+        return params
     }
 }
