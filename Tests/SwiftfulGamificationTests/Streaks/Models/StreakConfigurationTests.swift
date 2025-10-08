@@ -20,10 +20,10 @@ struct StreakConfigurationTests {
         let streakId = "workout"
 
         // When: Initializing with only the streak ID (using default parameters)
-        let config = StreakConfiguration(streakId: streakId)
+        let config = StreakConfiguration(streakKey: streakId)
 
         // Then: Should create configuration with default values
-        #expect(config.streakId == streakId)
+        #expect(config.streakKey == streakId)
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
@@ -46,7 +46,7 @@ struct StreakConfigurationTests {
 
         // When: Initializing with all custom parameters
         let config = StreakConfiguration(
-            streakId: streakId,
+            streakKey: streakId,
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: useServerCalculation,
             leewayHours: leewayHours,
@@ -54,7 +54,7 @@ struct StreakConfigurationTests {
         )
 
         // Then: All properties should match the provided values
-        #expect(config.streakId == streakId)
+        #expect(config.streakKey == streakId)
         #expect(config.eventsRequiredPerDay == eventsRequiredPerDay)
         #expect(config.useServerCalculation == useServerCalculation)
         #expect(config.leewayHours == leewayHours)
@@ -70,7 +70,7 @@ struct StreakConfigurationTests {
     func testInitValidatesEventsRequired() throws {
         // Note: This would crash with precondition failure if eventsRequiredPerDay < 1
         // Cannot test in unit tests as preconditions terminate the process
-        // Manual verification: StreakConfiguration(streakId: "test", eventsRequiredPerDay: 0)
+        // Manual verification: StreakConfiguration(streakKey: "test", eventsRequiredPerDay: 0)
         // Expected: "precondition failed: eventsRequiredPerDay must be >= 1"
     }
 
@@ -78,7 +78,7 @@ struct StreakConfigurationTests {
     func testInitValidatesLeewayMin() throws {
         // Note: This would crash with precondition failure if leewayHours < 0
         // Cannot test in unit tests as preconditions terminate the process
-        // Manual verification: StreakConfiguration(streakId: "test", leewayHours: -1)
+        // Manual verification: StreakConfiguration(streakKey: "test", leewayHours: -1)
         // Expected: "precondition failed: leewayHours must be >= 0"
     }
 
@@ -86,7 +86,7 @@ struct StreakConfigurationTests {
     func testInitValidatesLeewayMax() throws {
         // Note: This would crash with precondition failure if leewayHours > 24
         // Cannot test in unit tests as preconditions terminate the process
-        // Manual verification: StreakConfiguration(streakId: "test", leewayHours: 25)
+        // Manual verification: StreakConfiguration(streakKey: "test", leewayHours: 25)
         // Expected: "precondition failed: leewayHours must be <= 24"
     }
 
@@ -98,7 +98,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mock()
 
         // Then: Should create valid configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
@@ -111,7 +111,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mockBasic()
 
         // Then: Should create basic streak configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
@@ -129,7 +129,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mockGoalBased(eventsRequiredPerDay: 5)
 
         // Then: Should create goal-based configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 5)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
@@ -145,7 +145,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mockLenient(leewayHours: 6)
 
         // Then: Should create lenient configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 6)
@@ -163,7 +163,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mockTravelFriendly()
 
         // Then: Should create travel-friendly configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 24)
@@ -180,7 +180,7 @@ struct StreakConfigurationTests {
         let config = StreakConfiguration.mockServerCalculation()
 
         // Then: Should create server-calculated configuration
-        #expect(config.streakId == "workout")
+        #expect(config.streakKey == "workout")
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == true)
         #expect(config.leewayHours == 0)
@@ -193,7 +193,7 @@ struct StreakConfigurationTests {
     func testEncodesToSnakeCase() throws {
         // Given: A configuration with known values
         let config = StreakConfiguration(
-            streakId: "reading",
+            streakKey: "reading",
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
@@ -240,7 +240,7 @@ struct StreakConfigurationTests {
         let config = try decoder.decode(StreakConfiguration.self, from: data)
 
         // Then: Should decode all properties correctly
-        #expect(config.streakId == "meditation")
+        #expect(config.streakKey == "meditation")
         #expect(config.eventsRequiredPerDay == 2)
         #expect(config.useServerCalculation == true)
         #expect(config.leewayHours == 12)
@@ -251,7 +251,7 @@ struct StreakConfigurationTests {
     func testRoundtripPreservesData() throws {
         // Given: Original configuration
         let original = StreakConfiguration(
-            streakId: "journaling",
+            streakKey: "journaling",
             eventsRequiredPerDay: 7,
             useServerCalculation: false,
             leewayHours: 18,
@@ -266,7 +266,7 @@ struct StreakConfigurationTests {
 
         // Then: Should preserve all data
         #expect(decoded == original)
-        #expect(decoded.streakId == original.streakId)
+        #expect(decoded.streakKey == original.streakKey)
         #expect(decoded.eventsRequiredPerDay == original.eventsRequiredPerDay)
         #expect(decoded.useServerCalculation == original.useServerCalculation)
         #expect(decoded.leewayHours == original.leewayHours)
@@ -278,7 +278,7 @@ struct StreakConfigurationTests {
     @Test("isGoalBasedStreak true when eventsRequiredPerDay > 1")
     func testIsGoalBasedTrue() throws {
         // Given: Configuration with multiple events required per day
-        let config = StreakConfiguration(streakId: "test", eventsRequiredPerDay: 3)
+        let config = StreakConfiguration(streakKey: "test", eventsRequiredPerDay: 3)
 
         // Then: Should be goal-based
         #expect(config.isGoalBasedStreak == true)
@@ -287,7 +287,7 @@ struct StreakConfigurationTests {
     @Test("isGoalBasedStreak false when eventsRequiredPerDay = 1")
     func testIsGoalBasedFalse() throws {
         // Given: Configuration with single event required per day
-        let config = StreakConfiguration(streakId: "test", eventsRequiredPerDay: 1)
+        let config = StreakConfiguration(streakKey: "test", eventsRequiredPerDay: 1)
 
         // Then: Should not be goal-based
         #expect(config.isGoalBasedStreak == false)
@@ -296,7 +296,7 @@ struct StreakConfigurationTests {
     @Test("isStrictMode true when leewayHours = 0")
     func testIsStrictModeTrue() throws {
         // Given: Configuration with no leeway
-        let config = StreakConfiguration(streakId: "test", leewayHours: 0)
+        let config = StreakConfiguration(streakKey: "test", leewayHours: 0)
 
         // Then: Should be strict mode
         #expect(config.isStrictMode == true)
@@ -305,7 +305,7 @@ struct StreakConfigurationTests {
     @Test("isStrictMode false when leewayHours > 0")
     func testIsStrictModeFalse() throws {
         // Given: Configuration with leeway
-        let config = StreakConfiguration(streakId: "test", leewayHours: 3)
+        let config = StreakConfiguration(streakKey: "test", leewayHours: 3)
 
         // Then: Should not be strict mode
         #expect(config.isStrictMode == false)
@@ -314,7 +314,7 @@ struct StreakConfigurationTests {
     @Test("isTravelFriendly true when leewayHours >= 12")
     func testIsTravelFriendlyTrue() throws {
         // Given: Configuration with large leeway (exactly 12 hours)
-        let config = StreakConfiguration(streakId: "test", leewayHours: 12)
+        let config = StreakConfiguration(streakKey: "test", leewayHours: 12)
 
         // Then: Should be travel-friendly
         #expect(config.isTravelFriendly == true)
@@ -323,7 +323,7 @@ struct StreakConfigurationTests {
     @Test("isTravelFriendly false when leewayHours < 12")
     func testIsTravelFriendlyFalse() throws {
         // Given: Configuration with small leeway (11 hours)
-        let config = StreakConfiguration(streakId: "test", leewayHours: 11)
+        let config = StreakConfiguration(streakKey: "test", leewayHours: 11)
 
         // Then: Should not be travel-friendly
         #expect(config.isTravelFriendly == false)
@@ -335,14 +335,14 @@ struct StreakConfigurationTests {
     func testEquatableEqual() throws {
         // Given: Two configurations with identical values
         let config1 = StreakConfiguration(
-            streakId: "workout",
+            streakKey: "workout",
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
             autoConsumeFreeze: false
         )
         let config2 = StreakConfiguration(
-            streakId: "workout",
+            streakKey: "workout",
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
@@ -356,8 +356,8 @@ struct StreakConfigurationTests {
     @Test("Different streakId makes configurations unequal")
     func testEquatableUnequalStreakId() throws {
         // Given: Two configurations differing only in streakId
-        let config1 = StreakConfiguration(streakId: "workout")
-        let config2 = StreakConfiguration(streakId: "meditation")
+        let config1 = StreakConfiguration(streakKey: "workout")
+        let config2 = StreakConfiguration(streakKey: "meditation")
 
         // Then: Should not be equal
         #expect(config1 != config2)
@@ -366,8 +366,8 @@ struct StreakConfigurationTests {
     @Test("Different eventsRequiredPerDay makes configurations unequal")
     func testEquatableUnequalEventsRequired() throws {
         // Given: Two configurations differing only in eventsRequiredPerDay
-        let config1 = StreakConfiguration(streakId: "workout", eventsRequiredPerDay: 1)
-        let config2 = StreakConfiguration(streakId: "workout", eventsRequiredPerDay: 3)
+        let config1 = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 1)
+        let config2 = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
         // Then: Should not be equal
         #expect(config1 != config2)

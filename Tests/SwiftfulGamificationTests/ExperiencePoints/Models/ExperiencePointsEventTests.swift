@@ -18,7 +18,7 @@ struct ExperiencePointsEventTests {
     func testDefaultInitialization() throws {
         // When: Creating event with default parameters
         let before = Date()
-        let event = ExperiencePointsEvent(experienceId: "main", points: 100)
+        let event = ExperiencePointsEvent(experienceKey: "main", points: 100)
         let after = Date()
 
         // Then: Should generate UUID
@@ -50,7 +50,7 @@ struct ExperiencePointsEventTests {
         // When: Creating event with custom parameters
         let event = ExperiencePointsEvent(
             id: id,
-            experienceId: experienceId,
+            experienceKey: experienceId,
             timestamp: timestamp,
             points: points,
             metadata: metadata
@@ -58,7 +58,7 @@ struct ExperiencePointsEventTests {
 
         // Then: All properties should match provided values
         #expect(event.id == id)
-        #expect(event.experienceId == experienceId)
+        #expect(event.experienceKey == experienceId)
         #expect(event.timestamp == timestamp)
         #expect(event.points == points)
         #expect(event.metadata.count == 4)
@@ -76,7 +76,7 @@ struct ExperiencePointsEventTests {
         // Then: Should create valid event
         #expect(!event.id.isEmpty)
         #expect(UUID(uuidString: event.id) != nil)
-        #expect(event.experienceId == "main")
+        #expect(event.experienceKey == "main")
         #expect(event.points == 100)
         #expect(event.metadata["source"] == .string("test"))
         #expect(event.isValid == true)
@@ -89,11 +89,11 @@ struct ExperiencePointsEventTests {
         let experienceId = "quest"
 
         // When: Creating mock with specific date
-        let event = ExperiencePointsEvent.mock(date: specificDate, experienceId: experienceId, points: 500)
+        let event = ExperiencePointsEvent.mock(date: specificDate, experienceKey: experienceId, points: 500)
 
         // Then: Should use provided date
         #expect(event.timestamp == specificDate)
-        #expect(event.experienceId == experienceId)
+        #expect(event.experienceKey == experienceId)
         #expect(event.points == 500)
         #expect(!event.id.isEmpty)
         #expect(event.metadata["source"] == .string("test"))
@@ -105,7 +105,7 @@ struct ExperiencePointsEventTests {
         let daysAgo = 5
 
         // When: Creating mock with daysAgo
-        let event = ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceId: "main", points: 75)
+        let event = ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceKey: "main", points: 75)
 
         // Then: Should create event 5 days in the past
         let expectedDate = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
@@ -113,7 +113,7 @@ struct ExperiencePointsEventTests {
 
         // Allow small time difference (< 1 second) due to execution time
         #expect(timeDifference < 1.0)
-        #expect(event.experienceId == "main")
+        #expect(event.experienceKey == "main")
         #expect(event.points == 75)
         #expect(!event.id.isEmpty)
     }
@@ -126,7 +126,7 @@ struct ExperiencePointsEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = ExperiencePointsEvent(
             id: "xp-123",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: timestamp,
             points: 300,
             metadata: ["type": "bonus", "multiplier": 2]
@@ -151,7 +151,7 @@ struct ExperiencePointsEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = ExperiencePointsEvent(
             id: "xp-456",
-            experienceId: "battle",
+            experienceKey: "battle",
             timestamp: timestamp,
             points: 150,
             metadata: ["action": "complete", "score": 95]
@@ -165,7 +165,7 @@ struct ExperiencePointsEventTests {
 
         // Then: Should decode all fields correctly
         #expect(decoded.id == "xp-456")
-        #expect(decoded.experienceId == "battle")
+        #expect(decoded.experienceKey == "battle")
         #expect(decoded.timestamp == timestamp)
         #expect(decoded.points == 150)
         #expect(decoded.metadata.count == 2)
@@ -178,7 +178,7 @@ struct ExperiencePointsEventTests {
         // Given: Original event with complex metadata
         let original = ExperiencePointsEvent(
             id: "roundtrip-test",
-            experienceId: "quest",
+            experienceKey: "quest",
             timestamp: Date(timeIntervalSince1970: 1609459200),
             points: 500,
             metadata: [
@@ -198,7 +198,7 @@ struct ExperiencePointsEventTests {
         // Then: Should preserve all data
         #expect(decoded == original)
         #expect(decoded.id == original.id)
-        #expect(decoded.experienceId == original.experienceId)
+        #expect(decoded.experienceKey == original.experienceKey)
         #expect(decoded.timestamp == original.timestamp)
         #expect(decoded.points == original.points)
         #expect(decoded.metadata == original.metadata)
@@ -209,7 +209,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with various metadata types
         let original = ExperiencePointsEvent(
             id: "metadata-test",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: 200,
             metadata: [
@@ -240,7 +240,7 @@ struct ExperiencePointsEventTests {
         // Given: A valid event (recent timestamp, valid metadata keys, positive points)
         let event = ExperiencePointsEvent(
             id: "valid-id",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date().addingTimeInterval(-3600), // 1 hour ago
             points: 100,
             metadata: ["valid_key": "value", "another_key_123": 42]
@@ -259,7 +259,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with empty ID
         let event = ExperiencePointsEvent(
             id: "",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: 100,
             metadata: [:]
@@ -275,7 +275,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with negative points
         let event = ExperiencePointsEvent(
             id: "test",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: -50,
             metadata: [:]
@@ -291,7 +291,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with zero points
         let event = ExperiencePointsEvent(
             id: "test",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: 0,
             metadata: [:]
@@ -308,7 +308,7 @@ struct ExperiencePointsEventTests {
         let futureDate = Date().addingTimeInterval(3600) // 1 hour in future
         let event = ExperiencePointsEvent(
             id: "future-event",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: futureDate,
             points: 100,
             metadata: [:]
@@ -325,7 +325,7 @@ struct ExperiencePointsEventTests {
         let oldDate = Calendar.current.date(byAdding: .year, value: -2, to: Date())!
         let event = ExperiencePointsEvent(
             id: "old-event",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: oldDate,
             points: 100,
             metadata: [:]
@@ -341,7 +341,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with metadata keys containing special characters (not allowed in Firestore)
         let event = ExperiencePointsEvent(
             id: "invalid-metadata",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: 100,
             metadata: ["invalid-key": "value"] // Hyphen not allowed
@@ -360,7 +360,7 @@ struct ExperiencePointsEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = ExperiencePointsEvent(
             id: "analytics-test",
-            experienceId: "battle",
+            experienceKey: "battle",
             timestamp: timestamp,
             points: 500,
             metadata: ["type": "boss"]
@@ -382,7 +382,7 @@ struct ExperiencePointsEventTests {
         // Given: Event with various metadata types
         let event = ExperiencePointsEvent(
             id: "metadata-analytics",
-            experienceId: "quest",
+            experienceKey: "quest",
             timestamp: Date(),
             points: 250,
             metadata: [
@@ -406,10 +406,10 @@ struct ExperiencePointsEventTests {
     @Test("eventParameters includes metadata count")
     func testEventParametersMetadataCount() throws {
         // Given: Events with different metadata counts
-        let emptyEvent = ExperiencePointsEvent(id: "empty", experienceId: "main", timestamp: Date(), points: 50, metadata: [:])
+        let emptyEvent = ExperiencePointsEvent(id: "empty", experienceKey: "main", timestamp: Date(), points: 50, metadata: [:])
         let multiEvent = ExperiencePointsEvent(
             id: "multi",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: Date(),
             points: 100,
             metadata: ["a": 1, "b": 2, "c": 3]
@@ -432,14 +432,14 @@ struct ExperiencePointsEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event1 = ExperiencePointsEvent(
             id: "same-id",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: timestamp,
             points: 100,
             metadata: ["key": "value"]
         )
         let event2 = ExperiencePointsEvent(
             id: "same-id",
-            experienceId: "main",
+            experienceKey: "main",
             timestamp: timestamp,
             points: 100,
             metadata: ["key": "value"]
@@ -453,8 +453,8 @@ struct ExperiencePointsEventTests {
     func testEquatableUnequalId() throws {
         // Given: Two events differing only in ID
         let timestamp = Date()
-        let event1 = ExperiencePointsEvent(id: "id-1", experienceId: "main", timestamp: timestamp, points: 100, metadata: [:])
-        let event2 = ExperiencePointsEvent(id: "id-2", experienceId: "main", timestamp: timestamp, points: 100, metadata: [:])
+        let event1 = ExperiencePointsEvent(id: "id-1", experienceKey: "main", timestamp: timestamp, points: 100, metadata: [:])
+        let event2 = ExperiencePointsEvent(id: "id-2", experienceKey: "main", timestamp: timestamp, points: 100, metadata: [:])
 
         // Then: Should not be equal
         #expect(event1 != event2)
@@ -464,8 +464,8 @@ struct ExperiencePointsEventTests {
     func testEquatableUnequalPoints() throws {
         // Given: Two events differing only in points
         let timestamp = Date()
-        let event1 = ExperiencePointsEvent(id: "same-id", experienceId: "main", timestamp: timestamp, points: 100, metadata: [:])
-        let event2 = ExperiencePointsEvent(id: "same-id", experienceId: "main", timestamp: timestamp, points: 250, metadata: [:])
+        let event1 = ExperiencePointsEvent(id: "same-id", experienceKey: "main", timestamp: timestamp, points: 100, metadata: [:])
+        let event2 = ExperiencePointsEvent(id: "same-id", experienceKey: "main", timestamp: timestamp, points: 250, metadata: [:])
 
         // Then: Should not be equal
         #expect(event1 != event2)
@@ -476,8 +476,8 @@ struct ExperiencePointsEventTests {
         // Given: Two events differing only in timestamp
         let timestamp1 = Date(timeIntervalSince1970: 1609459200)
         let timestamp2 = Date(timeIntervalSince1970: 1609462800)
-        let event1 = ExperiencePointsEvent(id: "same-id", experienceId: "main", timestamp: timestamp1, points: 100, metadata: [:])
-        let event2 = ExperiencePointsEvent(id: "same-id", experienceId: "main", timestamp: timestamp2, points: 100, metadata: [:])
+        let event1 = ExperiencePointsEvent(id: "same-id", experienceKey: "main", timestamp: timestamp1, points: 100, metadata: [:])
+        let event2 = ExperiencePointsEvent(id: "same-id", experienceKey: "main", timestamp: timestamp2, points: 100, metadata: [:])
 
         // Then: Should not be equal
         #expect(event1 != event2)

@@ -24,7 +24,7 @@ struct MockLocalStreakPersistenceTests {
         let persistence = MockLocalStreakPersistence(streak: streak)
 
         // Then: Should store the streak
-        let saved = persistence.getSavedStreakData(streakId: streak.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: streak.streakKey)
         #expect(saved == streak)
     }
 
@@ -37,7 +37,7 @@ struct MockLocalStreakPersistenceTests {
         let persistence = MockLocalStreakPersistence(streak: initialStreak)
 
         // When: Getting saved streak
-        let saved = persistence.getSavedStreakData(streakId: initialStreak.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: initialStreak.streakKey)
 
         // Then: Should return initial streak
         #expect(saved == initialStreak)
@@ -51,10 +51,10 @@ struct MockLocalStreakPersistenceTests {
 
         // When: Saving new streak
         let newStreak = CurrentStreakData.mock(currentStreak: 10)
-        try persistence.saveCurrentStreakData(streakId: newStreak.streakId, newStreak)
+        try persistence.saveCurrentStreakData(streakKey: newStreak.streakKey, newStreak)
 
         // Then: Should return new streak
-        let saved = persistence.getSavedStreakData(streakId: newStreak.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: newStreak.streakKey)
         #expect(saved == newStreak)
         #expect(saved?.currentStreak == 10)
     }
@@ -64,15 +64,15 @@ struct MockLocalStreakPersistenceTests {
     @Test("saveStreakData persists new streak")
     func testSaveStreakDataPersists() throws {
         // Given: Persistence with blank streak
-        let blank = CurrentStreakData.blank(streakId: "test")
+        let blank = CurrentStreakData.blank(streakKey: "test")
         let persistence = MockLocalStreakPersistence(streak: blank)
 
         // When: Saving new streak data
         let newStreak = CurrentStreakData.mock(currentStreak: 15)
-        try persistence.saveCurrentStreakData(streakId: newStreak.streakId, newStreak)
+        try persistence.saveCurrentStreakData(streakKey: newStreak.streakKey, newStreak)
 
         // Then: New streak should be persisted
-        let saved = persistence.getSavedStreakData(streakId: newStreak.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: newStreak.streakKey)
         #expect(saved == newStreak)
     }
 
@@ -84,13 +84,13 @@ struct MockLocalStreakPersistenceTests {
 
         // When: Saving multiple times
         let streak1 = CurrentStreakData.mock(currentStreak: 10)
-        try persistence.saveCurrentStreakData(streakId: streak1.streakId, streak1)
+        try persistence.saveCurrentStreakData(streakKey: streak1.streakKey, streak1)
 
         let streak2 = CurrentStreakData.mock(currentStreak: 20)
-        try persistence.saveCurrentStreakData(streakId: streak2.streakId, streak2)
+        try persistence.saveCurrentStreakData(streakKey: streak2.streakKey, streak2)
 
         // Then: Only last streak should be saved
-        let saved = persistence.getSavedStreakData(streakId: streak2.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: streak2.streakKey)
         #expect(saved == streak2)
         #expect(saved?.currentStreak == 20)
     }
@@ -102,10 +102,10 @@ struct MockLocalStreakPersistenceTests {
         let persistence = MockLocalStreakPersistence(streak: initial)
 
         // When: Saving nil
-        try persistence.saveCurrentStreakData(streakId: initial.streakId, nil)
+        try persistence.saveCurrentStreakData(streakKey: initial.streakKey, nil)
 
         // Then: Should be cleared
-        let saved = persistence.getSavedStreakData(streakId: initial.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: initial.streakKey)
         #expect(saved == nil)
     }
 
@@ -114,17 +114,17 @@ struct MockLocalStreakPersistenceTests {
     @Test("Multiple saves preserve last value")
     func testMultipleSavesPreserveLast() throws {
         // Given: Persistence with blank streak
-        let blank = CurrentStreakData.blank(streakId: "workout")
+        let blank = CurrentStreakData.blank(streakKey: "workout")
         let persistence = MockLocalStreakPersistence(streak: blank)
 
         // When: Saving multiple streaks (all with same default "workout" streakId)
         for i in 1...5 {
             let streak = CurrentStreakData.mock(currentStreak: i)
-            try persistence.saveCurrentStreakData(streakId: streak.streakId, streak)
+            try persistence.saveCurrentStreakData(streakKey: streak.streakKey, streak)
         }
 
         // Then: Last streak should be saved (they all have same "workout" streakId from mock)
-        let saved = persistence.getSavedStreakData(streakId: "workout")
+        let saved = persistence.getSavedStreakData(streakKey: "workout")
         #expect(saved?.currentStreak == 5)
     }
 
@@ -135,9 +135,9 @@ struct MockLocalStreakPersistenceTests {
         let persistence = MockLocalStreakPersistence(streak: streak)
 
         // When: Getting saved data multiple times
-        let get1 = persistence.getSavedStreakData(streakId: streak.streakId)
-        let get2 = persistence.getSavedStreakData(streakId: streak.streakId)
-        let get3 = persistence.getSavedStreakData(streakId: streak.streakId)
+        let get1 = persistence.getSavedStreakData(streakKey: streak.streakKey)
+        let get2 = persistence.getSavedStreakData(streakKey: streak.streakKey)
+        let get3 = persistence.getSavedStreakData(streakKey: streak.streakKey)
 
         // Then: All should return same data
         #expect(get1 == streak)
@@ -150,17 +150,17 @@ struct MockLocalStreakPersistenceTests {
     @Test("Save and get maintain data consistency")
     func testSaveAndGetConsistency() throws {
         // Given: Persistence
-        let blank = CurrentStreakData.blank(streakId: "test")
+        let blank = CurrentStreakData.blank(streakKey: "test")
         let persistence = MockLocalStreakPersistence(streak: blank)
 
         // When: Performing multiple save/get cycles
         let streak1 = CurrentStreakData.mock(currentStreak: 3)
-        try persistence.saveCurrentStreakData(streakId: streak1.streakId, streak1)
-        let saved1 = persistence.getSavedStreakData(streakId: streak1.streakId)
+        try persistence.saveCurrentStreakData(streakKey: streak1.streakKey, streak1)
+        let saved1 = persistence.getSavedStreakData(streakKey: streak1.streakKey)
 
         let streak2 = CurrentStreakData.mock(currentStreak: 7)
-        try persistence.saveCurrentStreakData(streakId: streak2.streakId, streak2)
-        let saved2 = persistence.getSavedStreakData(streakId: streak2.streakId)
+        try persistence.saveCurrentStreakData(streakKey: streak2.streakKey, streak2)
+        let saved2 = persistence.getSavedStreakData(streakKey: streak2.streakKey)
 
         // Then: Each get should return correct streak
         #expect(saved1 == streak1)
@@ -170,30 +170,30 @@ struct MockLocalStreakPersistenceTests {
     @Test("Different streak IDs are stored separately")
     func testDifferentStreakIds() throws {
         // Given: Persistence with workout streak
-        let workoutStreak = CurrentStreakData.blank(streakId: "workout")
+        let workoutStreak = CurrentStreakData.blank(streakKey: "workout")
         let persistence = MockLocalStreakPersistence(streak: workoutStreak)
 
         // When: Saving reading streak
-        let readingStreak = CurrentStreakData.blank(streakId: "reading")
-        try persistence.saveCurrentStreakData(streakId: readingStreak.streakId, readingStreak)
+        let readingStreak = CurrentStreakData.blank(streakKey: "reading")
+        try persistence.saveCurrentStreakData(streakKey: readingStreak.streakKey, readingStreak)
 
         // Then: Both should be saved separately
-        let savedWorkout = persistence.getSavedStreakData(streakId: "workout")
-        let savedReading = persistence.getSavedStreakData(streakId: "reading")
+        let savedWorkout = persistence.getSavedStreakData(streakKey: "workout")
+        let savedReading = persistence.getSavedStreakData(streakKey: "reading")
 
-        #expect(savedWorkout?.streakId == "workout")
-        #expect(savedReading?.streakId == "reading")
+        #expect(savedWorkout?.streakKey == "workout")
+        #expect(savedReading?.streakKey == "reading")
     }
 
     @Test("Complex streak data is preserved")
     func testComplexStreakPreservation() throws {
         // Given: Persistence
-        let blank = CurrentStreakData.blank(streakId: "test")
+        let blank = CurrentStreakData.blank(streakKey: "test")
         let persistence = MockLocalStreakPersistence(streak: blank)
 
         // When: Saving complex streak with all fields
         let complexStreak = CurrentStreakData(
-            streakId: "complex",
+            streakKey: "complex",
             currentStreak: 25,
             longestStreak: 50,
             lastEventDate: Date(),
@@ -206,10 +206,10 @@ struct MockLocalStreakPersistenceTests {
             eventsRequiredPerDay: 3,
             todayEventCount: 2
         )
-        try persistence.saveCurrentStreakData(streakId: complexStreak.streakId, complexStreak)
+        try persistence.saveCurrentStreakData(streakKey: complexStreak.streakKey, complexStreak)
 
         // Then: All fields should be preserved
-        let saved = persistence.getSavedStreakData(streakId: complexStreak.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: complexStreak.streakKey)
         #expect(saved == complexStreak)
         #expect(saved?.currentStreak == 25)
         #expect(saved?.longestStreak == 50)
@@ -224,11 +224,11 @@ struct MockLocalStreakPersistenceTests {
         let persistence = MockLocalStreakPersistence(streak: activeStreak)
 
         // When: Saving blank streak
-        let blank = CurrentStreakData.blank(streakId: "workout")
-        try persistence.saveCurrentStreakData(streakId: blank.streakId, blank)
+        let blank = CurrentStreakData.blank(streakKey: "workout")
+        try persistence.saveCurrentStreakData(streakKey: blank.streakKey, blank)
 
         // Then: Blank streak should be saved
-        let saved = persistence.getSavedStreakData(streakId: blank.streakId)
+        let saved = persistence.getSavedStreakData(streakKey: blank.streakKey)
         #expect(saved == blank)
         #expect(saved?.currentStreak == 0)
         #expect(saved?.longestStreak == 0)

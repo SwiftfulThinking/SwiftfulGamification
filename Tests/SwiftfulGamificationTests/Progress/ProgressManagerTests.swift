@@ -23,7 +23,7 @@ struct ProgressManagerTests {
         let services = MockProgressServices(items: [])
 
         // When: Initializing manager
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // Then: Should have empty cache
         #expect(manager.getProgress(id: "any_id") == 0.0)
@@ -39,7 +39,7 @@ struct ProgressManagerTests {
         let services = MockProgressServices(items: items)
 
         // When: Initializing manager
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // Give async init time to complete
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -55,7 +55,7 @@ struct ProgressManagerTests {
     func testGetProgressNonExistent() throws {
         // Given: Manager with no items
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // When: Getting non-existent progress
         let value = manager.getProgress(id: "non_existent")
@@ -69,7 +69,7 @@ struct ProgressManagerTests {
         // Given: Manager with cached items
         let items = [ProgressItem.mock(id: "item1", value: 0.65)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // Give async init time to load cache
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -86,7 +86,7 @@ struct ProgressManagerTests {
         // Given: Manager with items
         let items = [ProgressItem.mock(id: "sync_test", value: 0.5)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // Give async init time to load cache
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -112,10 +112,10 @@ struct ProgressManagerTests {
 
         // Add items to remote
         for item in remoteItems {
-            try await remote.updateProgress(userId: "user123", item: item)
+            try await remote.addProgress(userId: "user123", progressKey: "default", item: item)
         }
 
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // When: Logging in
         try await manager.logIn(userId: "user123")
@@ -133,7 +133,7 @@ struct ProgressManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services, logger: logger)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"), logger: logger)
 
         // When: Logging in
         try await manager.logIn(userId: "user123")
@@ -152,7 +152,7 @@ struct ProgressManagerTests {
         // Given: Manager with items and logged in
         let items = [ProgressItem.mock(id: "item1", value: 0.5)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Logging out
@@ -162,68 +162,68 @@ struct ProgressManagerTests {
         #expect(manager.getProgress(id: "item1") == 0.0)
     }
 
-    // MARK: - updateProgress Tests
+    // MARK: - addProgress Tests
 
-    @Test("updateProgress requires login")
+    @Test("addProgress requires login")
     func testUpdateProgressRequiresLogin() async throws {
         // Given: Manager not logged in
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // When/Then: Updating should throw
         await #expect(throws: ProgressError.self) {
-            try await manager.updateProgress(id: "item1", value: 0.5)
+            try await manager.addProgress(id: "item1", value: 0.5)
         }
     }
 
-    @Test("updateProgress validates value range")
+    @Test("addProgress validates value range")
     func testUpdateProgressValidatesRange() async throws {
         // Given: Logged in manager
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When/Then: Negative value should throw
         await #expect(throws: ProgressError.self) {
-            try await manager.updateProgress(id: "item1", value: -0.1)
+            try await manager.addProgress(id: "item1", value: -0.1)
         }
 
         // When/Then: Value > 1.0 should throw
         await #expect(throws: ProgressError.self) {
-            try await manager.updateProgress(id: "item1", value: 1.1)
+            try await manager.addProgress(id: "item1", value: 1.1)
         }
     }
 
-    @Test("updateProgress accepts valid range")
+    @Test("addProgress accepts valid range")
     func testUpdateProgressValidRange() async throws {
         // Given: Logged in manager
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating with 0.0
-        try await manager.updateProgress(id: "item1", value: 0.0)
+        try await manager.addProgress(id: "item1", value: 0.0)
 
         // Then: Should succeed
         #expect(manager.getProgress(id: "item1") == 0.0)
 
         // When: Updating with 1.0
-        try await manager.updateProgress(id: "item2", value: 1.0)
+        try await manager.addProgress(id: "item2", value: 1.0)
 
         // Then: Should succeed
         #expect(manager.getProgress(id: "item2") == 1.0)
     }
 
-    @Test("updateProgress updates cache optimistically")
+    @Test("addProgress updates cache optimistically")
     func testUpdateProgressOptimistic() async throws {
         // Given: Logged in manager
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating progress
         let updateTask = Task {
-            try await manager.updateProgress(id: "item1", value: 0.75)
+            try await manager.addProgress(id: "item1", value: 0.75)
         }
 
         // Then: Cache should be updated immediately (before remote completes)
@@ -234,91 +234,91 @@ struct ProgressManagerTests {
         try await updateTask.value
     }
 
-    @Test("updateProgress saves to local storage")
+    @Test("addProgress saves to local storage")
     func testUpdateProgressSavesLocal() async throws {
         // Given: Logged in manager
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating progress
-        try await manager.updateProgress(id: "item1", value: 0.55)
+        try await manager.addProgress(id: "item1", value: 0.55)
 
         // Then: Should save to local storage
         let local = services.local
-        let savedItem = local.getProgressItem(id: "item1")
+        let savedItem = local.getProgressItem(progressKey: "default", id: "item1")
         #expect(savedItem?.value == 0.55)
     }
 
-    @Test("updateProgress saves to remote")
+    @Test("addProgress saves to remote")
     func testUpdateProgressSavesRemote() async throws {
         // Given: Logged in manager
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating progress
-        try await manager.updateProgress(id: "item1", value: 0.45)
+        try await manager.addProgress(id: "item1", value: 0.45)
 
         // Then: Should save to remote
         let remote = services.remote
-        let remoteItems = try await remote.getAllProgressItems(userId: "user123")
+        let remoteItems = try await remote.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(remoteItems.contains(where: { $0.id == "item1" && $0.value == 0.45 }))
     }
 
-    @Test("updateProgress preserves dateCreated for existing items")
+    @Test("addProgress preserves dateCreated for existing items")
     func testUpdateProgressPreservesDateCreated() async throws {
         // Given: Manager with existing item
         let originalDate = Date(timeIntervalSince1970: 1609459200)
-        let existingItem = ProgressItem(id: "item1", value: 0.3, dateCreated: originalDate, dateModified: originalDate)
+        let existingItem = ProgressItem(id: "item1", progressKey: "default", value: 0.3, dateCreated: originalDate, dateModified: originalDate)
         let services = MockProgressServices(items: [existingItem])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating the item
-        try await manager.updateProgress(id: "item1", value: 0.7)
+        try await manager.addProgress(id: "item1", value: 0.7)
 
         // Then: Should preserve original dateCreated
         let local = services.local
-        let updatedItem = local.getProgressItem(id: "item1")
+        let updatedItem = local.getProgressItem(progressKey: "default", id: "item1")
         #expect(updatedItem?.dateCreated == originalDate)
     }
 
-    @Test("updateProgress updates dateModified")
+    @Test("addProgress updates dateModified")
     func testUpdateProgressUpdatesDateModified() async throws {
         // Given: Manager with existing item
         let oldDate = Date(timeIntervalSince1970: 1609459200)
-        let existingItem = ProgressItem(id: "item1", value: 0.3, dateCreated: oldDate, dateModified: oldDate)
+        let existingItem = ProgressItem(id: "item1", progressKey: "default", value: 0.3, dateCreated: oldDate, dateModified: oldDate)
         let services = MockProgressServices(items: [existingItem])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Updating the item
         let before = Date()
-        try await manager.updateProgress(id: "item1", value: 0.7)
+        try await manager.addProgress(id: "item1", value: 0.7)
         let after = Date()
 
         // Then: Should update dateModified to current time
         let local = services.local
-        let updatedItem = local.getProgressItem(id: "item1")
+        let updatedItem = local.getProgressItem(progressKey: "default", id: "item1")
         #expect(updatedItem?.dateModified ?? Date.distantPast >= before)
         #expect(updatedItem?.dateModified ?? Date.distantFuture <= after)
     }
 
-    @Test("updateProgress logs events")
+    @Test("addProgress logs events")
     func testUpdateProgressLogsEvents() async throws {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services, logger: logger)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"), logger: logger)
         try await manager.logIn(userId: "user123")
 
         // When: Updating progress
-        try await manager.updateProgress(id: "item1", value: 0.6)
+        try await manager.addProgress(id: "item1", value: 0.6)
 
         // Then: Should log start and success events
-        #expect(logger.trackedEvents.contains("ProgressMan_UpdateProgress_Start"))
-        #expect(logger.trackedEvents.contains("ProgressMan_UpdateProgress_Success"))
+        #expect(logger.trackedEvents.contains("ProgressMan_AddProgress_Start"))
+        #expect(logger.trackedEvents.contains("ProgressMan_AddProgress_Success"))
     }
 
     // MARK: - deleteProgress Tests
@@ -327,7 +327,7 @@ struct ProgressManagerTests {
     func testDeleteProgressRequiresLogin() async throws {
         // Given: Manager not logged in
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // When/Then: Deleting should throw
         await #expect(throws: ProgressError.self) {
@@ -340,7 +340,7 @@ struct ProgressManagerTests {
         // Given: Manager with item
         let items = [ProgressItem.mock(id: "item1", value: 0.5)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting progress
@@ -355,7 +355,7 @@ struct ProgressManagerTests {
         // Given: Manager with item
         let items = [ProgressItem.mock(id: "item1", value: 0.5)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting progress
@@ -363,7 +363,7 @@ struct ProgressManagerTests {
 
         // Then: Should remove from local storage
         let local = services.local
-        #expect(local.getProgressItem(id: "item1") == nil)
+        #expect(local.getProgressItem(progressKey: "default", id: "item1") == nil)
     }
 
     @Test("deleteProgress removes from remote")
@@ -371,7 +371,7 @@ struct ProgressManagerTests {
         // Given: Manager with item
         let items = [ProgressItem.mock(id: "item1", value: 0.5)]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting progress
@@ -379,7 +379,7 @@ struct ProgressManagerTests {
 
         // Then: Should remove from remote
         let remote = services.remote
-        let remoteItems = try await remote.getAllProgressItems(userId: "user123")
+        let remoteItems = try await remote.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(!remoteItems.contains(where: { $0.id == "item1" }))
     }
 
@@ -389,7 +389,7 @@ struct ProgressManagerTests {
     func testDeleteAllProgressRequiresLogin() async throws {
         // Given: Manager not logged in
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
 
         // When/Then: Deleting all should throw
         await #expect(throws: ProgressError.self) {
@@ -405,7 +405,7 @@ struct ProgressManagerTests {
             ProgressItem.mock(id: "item2", value: 0.7)
         ]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting all progress
@@ -424,7 +424,7 @@ struct ProgressManagerTests {
             ProgressItem.mock(id: "item2", value: 0.7)
         ]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting all progress
@@ -432,7 +432,7 @@ struct ProgressManagerTests {
 
         // Then: Local storage should be empty
         let local = services.local
-        #expect(local.getAllProgressItems().isEmpty)
+        #expect(local.getAllProgressItems(progressKey: "default").isEmpty)
     }
 
     @Test("deleteAllProgress clears remote")
@@ -443,7 +443,7 @@ struct ProgressManagerTests {
             ProgressItem.mock(id: "item2", value: 0.7)
         ]
         let services = MockProgressServices(items: items)
-        let manager = ProgressManager(services: services)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"))
         try await manager.logIn(userId: "user123")
 
         // When: Deleting all progress
@@ -451,7 +451,7 @@ struct ProgressManagerTests {
 
         // Then: Remote should be empty
         let remote = services.remote
-        let remoteItems = try await remote.getAllProgressItems(userId: "user123")
+        let remoteItems = try await remote.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(remoteItems.isEmpty)
     }
 
@@ -463,9 +463,9 @@ struct ProgressManagerTests {
         let logger = MockGamificationLogger()
         let services = MockProgressServices(items: [])
         let remote = services.remote as! MockRemoteProgressService
-        try await remote.updateProgress(userId: "user123", item: ProgressItem.mock(id: "item1", value: 0.5))
+        try await remote.addProgress(userId: "user123", progressKey: "default", item: ProgressItem.mock(id: "item1", value: 0.5))
 
-        let manager = ProgressManager(services: services, logger: logger)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"), logger: logger)
 
         // When: Logging in (triggers bulk load)
         try await manager.logIn(userId: "user123")
@@ -483,7 +483,7 @@ struct ProgressManagerTests {
         // Given: Manager with logger and item
         let logger = MockGamificationLogger()
         let services = MockProgressServices(items: [ProgressItem.mock(id: "item1", value: 0.5)])
-        let manager = ProgressManager(services: services, logger: logger)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"), logger: logger)
         try await manager.logIn(userId: "user123")
 
         // Clear previous events
@@ -502,7 +502,7 @@ struct ProgressManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockProgressServices(items: [])
-        let manager = ProgressManager(services: services, logger: logger)
+        let manager = ProgressManager(services: services, configuration: ProgressConfiguration(progressKey: "default"), logger: logger)
         try await manager.logIn(userId: "user123")
 
         // Clear previous events

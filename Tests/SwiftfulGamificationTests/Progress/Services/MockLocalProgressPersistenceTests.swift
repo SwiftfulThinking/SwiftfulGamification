@@ -21,7 +21,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence()
 
         // Then: Should return empty array
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.isEmpty)
     }
 
@@ -37,7 +37,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // Then: Should return all items
-        let retrieved = persistence.getAllProgressItems()
+        let retrieved = persistence.getAllProgressItems(progressKey: "default")
         #expect(retrieved.count == 2)
         #expect(retrieved.contains(where: { $0.id == "item1" }))
         #expect(retrieved.contains(where: { $0.id == "item2" }))
@@ -55,7 +55,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Getting item by id
-        let item = persistence.getProgressItem(id: "item1")
+        let item = persistence.getProgressItem(progressKey: "default", id: "item1")
 
         // Then: Should return correct item
         #expect(item?.id == "item1")
@@ -68,7 +68,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: [ProgressItem.mock(id: "item1")])
 
         // When: Getting non-existent item
-        let item = persistence.getProgressItem(id: "non_existent")
+        let item = persistence.getProgressItem(progressKey: "default", id: "non_existent")
 
         // Then: Should return nil
         #expect(item == nil)
@@ -87,7 +87,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Getting all items
-        let retrieved = persistence.getAllProgressItems()
+        let retrieved = persistence.getAllProgressItems(progressKey: "default")
 
         // Then: Should return all items
         #expect(retrieved.count == 3)
@@ -99,7 +99,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence()
 
         // When: Getting all items
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
 
         // Then: Should return empty array
         #expect(items.isEmpty)
@@ -117,7 +117,7 @@ struct MockLocalProgressPersistenceTests {
         try persistence.saveProgressItem(item)
 
         // Then: Should add the item
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.count == 1)
         #expect(items.first?.id == "new_item")
         #expect(items.first?.value == 0.6)
@@ -130,11 +130,11 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: [original])
 
         // When: Saving item with same id but different value
-        let updated = ProgressItem(id: "item1", value: 0.8)
+        let updated = ProgressItem(id: "item1", progressKey: "default", value: 0.8)
         try persistence.saveProgressItem(updated)
 
         // Then: Should update the value
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.count == 1)
         #expect(items.first?.value == 0.8)
     }
@@ -154,7 +154,7 @@ struct MockLocalProgressPersistenceTests {
         try persistence.saveProgressItems(items)
 
         // Then: Should add all items
-        let saved = persistence.getAllProgressItems()
+        let saved = persistence.getAllProgressItems(progressKey: "default")
         #expect(saved.count == 2)
     }
 
@@ -166,13 +166,13 @@ struct MockLocalProgressPersistenceTests {
 
         // When: Saving batch with one update and one new item
         let items = [
-            ProgressItem(id: "item1", value: 0.8),
+            ProgressItem(id: "item1", progressKey: "default", value: 0.8),
             ProgressItem.mock(id: "item2", value: 0.5)
         ]
         try persistence.saveProgressItems(items)
 
         // Then: Should have both items with correct values
-        let saved = persistence.getAllProgressItems()
+        let saved = persistence.getAllProgressItems(progressKey: "default")
         #expect(saved.count == 2)
         #expect(saved.first(where: { $0.id == "item1" })?.value == 0.8)
         #expect(saved.first(where: { $0.id == "item2" })?.value == 0.5)
@@ -187,7 +187,7 @@ struct MockLocalProgressPersistenceTests {
         try persistence.saveProgressItems([])
 
         // Then: Should not affect existing items
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.count == 1)
     }
 
@@ -203,10 +203,10 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Deleting one item
-        try persistence.deleteProgressItem(id: "item1")
+        try persistence.deleteProgressItem(progressKey: "default", id: "item1")
 
         // Then: Should remove only that item
-        let remaining = persistence.getAllProgressItems()
+        let remaining = persistence.getAllProgressItems(progressKey: "default")
         #expect(remaining.count == 1)
         #expect(remaining.first?.id == "item2")
     }
@@ -217,10 +217,10 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: [ProgressItem.mock(id: "item1")])
 
         // When: Deleting non-existent item
-        try persistence.deleteProgressItem(id: "non_existent")
+        try persistence.deleteProgressItem(progressKey: "default", id: "non_existent")
 
         // Then: Should not throw and keep existing items
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.count == 1)
     }
 
@@ -237,10 +237,10 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Deleting all items
-        try persistence.deleteAllProgressItems()
+        try persistence.deleteAllProgressItems(progressKey: "default")
 
         // Then: Should remove all items
-        let remaining = persistence.getAllProgressItems()
+        let remaining = persistence.getAllProgressItems(progressKey: "default")
         #expect(remaining.isEmpty)
     }
 
@@ -250,10 +250,10 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence()
 
         // When: Deleting all items
-        try persistence.deleteAllProgressItems()
+        try persistence.deleteAllProgressItems(progressKey: "default")
 
         // Then: Should not throw
-        let items = persistence.getAllProgressItems()
+        let items = persistence.getAllProgressItems(progressKey: "default")
         #expect(items.isEmpty)
     }
 }

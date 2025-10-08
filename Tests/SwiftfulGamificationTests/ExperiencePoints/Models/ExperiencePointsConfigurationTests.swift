@@ -20,10 +20,10 @@ struct ExperiencePointsConfigurationTests {
         let experienceId = "main"
 
         // When: Initializing with only the experience ID (using default parameters)
-        let config = ExperiencePointsConfiguration(experienceId: experienceId)
+        let config = ExperiencePointsConfiguration(experienceKey: experienceId)
 
         // Then: Should create configuration with default values
-        #expect(config.experienceId == experienceId)
+        #expect(config.experienceKey == experienceId)
         #expect(config.useServerCalculation == false)
     }
 
@@ -35,12 +35,12 @@ struct ExperiencePointsConfigurationTests {
 
         // When: Initializing with all custom parameters
         let config = ExperiencePointsConfiguration(
-            experienceId: experienceId,
+            experienceKey: experienceId,
             useServerCalculation: useServerCalculation
         )
 
         // Then: All properties should match the provided values
-        #expect(config.experienceId == experienceId)
+        #expect(config.experienceKey == experienceId)
         #expect(config.useServerCalculation == useServerCalculation)
     }
 
@@ -52,7 +52,7 @@ struct ExperiencePointsConfigurationTests {
         let config = ExperiencePointsConfiguration.mock()
 
         // Then: Should create valid configuration
-        #expect(config.experienceId == "main")
+        #expect(config.experienceKey == "main")
         #expect(config.useServerCalculation == false)
     }
 
@@ -62,7 +62,7 @@ struct ExperiencePointsConfigurationTests {
         let config = ExperiencePointsConfiguration.mockBasic()
 
         // Then: Should create basic XP configuration
-        #expect(config.experienceId == "main")
+        #expect(config.experienceKey == "main")
         #expect(config.useServerCalculation == false)
     }
 
@@ -72,7 +72,7 @@ struct ExperiencePointsConfigurationTests {
         let config = ExperiencePointsConfiguration.mockServerCalculation()
 
         // Then: Should create server-calculated configuration
-        #expect(config.experienceId == "main")
+        #expect(config.experienceKey == "main")
         #expect(config.useServerCalculation == true)
     }
 
@@ -82,7 +82,7 @@ struct ExperiencePointsConfigurationTests {
     func testEncodesToSnakeCase() throws {
         // Given: A configuration with known values
         let config = ExperiencePointsConfiguration(
-            experienceId: "battle",
+            experienceKey: "battle",
             useServerCalculation: true
         )
 
@@ -117,7 +117,7 @@ struct ExperiencePointsConfigurationTests {
         let config = try decoder.decode(ExperiencePointsConfiguration.self, from: data)
 
         // Then: Should decode all properties correctly
-        #expect(config.experienceId == "quest")
+        #expect(config.experienceKey == "quest")
         #expect(config.useServerCalculation == true)
     }
 
@@ -125,7 +125,7 @@ struct ExperiencePointsConfigurationTests {
     func testRoundtripPreservesData() throws {
         // Given: Original configuration
         let original = ExperiencePointsConfiguration(
-            experienceId: "arena",
+            experienceKey: "arena",
             useServerCalculation: false
         )
 
@@ -137,7 +137,7 @@ struct ExperiencePointsConfigurationTests {
 
         // Then: Should preserve all data
         #expect(decoded == original)
-        #expect(decoded.experienceId == original.experienceId)
+        #expect(decoded.experienceKey == original.experienceKey)
         #expect(decoded.useServerCalculation == original.useServerCalculation)
     }
 
@@ -147,11 +147,11 @@ struct ExperiencePointsConfigurationTests {
     func testEquatableEqual() throws {
         // Given: Two configurations with identical values
         let config1 = ExperiencePointsConfiguration(
-            experienceId: "main",
+            experienceKey: "main",
             useServerCalculation: true
         )
         let config2 = ExperiencePointsConfiguration(
-            experienceId: "main",
+            experienceKey: "main",
             useServerCalculation: true
         )
 
@@ -162,8 +162,8 @@ struct ExperiencePointsConfigurationTests {
     @Test("Different experienceId makes configurations unequal")
     func testEquatableUnequalExperienceId() throws {
         // Given: Two configurations differing only in experienceId
-        let config1 = ExperiencePointsConfiguration(experienceId: "main")
-        let config2 = ExperiencePointsConfiguration(experienceId: "battle")
+        let config1 = ExperiencePointsConfiguration(experienceKey: "main")
+        let config2 = ExperiencePointsConfiguration(experienceKey: "battle")
 
         // Then: Should not be equal
         #expect(config1 != config2)
@@ -172,8 +172,8 @@ struct ExperiencePointsConfigurationTests {
     @Test("Different useServerCalculation makes configurations unequal")
     func testEquatableUnequalServerCalculation() throws {
         // Given: Two configurations differing only in useServerCalculation
-        let config1 = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
-        let config2 = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config1 = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
+        let config2 = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
 
         // Then: Should not be equal
         #expect(config1 != config2)

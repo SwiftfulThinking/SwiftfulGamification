@@ -18,7 +18,7 @@ struct ExperiencePointsCalculatorTests {
     func testCalculatesZeroXPNoEvents() throws {
         // Given: Empty event array
         let events: [ExperiencePointsEvent] = []
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -35,9 +35,9 @@ struct ExperiencePointsCalculatorTests {
     func testCalculatesXPForSingleEvent() throws {
         // Given: One event with 100 points
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 100)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -54,13 +54,13 @@ struct ExperiencePointsCalculatorTests {
     func testCalculatesSumOfMultipleEvents() throws {
         // Given: 5 events with different point values
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 100),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 250),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 50),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 300),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 75)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 250),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 50),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 300),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 75)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -77,11 +77,11 @@ struct ExperiencePointsCalculatorTests {
     func testHandlesZeroPointEvents() throws {
         // Given: Events including zero-point events
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 100),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 0),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 50)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 0),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 50)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -98,11 +98,11 @@ struct ExperiencePointsCalculatorTests {
     func testHandlesLargePointValues() throws {
         // Given: Events with large point values
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 10000),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 25000),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 50000)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 10000),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 25000),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 50000)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -121,10 +121,10 @@ struct ExperiencePointsCalculatorTests {
     func testGetTotalPointsForMetadata() throws {
         // Given: Events with different metadata
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 100, metadata: ["source": .string("quest")]),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 200, metadata: ["source": .string("battle")]),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 150, metadata: ["source": .string("quest")]),
-            ExperiencePointsEvent.mock(experienceId: "main", points: 300, metadata: ["source": .string("daily")])
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100, metadata: ["source": .string("quest")]),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 200, metadata: ["source": .string("battle")]),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 150, metadata: ["source": .string("quest")]),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 300, metadata: ["source": .string("daily")])
         ]
 
         // When: Getting total points for "quest" source
@@ -142,7 +142,7 @@ struct ExperiencePointsCalculatorTests {
     func testHandlesEmptyEventArray() throws {
         // Given: Empty events
         let events: [ExperiencePointsEvent] = []
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -153,7 +153,7 @@ struct ExperiencePointsCalculatorTests {
         // Then: Returns blank XP data
         #expect(result.totalPoints == 0)
         #expect(result.totalEvents == 0)
-        #expect(result.experienceId == "main")
+        #expect(result.experienceKey == "main")
     }
 
     @Test("Handles events sorted in random order")
@@ -161,12 +161,12 @@ struct ExperiencePointsCalculatorTests {
         // Given: Events in random order
         let now = Date()
         let events = [
-            ExperiencePointsEvent.mock(id: "3", experienceId: "main", timestamp: now.addingTimeInterval(-172800), points: 75),
-            ExperiencePointsEvent.mock(id: "1", experienceId: "main", timestamp: now, points: 100),
-            ExperiencePointsEvent.mock(id: "4", experienceId: "main", timestamp: now.addingTimeInterval(-259200), points: 50),
-            ExperiencePointsEvent.mock(id: "2", experienceId: "main", timestamp: now.addingTimeInterval(-86400), points: 200)
+            ExperiencePointsEvent.mock(id: "3", experienceKey: "main", timestamp: now.addingTimeInterval(-172800), points: 75),
+            ExperiencePointsEvent.mock(id: "1", experienceKey: "main", timestamp: now, points: 100),
+            ExperiencePointsEvent.mock(id: "4", experienceKey: "main", timestamp: now.addingTimeInterval(-259200), points: 50),
+            ExperiencePointsEvent.mock(id: "2", experienceKey: "main", timestamp: now.addingTimeInterval(-86400), points: 200)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -185,9 +185,9 @@ struct ExperiencePointsCalculatorTests {
     func testHandlesSingleLargeValue() throws {
         // Given: Single event with large point value
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 1000000)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 1000000)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -204,9 +204,9 @@ struct ExperiencePointsCalculatorTests {
     func testHandlesVeryLongEventList() throws {
         // Given: 1000 events
         let events = (0..<1000).map { i in
-            ExperiencePointsEvent.mock(experienceId: "main", points: 10)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 10)
         }
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -223,9 +223,9 @@ struct ExperiencePointsCalculatorTests {
     func testReturnsCorrectExperienceId() throws {
         // Given: Events for specific experienceId
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "battle", points: 500)
+            ExperiencePointsEvent.mock(experienceKey: "battle", points: 500)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "battle")
+        let config = ExperiencePointsConfiguration(experienceKey: "battle")
 
         // When: Calculating XP
         let result = ExperiencePointsCalculator.calculateExperiencePoints(
@@ -234,16 +234,16 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Result should have correct experienceId
-        #expect(result.experienceId == "battle")
+        #expect(result.experienceKey == "battle")
     }
 
     @Test("Sets updatedAt timestamp in result")
     func testSetsUpdatedAtTimestamp() throws {
         // Given: Events
         let events = [
-            ExperiencePointsEvent.mock(experienceId: "main", points: 100)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100)
         ]
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let beforeCalculation = Date()
 
         // When: Calculating XP
@@ -268,9 +268,9 @@ struct ExperiencePointsCalculatorTests {
     func testPerformanceWith10000Events() throws {
         // Given: 10000 events
         let events = (0..<10000).map { i in
-            ExperiencePointsEvent.mock(experienceId: "main", points: i % 100)
+            ExperiencePointsEvent.mock(experienceKey: "main", points: i % 100)
         }
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Calculating XP (measure performance)
         let startTime = Date()

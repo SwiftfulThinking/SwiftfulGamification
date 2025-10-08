@@ -50,13 +50,13 @@ struct StreakManagerTests {
     func testInitializationWithBlankStreak() async throws {
         // Given: Local cache returns nil
         let services = MockStreakServices(streak: nil)
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
 
         // When: Initializing manager
         let manager = StreakManager(services: services, configuration: config)
 
         // Then: Should have blank streak
-        #expect(manager.currentStreakData.streakId == "workout")
+        #expect(manager.currentStreakData.streakKey == "workout")
         #expect(manager.currentStreakData.currentStreak == 0)
         #expect(manager.currentStreakData.totalEvents == 0)
     }
@@ -70,9 +70,9 @@ struct StreakManagerTests {
             let local: LocalStreakPersistence
         }
         let local = MockLocalStreakPersistence(streak: savedStreak)
-        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakId: "workout"))
+        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakKey: "workout"))
         let services = TestServices(remote: remote, local: local)
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
 
         // When: Initializing manager
         let manager = StreakManager(services: services, configuration: config)
@@ -85,21 +85,21 @@ struct StreakManagerTests {
     @Test("Manager handles local cache with mismatched streakId")
     func testInitializationWithMismatchedStreakId() async throws {
         // Given: Local cache has streak for different streakId
-        let savedStreak = CurrentStreakData.mock(streakId: "reading", currentStreak: 5)
+        let savedStreak = CurrentStreakData.mock(streakKey: "reading", currentStreak: 5)
         struct TestServices: StreakServices {
             let remote: RemoteStreakService
             let local: LocalStreakPersistence
         }
         let local = MockLocalStreakPersistence(streak: savedStreak)
-        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakId: "workout"))
+        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakKey: "workout"))
         let services = TestServices(remote: remote, local: local)
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
 
         // When: Initializing manager
         let manager = StreakManager(services: services, configuration: config)
 
         // Then: Manager loads blank streak for "workout" since "reading" doesn't match
-        #expect(manager.currentStreakData.streakId == "workout")
+        #expect(manager.currentStreakData.streakKey == "workout")
         #expect(manager.currentStreakData.currentStreak == 0)
     }
 
@@ -110,7 +110,7 @@ struct StreakManagerTests {
         // Given: Manager with mock services
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock())
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -129,7 +129,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -148,7 +148,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -167,7 +167,7 @@ struct StreakManagerTests {
         let initialStreak = CurrentStreakData.mock(currentStreak: 5)
         let services = MockStreakServices(streak: initialStreak)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -177,7 +177,7 @@ struct StreakManagerTests {
         manager.logOut()
 
         // Then: Streak data should be reset to blank
-        #expect(manager.currentStreakData.streakId == "workout")
+        #expect(manager.currentStreakData.streakKey == "workout")
         #expect(manager.currentStreakData.currentStreak == 0)
         #expect(manager.currentStreakData.totalEvents == 0)
     }
@@ -187,7 +187,7 @@ struct StreakManagerTests {
         // Given: Manager already logged in
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock())
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user1")
@@ -208,7 +208,7 @@ struct StreakManagerTests {
         // Given: Manager with active stream
         let services = MockStreakServices(streak: .mock())
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -226,10 +226,10 @@ struct StreakManagerTests {
     @Test("Adding streak event updates currentStreakData (client mode)")
     func testAddStreakEventUpdatesDataClientMode() async throws {
         // Given: Manager in client calculation mode with initial streak
-        let initialStreak = CurrentStreakData.blank(streakId: "workout")
+        let initialStreak = CurrentStreakData.blank(streakKey: "workout")
         let services = MockStreakServices(streak: initialStreak)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -252,7 +252,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -276,7 +276,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -299,7 +299,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -327,7 +327,7 @@ struct StreakManagerTests {
         let initialStreak = CurrentStreakData.mock(currentStreak: 5)
         let services = MockStreakServices(streak: initialStreak)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -335,7 +335,7 @@ struct StreakManagerTests {
 
         // When: Remote updates streak
         let newStreak = CurrentStreakData.mock(currentStreak: 10)
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: newStreak)
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: newStreak)
 
         // Give listener time to receive update
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -351,7 +351,7 @@ struct StreakManagerTests {
         let services = MockStreakServices(streak: initialStreak)
         let remote = services.remote as! MockRemoteStreakService
         let local = services.local as! MockLocalStreakPersistence
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -359,12 +359,12 @@ struct StreakManagerTests {
 
         // When: Remote updates streak
         let newStreak = CurrentStreakData.mock(currentStreak: 15)
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: newStreak)
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: newStreak)
 
         try await Task.sleep(nanoseconds: 100_000_000) // Wait for save
 
         // Then: Local cache should have updated data
-        let saved = local.getSavedStreakData(streakId: "workout")
+        let saved = local.getSavedStreakData(streakKey: "workout")
         #expect(saved?.currentStreak == 15)
     }
 
@@ -373,7 +373,7 @@ struct StreakManagerTests {
         // Given: Remote that will emit error (stream ends after initial value)
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock())
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Login (stream will eventually end/error)
@@ -391,7 +391,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock(currentStreak: 1))
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -400,11 +400,11 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Sending multiple rapid updates
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: CurrentStreakData.mock(currentStreak: 2))
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: CurrentStreakData.mock(currentStreak: 2))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: CurrentStreakData.mock(currentStreak: 3))
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: CurrentStreakData.mock(currentStreak: 3))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: CurrentStreakData.mock(currentStreak: 4))
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: CurrentStreakData.mock(currentStreak: 4))
         try await Task.sleep(nanoseconds: 20_000_000)
 
         // Then: All updates should be received
@@ -420,7 +420,7 @@ struct StreakManagerTests {
         // Given: Manager
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Adding freeze
@@ -428,7 +428,7 @@ struct StreakManagerTests {
         try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
 
         // Then: Freeze should be added to remote
-        let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakId: "workout")
+        let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakKey: "workout")
         #expect(freezes.count == 1)
         #expect(freezes.first?.id == "freeze-1")
     }
@@ -438,9 +438,9 @@ struct StreakManagerTests {
         // Given: Manager with freezes in remote
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
-        let config = StreakConfiguration(streakId: "workout")
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Getting all freezes
@@ -456,8 +456,8 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -484,13 +484,13 @@ struct StreakManagerTests {
         // Add events: today and 3 days ago (2-day gap)
         let today = Date()
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
 
         // Add 2 freezes (enough to fill 2-day gap)
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers calculation with auto-consume)
@@ -499,12 +499,12 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 200_000_000) // Wait for auto-consume
 
         // Then: Freezes should be marked as used
-        let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakId: "workout")
+        let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakKey: "workout")
         let usedFreezes = freezes.filter { $0.isUsed }
         #expect(usedFreezes.count == 2)
 
         // And: Freeze events should be created
-        let events = try await remote.getAllEvents(userId: "user123", streakId: "workout")
+        let events = try await remote.getAllEvents(userId: "user123", streakKey: "workout")
         let freezeEvents = events.filter { $0.isFreeze }
         #expect(freezeEvents.count == 2)
 
@@ -520,7 +520,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -543,7 +543,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -568,7 +568,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock(currentStreak: 5))
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (starts listener)
@@ -587,7 +587,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers calculation)
@@ -609,11 +609,11 @@ struct StreakManagerTests {
 
         let today = Date()
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers auto-consume)
@@ -631,7 +631,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock(currentStreak: 5))
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (listener receives initial value)
@@ -649,7 +649,7 @@ struct StreakManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: .mock())
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Login triggers listener update which saves locally
@@ -670,7 +670,7 @@ struct StreakManagerTests {
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Login triggers calculation with no events
@@ -688,8 +688,8 @@ struct StreakManagerTests {
         // Given: Client mode with events
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock())
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock())
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -698,7 +698,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Simulate external update while calculation is in progress
-        try await remote.updateCurrentStreak(userId: "user123", streakId: "workout", streak: CurrentStreakData.mock(currentStreak: 99))
+        try await remote.updateCurrentStreak(userId: "user123", streakKey: "workout", streak: CurrentStreakData.mock(currentStreak: 99))
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -712,10 +712,10 @@ struct StreakManagerTests {
         // Given: Manager with events
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(id: "e1"))
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(id: "e2"))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(id: "e1"))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(id: "e2"))
 
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Getting all events
@@ -730,10 +730,10 @@ struct StreakManagerTests {
         // Given: Manager with events
         let services = MockStreakServices(streak: nil)
         let remote = services.remote as! MockRemoteStreakService
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock())
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock())
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock())
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock())
 
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Deleting all events
@@ -759,9 +759,9 @@ struct StreakManagerTests {
             let local: LocalStreakPersistence
         }
         let local = MockLocalStreakPersistence(streak: savedStreak)
-        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakId: "workout"))
+        let remote = MockRemoteStreakService(streak: CurrentStreakData.blank(streakKey: "workout"))
         let services = TestServices(remote: remote, local: local)
-        let config = StreakConfiguration(streakId: "workout")
+        let config = StreakConfiguration(streakKey: "workout")
 
         // When: Initializing manager
         let manager = StreakManager(services: services, configuration: config)
@@ -781,10 +781,10 @@ struct StreakManagerTests {
         let today = Date()
         for daysAgo in 0..<5 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
         }
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in (triggers calculation)
@@ -804,15 +804,15 @@ struct StreakManagerTests {
 
         let today = Date()
         // Today and yesterday
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: yesterday))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: yesterday))
 
         // 4 days ago (creates 2-day gap)
         let fourDaysAgo = Calendar.current.date(byAdding: .day, value: -4, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: fourDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: fourDaysAgo))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -831,16 +831,16 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
 
         // 2 days ago (creates 1-day gap)
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
 
         // Add freeze
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in (should auto-consume freeze)
@@ -863,11 +863,11 @@ struct StreakManagerTests {
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
 
         // Add events for today, yesterday and 2 days ago (current streak = 3)
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: yesterday))
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: yesterday))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -894,9 +894,9 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -919,14 +919,14 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
 
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
 
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -949,15 +949,15 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
 
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
 
         let freeze = StreakFreeze.mockUnused(id: "freeze-1")
-        try await remote.addStreakFreeze(userId: "user123", streakId: "workout", freeze: freeze)
+        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: freeze)
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: false)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -990,16 +990,16 @@ struct StreakManagerTests {
         // Today: 3 events (meets goal)
         for hour in [8, 12, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
         // Yesterday: 3 events (meets goal)
         for hour in [9, 14, 19] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: yesterday)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
-        let config = StreakConfiguration(streakId: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1025,22 +1025,22 @@ struct StreakManagerTests {
         // Today: 3 events (meets goal)
         for hour in [8, 12, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
         // Yesterday: Only 2 events (fails goal of 3)
         for hour in [9, 14] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: yesterday)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
         // Two days ago: 3 events (meets goal)
         for hour in [10, 15, 20] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: twoDaysAgo)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
-        let config = StreakConfiguration(streakId: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1068,10 +1068,10 @@ struct StreakManagerTests {
         let today = Date()
         for daysAgo in 0...6 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
         }
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in (recalculates streak)
@@ -1093,16 +1093,16 @@ struct StreakManagerTests {
         // Create a 3-day current streak
         for daysAgo in 0...2 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
         }
 
         // Create a longer streak in the past (10 days, starting 5 days ago)
         for daysAgo in 5...14 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
         }
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1124,10 +1124,10 @@ struct StreakManagerTests {
         // Add 5 events today at different times
         for hour in [6, 9, 12, 15, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
         }
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1152,7 +1152,7 @@ struct StreakManagerTests {
 
         let today = Date()
         let pstDate = pstCalendar.date(bySettingHour: 22, minute: 0, second: 0, of: today)! // 10 PM PST
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent(
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent(
             timestamp: pstDate,
             timezone: pstTimezone.identifier
         ))
@@ -1163,12 +1163,12 @@ struct StreakManagerTests {
         jstCalendar.timeZone = jstTimezone
 
         let jstDate = jstCalendar.date(byAdding: .hour, value: 4, to: pstDate)! // 4 hours later = 2 AM JST next day
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent(
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent(
             timestamp: jstDate,
             timezone: jstTimezone.identifier
         ))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1191,13 +1191,13 @@ struct StreakManagerTests {
 
         // Event yesterday at 11 PM
         let lastNight = Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: yesterday)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: lastNight))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: lastNight))
 
         // Event today at 4 AM (within 6-hour leeway window)
         let todayEarly = Calendar.current.date(bySettingHour: 4, minute: 0, second: 0, of: now)!
-        try await remote.addEvent(userId: "user123", streakId: "workout", event: StreakEvent.mock(timestamp: todayEarly))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: todayEarly))
 
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false, leewayHours: 6)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, leewayHours: 6)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in
@@ -1212,7 +1212,7 @@ struct StreakManagerTests {
     func testEmptyEventsResultsInZeroStreak() async throws {
         // Given: Manager with no events
         let services = MockStreakServices(streak: nil)
-        let config = StreakConfiguration(streakId: "workout", useServerCalculation: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in

@@ -18,7 +18,7 @@ struct ProgressItemTests {
     func testDefaultInitialization() throws {
         // When: Creating item with default parameters
         let before = Date()
-        let item = ProgressItem(id: "test_1", value: 0.5)
+        let item = ProgressItem(id: "test_1", progressKey: "default", value: 0.5)
         let after = Date()
 
         // Then: Should use current dates
@@ -41,6 +41,7 @@ struct ProgressItemTests {
         // When: Creating item with custom parameters
         let item = ProgressItem(
             id: id,
+            progressKey: "default",
             value: value,
             dateCreated: dateCreated,
             dateModified: dateModified
@@ -84,6 +85,7 @@ struct ProgressItemTests {
         let dateModified = Date(timeIntervalSince1970: 1609545600)
         let item = ProgressItem(
             id: "progress_123",
+            progressKey: "default",
             value: 0.65,
             dateCreated: dateCreated,
             dateModified: dateModified
@@ -106,6 +108,7 @@ struct ProgressItemTests {
         // Given: JSON with snake_case keys
         let item = ProgressItem(
             id: "progress_456",
+            progressKey: "default",
             value: 0.3,
             dateCreated: Date(timeIntervalSince1970: 1609459200),
             dateModified: Date(timeIntervalSince1970: 1609545600)
@@ -129,6 +132,7 @@ struct ProgressItemTests {
         // Given: Original item
         let original = ProgressItem(
             id: "roundtrip_test",
+            progressKey: "default",
             value: 0.999,
             dateCreated: Date(timeIntervalSince1970: 1609459200),
             dateModified: Date(timeIntervalSince1970: 1609545600)
@@ -152,7 +156,7 @@ struct ProgressItemTests {
     @Test("isValid true for valid item")
     func testIsValidTrue() throws {
         // Given: A valid item
-        let item = ProgressItem(id: "valid_id", value: 0.5)
+        let item = ProgressItem(id: "valid_id", progressKey: "default", value: 0.5)
 
         // Then: Should be valid
         #expect(item.isValid == true)
@@ -163,7 +167,7 @@ struct ProgressItemTests {
     @Test("isValid false when ID empty")
     func testIsValidFalseEmptyId() throws {
         // Given: Item with empty ID
-        let item = ProgressItem(id: "", value: 0.5)
+        let item = ProgressItem(id: "", progressKey: "default", value: 0.5)
 
         // Then: Should be invalid
         #expect(item.isValid == false)
@@ -173,7 +177,7 @@ struct ProgressItemTests {
     @Test("isValid false when value negative")
     func testIsValidFalseNegativeValue() throws {
         // Given: Item with negative value
-        let item = ProgressItem(id: "test", value: -0.1)
+        let item = ProgressItem(id: "test", progressKey: "default", value: -0.1)
 
         // Then: Should be invalid
         #expect(item.isValid == false)
@@ -183,7 +187,7 @@ struct ProgressItemTests {
     @Test("isValid false when value greater than 1")
     func testIsValidFalseValueTooLarge() throws {
         // Given: Item with value > 1.0
-        let item = ProgressItem(id: "test", value: 1.1)
+        let item = ProgressItem(id: "test", progressKey: "default", value: 1.1)
 
         // Then: Should be invalid
         #expect(item.isValid == false)
@@ -193,8 +197,8 @@ struct ProgressItemTests {
     @Test("isValid true for boundary values")
     func testIsValidTrueBoundaryValues() throws {
         // Given: Items with boundary values
-        let minItem = ProgressItem(id: "min", value: 0.0)
-        let maxItem = ProgressItem(id: "max", value: 1.0)
+        let minItem = ProgressItem(id: "min", progressKey: "default", value: 0.0)
+        let maxItem = ProgressItem(id: "max", progressKey: "default", value: 1.0)
 
         // Then: Should be valid
         #expect(minItem.isValid == true)
@@ -212,6 +216,7 @@ struct ProgressItemTests {
         let dateModified = Date(timeIntervalSince1970: 1609545600)
         let item = ProgressItem(
             id: "analytics_test",
+            progressKey: "default",
             value: 0.85,
             dateCreated: dateCreated,
             dateModified: dateModified

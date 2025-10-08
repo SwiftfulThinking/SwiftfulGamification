@@ -21,7 +21,7 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService()
 
         // Then: Should return empty array
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.isEmpty)
     }
 
@@ -37,7 +37,7 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: items)
 
         // Then: Should return all items
-        let retrieved = try await service.getAllProgressItems(userId: "user123")
+        let retrieved = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(retrieved.count == 2)
         #expect(retrieved.contains(where: { $0.id == "item1" }))
         #expect(retrieved.contains(where: { $0.id == "item2" }))
@@ -56,7 +56,7 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: items)
 
         // When: Getting all items
-        let retrieved = try await service.getAllProgressItems(userId: "user123")
+        let retrieved = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
 
         // Then: Should return all items
         #expect(retrieved.count == 3)
@@ -68,8 +68,8 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: [ProgressItem.mock()])
 
         // When: Getting items for different users
-        let user1Items = try await service.getAllProgressItems(userId: "user1")
-        let user2Items = try await service.getAllProgressItems(userId: "user2")
+        let user1Items = try await service.getAllProgressItems(userId: "user1", progressKey: "default")
+        let user2Items = try await service.getAllProgressItems(userId: "user2", progressKey: "default")
 
         // Then: Should return same items (mock doesn't separate by user)
         #expect(user1Items.count == user2Items.count)
@@ -77,40 +77,40 @@ struct MockRemoteProgressServiceTests {
 
     // MARK: - Update Progress Tests
 
-    @Test("updateProgress adds new item")
+    @Test("addProgress adds new item")
     func testUpdateProgressAddsNewItem() async throws {
         // Given: Service with no items
         let service = MockRemoteProgressService()
 
         // When: Updating progress for new item
         let item = ProgressItem.mock(id: "new_item", value: 0.6)
-        try await service.updateProgress(userId: "user123", item: item)
+        try await service.addProgress(userId: "user123", progressKey: "default", item: item)
 
         // Then: Should add the item
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.count == 1)
         #expect(items.first?.id == "new_item")
         #expect(items.first?.value == 0.6)
     }
 
-    @Test("updateProgress updates existing item")
+    @Test("addProgress updates existing item")
     func testUpdateProgressUpdatesExisting() async throws {
         // Given: Service with existing item
         let original = ProgressItem.mock(id: "item1", value: 0.3)
         let service = MockRemoteProgressService(items: [original])
 
         // When: Updating the same item with new value
-        let updated = ProgressItem(id: "item1", value: 0.8)
-        try await service.updateProgress(userId: "user123", item: updated)
+        let updated = ProgressItem(id: "item1", progressKey: "default", value: 0.8)
+        try await service.addProgress(userId: "user123", progressKey: "default", item: updated)
 
         // Then: Should update the value
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.count == 1)
         #expect(items.first?.id == "item1")
         #expect(items.first?.value == 0.8)
     }
 
-    @Test("updateProgress updates dates")
+    @Test("addProgress updates dates")
     func testUpdateProgressUpdatesDates() async throws {
         // Given: Service with existing item
         let original = ProgressItem.mock(id: "item1", value: 0.3)
@@ -120,14 +120,15 @@ struct MockRemoteProgressServiceTests {
         let newDateModified = Date()
         let updated = ProgressItem(
             id: "item1",
+            progressKey: "default",
             value: 0.5,
             dateCreated: original.dateCreated,
             dateModified: newDateModified
         )
-        try await service.updateProgress(userId: "user123", item: updated)
+        try await service.addProgress(userId: "user123", progressKey: "default", item: updated)
 
         // Then: Should update the modified date
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.first?.dateModified == newDateModified)
     }
 
@@ -143,10 +144,10 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: items)
 
         // When: Deleting one item
-        try await service.deleteProgress(userId: "user123", id: "item1")
+        try await service.deleteProgress(userId: "user123", progressKey: "default", id: "item1")
 
         // Then: Should remove only that item
-        let remaining = try await service.getAllProgressItems(userId: "user123")
+        let remaining = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(remaining.count == 1)
         #expect(remaining.first?.id == "item2")
     }
@@ -157,10 +158,10 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: [ProgressItem.mock(id: "item1")])
 
         // When: Deleting non-existent item
-        try await service.deleteProgress(userId: "user123", id: "non_existent")
+        try await service.deleteProgress(userId: "user123", progressKey: "default", id: "non_existent")
 
         // Then: Should not throw and keep existing items
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.count == 1)
     }
 
@@ -177,10 +178,10 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService(items: items)
 
         // When: Deleting all items
-        try await service.deleteAllProgress(userId: "user123")
+        try await service.deleteAllProgress(userId: "user123", progressKey: "default")
 
         // Then: Should remove all items
-        let remaining = try await service.getAllProgressItems(userId: "user123")
+        let remaining = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(remaining.isEmpty)
     }
 
@@ -190,10 +191,10 @@ struct MockRemoteProgressServiceTests {
         let service = MockRemoteProgressService()
 
         // When: Deleting all items
-        try await service.deleteAllProgress(userId: "user123")
+        try await service.deleteAllProgress(userId: "user123", progressKey: "default")
 
         // Then: Should not throw
-        let items = try await service.getAllProgressItems(userId: "user123")
+        let items = try await service.getAllProgressItems(userId: "user123", progressKey: "default")
         #expect(items.isEmpty)
     }
 
@@ -206,8 +207,9 @@ struct MockRemoteProgressServiceTests {
 
         // When: Starting stream and updating item
         var receivedItems: [ProgressItem] = []
+        let (updates, _) = service.streamProgressUpdates(userId: "user123", progressKey: "default")
         let streamTask = Task {
-            for try await item in service.streamProgressUpdates(userId: "user123") {
+            for try await item in updates {
                 receivedItems.append(item)
                 if receivedItems.count >= 2 {
                     break
@@ -219,7 +221,7 @@ struct MockRemoteProgressServiceTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // Update item
-        try await service.updateProgress(userId: "user123", item: ProgressItem(id: "item1", value: 0.8))
+        try await service.addProgress(userId: "user123", progressKey: "default", item: ProgressItem(id: "item1", progressKey: "default", value: 0.8))
 
         // Wait for stream to receive update
         try await Task.sleep(nanoseconds: 100_000_000)

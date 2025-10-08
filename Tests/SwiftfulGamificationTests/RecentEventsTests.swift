@@ -150,7 +150,7 @@ struct RecentEventsTests {
         ))
 
         let config = StreakConfiguration(
-            streakId: "test",
+            streakKey: "test",
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 3,
@@ -194,7 +194,7 @@ struct RecentEventsTests {
         )]
 
         let config = StreakConfiguration(
-            streakId: "test",
+            streakKey: "test",
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 0,
@@ -332,7 +332,7 @@ struct RecentEventsTests {
         )]
 
         let config = StreakConfiguration(
-            streakId: "test",
+            streakKey: "test",
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 3,
@@ -355,7 +355,7 @@ struct RecentEventsTests {
 
     @Test("Empty recent events returns empty calendar days")
     func emptyRecentEventsReturnsEmptyCalendarDays() async throws {
-        let streak = CurrentStreakData.blank(streakId: "test")
+        let streak = CurrentStreakData.blank(streakKey: "test")
 
         let calendarDays = streak.getCalendarDaysWithEvents()
         #expect(calendarDays.isEmpty)

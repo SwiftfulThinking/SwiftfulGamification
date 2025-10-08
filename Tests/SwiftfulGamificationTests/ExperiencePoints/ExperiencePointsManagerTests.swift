@@ -21,13 +21,13 @@ struct ExperiencePointsManagerTests {
     func testInitializationWithBlankData() async throws {
         // Given: Local cache returns nil
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Initializing manager
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // Then: Should have blank data
-        #expect(manager.currentExperiencePointsData.experienceId == "main")
+        #expect(manager.currentExperiencePointsData.experienceKey == "main")
         #expect(manager.currentExperiencePointsData.totalPoints == 0)
         #expect(manager.currentExperiencePointsData.totalEvents == 0)
     }
@@ -41,9 +41,9 @@ struct ExperiencePointsManagerTests {
             let local: LocalExperiencePointsPersistence
         }
         let local = MockLocalExperiencePointsPersistence(data: savedData)
-        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceId: "main"))
+        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceKey: "main"))
         let services = TestServices(remote: remote, local: local)
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Initializing manager
         let manager = ExperiencePointsManager(services: services, configuration: config)
@@ -56,21 +56,21 @@ struct ExperiencePointsManagerTests {
     @Test("Manager handles local cache with mismatched experienceId")
     func testInitializationWithMismatchedExperienceId() async throws {
         // Given: Local cache has data for different experienceId
-        let savedData = CurrentExperiencePointsData.mock(experienceId: "battle", totalPoints: 2000)
+        let savedData = CurrentExperiencePointsData.mock(experienceKey: "battle", totalPoints: 2000)
         struct TestServices: ExperiencePointsServices {
             let remote: RemoteExperiencePointsService
             let local: LocalExperiencePointsPersistence
         }
         let local = MockLocalExperiencePointsPersistence(data: savedData)
-        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceId: "main"))
+        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceKey: "main"))
         let services = TestServices(remote: remote, local: local)
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Initializing manager
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // Then: Manager loads blank data for "main" since "battle" doesn't match
-        #expect(manager.currentExperiencePointsData.experienceId == "main")
+        #expect(manager.currentExperiencePointsData.experienceKey == "main")
         #expect(manager.currentExperiencePointsData.totalPoints == 0)
     }
 
@@ -81,7 +81,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with mock services
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock())
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -99,7 +99,7 @@ struct ExperiencePointsManagerTests {
         // Given: Client-side calculation enabled
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -117,7 +117,7 @@ struct ExperiencePointsManagerTests {
         // Given: Server-side calculation enabled
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in
@@ -135,7 +135,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager logged in with active listener
         let initialData = CurrentExperiencePointsData.mock(totalPoints: 5000)
         let services = MockExperiencePointsServices(data: initialData)
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -145,7 +145,7 @@ struct ExperiencePointsManagerTests {
         manager.logOut()
 
         // Then: Data should be reset to blank
-        #expect(manager.currentExperiencePointsData.experienceId == "main")
+        #expect(manager.currentExperiencePointsData.experienceKey == "main")
         #expect(manager.currentExperiencePointsData.totalPoints == 0)
         #expect(manager.currentExperiencePointsData.totalEvents == 0)
     }
@@ -155,7 +155,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager already logged in
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock())
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user1")
@@ -176,17 +176,17 @@ struct ExperiencePointsManagerTests {
     @Test("Adding XP event updates currentData (client mode)")
     func testAddXPEventUpdatesDataClientMode() async throws {
         // Given: Manager in client calculation mode
-        let initialData = CurrentExperiencePointsData.blank(experienceId: "main")
+        let initialData = CurrentExperiencePointsData.blank(experienceKey: "main")
         let services = MockExperiencePointsServices(data: initialData)
         let remote = services.remote as! MockRemoteExperiencePointsService
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding XP event
-        let event = ExperiencePointsEvent.mock(experienceId: "main", points: 100)
+        let event = ExperiencePointsEvent.mock(experienceKey: "main", points: 100)
         try await manager.addExperiencePoints(userId: "user123", event: event)
 
         // Give calculation time to complete
@@ -202,7 +202,7 @@ struct ExperiencePointsManagerTests {
         // Given: Client calculation mode
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -211,7 +211,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -225,7 +225,7 @@ struct ExperiencePointsManagerTests {
         // Given: Server calculation mode
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -234,7 +234,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -246,18 +246,18 @@ struct ExperiencePointsManagerTests {
     func testMultipleEventsAccumulatePoints() async throws {
         // Given: Manager in client mode
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding multiple events
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 100))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 100))
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 250))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 250))
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Total should be sum of all events
@@ -273,7 +273,7 @@ struct ExperiencePointsManagerTests {
         let initialData = CurrentExperiencePointsData.mock(totalPoints: 1000)
         let services = MockExperiencePointsServices(data: initialData)
         let remote = services.remote as! MockRemoteExperiencePointsService
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -281,7 +281,7 @@ struct ExperiencePointsManagerTests {
 
         // When: Remote updates data
         let newData = CurrentExperiencePointsData.mock(totalPoints: 2500)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceId: "main", data: newData)
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: newData)
 
         // Give listener time to receive update
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -297,7 +297,7 @@ struct ExperiencePointsManagerTests {
         let services = MockExperiencePointsServices(data: initialData)
         let remote = services.remote as! MockRemoteExperiencePointsService
         let local = services.local as! MockLocalExperiencePointsPersistence
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -305,12 +305,12 @@ struct ExperiencePointsManagerTests {
 
         // When: Remote updates data
         let newData = CurrentExperiencePointsData.mock(totalPoints: 3500)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceId: "main", data: newData)
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: newData)
 
         try await Task.sleep(nanoseconds: 100_000_000) // Wait for save
 
         // Then: Local cache should have updated data
-        let saved = local.getSavedExperiencePointsData(experienceId: "main")
+        let saved = local.getSavedExperiencePointsData(experienceKey: "main")
         #expect(saved?.totalPoints == 3500)
     }
 
@@ -319,7 +319,7 @@ struct ExperiencePointsManagerTests {
         // Given: Remote that will emit error (stream ends after initial value)
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock())
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Login (stream will eventually end/error)
@@ -336,7 +336,7 @@ struct ExperiencePointsManagerTests {
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock(totalPoints: 100))
         let remote = services.remote as! MockRemoteExperiencePointsService
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -345,11 +345,11 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Sending multiple rapid updates
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceId: "main", data: CurrentExperiencePointsData.mock(totalPoints: 500))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 500))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceId: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1000))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1000))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceId: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1500))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1500))
         try await Task.sleep(nanoseconds: 20_000_000)
 
         // Then: All updates should be received
@@ -365,7 +365,7 @@ struct ExperiencePointsManagerTests {
         // Given: Client mode
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -387,7 +387,7 @@ struct ExperiencePointsManagerTests {
         // Given: Server mode
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: true)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         try await manager.logIn(userId: "user123")
@@ -411,7 +411,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock(totalPoints: 1000))
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (starts listener)
@@ -429,7 +429,7 @@ struct ExperiencePointsManagerTests {
         // Given: Client mode
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers calculation)
@@ -447,7 +447,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock(totalPoints: 1000))
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (listener receives initial value)
@@ -465,7 +465,7 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: .mock())
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Login triggers listener update which saves locally
@@ -485,7 +485,7 @@ struct ExperiencePointsManagerTests {
         // Given: Client mode with no events
         let logger = MockGamificationLogger()
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
         // When: Login triggers calculation with no events
@@ -503,10 +503,10 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with events
         let services = MockExperiencePointsServices(data: nil)
         let remote = services.remote as! MockRemoteExperiencePointsService
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(id: "e1", experienceId: "main", points: 100))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(id: "e2", experienceId: "main", points: 250))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(id: "e1", experienceKey: "main", points: 100))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(id: "e2", experienceKey: "main", points: 250))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Getting all events
@@ -521,10 +521,10 @@ struct ExperiencePointsManagerTests {
         // Given: Manager with events
         let services = MockExperiencePointsServices(data: nil)
         let remote = services.remote as! MockRemoteExperiencePointsService
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(experienceId: "main", points: 100))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(experienceId: "main", points: 250))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 100))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 250))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Deleting all events
@@ -549,9 +549,9 @@ struct ExperiencePointsManagerTests {
             let local: LocalExperiencePointsPersistence
         }
         let local = MockLocalExperiencePointsPersistence(data: savedData)
-        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceId: "main"))
+        let remote = MockRemoteExperiencePointsService(data: CurrentExperiencePointsData.blank(experienceKey: "main"))
         let services = TestServices(remote: remote, local: local)
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
 
         // When: Initializing manager
         let manager = ExperiencePointsManager(services: services, configuration: config)
@@ -568,11 +568,11 @@ struct ExperiencePointsManagerTests {
         let remote = services.remote as! MockRemoteExperiencePointsService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 100))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 250))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 50))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 100))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 250))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 50))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Logging in (triggers calculation)
@@ -591,9 +591,9 @@ struct ExperiencePointsManagerTests {
         let remote = services.remote as! MockRemoteExperiencePointsService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 500))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 500))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -604,7 +604,7 @@ struct ExperiencePointsManagerTests {
         #expect(manager.currentExperiencePointsData.totalEvents == 1)
 
         // When: Adding another event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceId: "main", points: 750))
+        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 750))
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 1250
@@ -622,10 +622,10 @@ struct ExperiencePointsManagerTests {
         // Add 5 events today
         for hour in [6, 9, 12, 15, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: eventDate, experienceId: "main", points: 100))
+            try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: eventDate, experienceKey: "main", points: 100))
         }
 
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Logging in
@@ -644,10 +644,10 @@ struct ExperiencePointsManagerTests {
         let remote = services.remote as! MockRemoteExperiencePointsService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 100))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(date: today, experienceId: "main", points: 0))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 100))
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(date: today, experienceKey: "main", points: 0))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Logging in
@@ -663,7 +663,7 @@ struct ExperiencePointsManagerTests {
     func testEmptyEventsResultsInZeroXP() async throws {
         // Given: Manager with no events
         let services = MockExperiencePointsServices(data: nil)
-        let config = ExperiencePointsConfiguration(experienceId: "main", useServerCalculation: false)
+        let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: false)
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Logging in
@@ -683,23 +683,23 @@ struct ExperiencePointsManagerTests {
         let services = MockExperiencePointsServices(data: nil)
         let remote = services.remote as! MockRemoteExperiencePointsService
 
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(
-            experienceId: "main",
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(
+            experienceKey: "main",
             points: 100,
             metadata: ["source": "quest"]
         ))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(
-            experienceId: "main",
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(
+            experienceKey: "main",
             points: 200,
             metadata: ["source": "battle"]
         ))
-        try await remote.addEvent(userId: "user123", experienceId: "main", event: ExperiencePointsEvent.mock(
-            experienceId: "main",
+        try await remote.addEvent(userId: "user123", experienceKey: "main", event: ExperiencePointsEvent.mock(
+            experienceKey: "main",
             points: 150,
             metadata: ["source": "quest"]
         ))
 
-        let config = ExperiencePointsConfiguration(experienceId: "main")
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // When: Getting events for source = "quest"

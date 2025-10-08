@@ -21,7 +21,7 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Create test data
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 5000,
             totalEvents: 100,
             createdAt: Date(),
@@ -29,19 +29,19 @@ struct FileManagerExperiencePointsPersistenceTests {
         )
 
         // Save data
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
 
         // Retrieve data
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
         // Verify
         #expect(retrieved != nil)
-        #expect(retrieved?.experienceId == testData.experienceId)
+        #expect(retrieved?.experienceKey == testData.experienceKey)
         #expect(retrieved?.totalPoints == testData.totalPoints)
         #expect(retrieved?.totalEvents == testData.totalEvents)
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     @Test("Retrieve returns nil when no data saved")
@@ -49,10 +49,10 @@ struct FileManagerExperiencePointsPersistenceTests {
         let persistence = FileManagerExperiencePointsPersistence()
 
         // Clean up any existing data
-        try? persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try? persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
 
         // Retrieve should return nil
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
         #expect(retrieved == nil)
     }
 
@@ -62,22 +62,22 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Save some data
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 3000,
             totalEvents: 50,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
 
         // Verify it was saved
-        #expect(persistence.getSavedExperiencePointsData(experienceId: "test") != nil)
+        #expect(persistence.getSavedExperiencePointsData(experienceKey: "test") != nil)
 
         // Save nil
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
 
         // Verify it was cleared
-        #expect(persistence.getSavedExperiencePointsData(experienceId: "test") == nil)
+        #expect(persistence.getSavedExperiencePointsData(experienceKey: "test") == nil)
     }
 
     @Test("Overwrite existing data with new data")
@@ -86,31 +86,31 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Save initial data
         let initialData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 5000,
             totalEvents: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", initialData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", initialData)
 
         // Save new data
         let newData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 7000,
             totalEvents: 150,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", newData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", newData)
 
         // Retrieve and verify it's the new data
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
         #expect(retrieved?.totalPoints == 7000)
         #expect(retrieved?.totalEvents == 150)
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     // MARK: - Data Integrity
@@ -123,17 +123,17 @@ struct FileManagerExperiencePointsPersistenceTests {
         let createdDate = Calendar.current.date(byAdding: .day, value: -30, to: now)!
 
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 10000,
             totalEvents: 250,
             createdAt: createdDate,
             updatedAt: now
         )
 
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
-        #expect(retrieved?.experienceId == testData.experienceId)
+        #expect(retrieved?.experienceKey == testData.experienceKey)
         #expect(retrieved?.totalPoints == testData.totalPoints)
         #expect(retrieved?.totalEvents == testData.totalEvents)
 
@@ -151,7 +151,7 @@ struct FileManagerExperiencePointsPersistenceTests {
         }
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     @Test("Save and retrieve with nil optional fields")
@@ -159,24 +159,24 @@ struct FileManagerExperiencePointsPersistenceTests {
         let persistence = FileManagerExperiencePointsPersistence()
 
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: nil,
             totalEvents: nil,
             createdAt: nil,
             updatedAt: nil
         )
 
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
-        #expect(retrieved?.experienceId == "test")
+        #expect(retrieved?.experienceKey == "test")
         #expect(retrieved?.totalPoints == nil)
         #expect(retrieved?.totalEvents == nil)
         #expect(retrieved?.createdAt == nil)
         #expect(retrieved?.updatedAt == nil)
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     // MARK: - Multiple Instances
@@ -187,7 +187,7 @@ struct FileManagerExperiencePointsPersistenceTests {
         let persistence2 = FileManagerExperiencePointsPersistence()
 
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 8000,
             totalEvents: 200,
             createdAt: Date(),
@@ -195,21 +195,21 @@ struct FileManagerExperiencePointsPersistenceTests {
         )
 
         // Save with first instance
-        try persistence1.saveCurrentExperiencePointsData(experienceId: "test", testData)
+        try persistence1.saveCurrentExperiencePointsData(experienceKey: "test", testData)
 
         // Retrieve with second instance
-        let retrieved = persistence2.getSavedExperiencePointsData(experienceId: "test")
+        let retrieved = persistence2.getSavedExperiencePointsData(experienceKey: "test")
 
-        #expect(retrieved?.experienceId == "test")
+        #expect(retrieved?.experienceKey == "test")
         #expect(retrieved?.totalPoints == 8000)
         #expect(retrieved?.totalEvents == 200)
 
         // Clean up with either instance
-        try persistence1.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence1.saveCurrentExperiencePointsData(experienceKey: "test", nil)
 
         // Verify both see it as cleared
-        #expect(persistence1.getSavedExperiencePointsData(experienceId: "test") == nil)
-        #expect(persistence2.getSavedExperiencePointsData(experienceId: "test") == nil)
+        #expect(persistence1.getSavedExperiencePointsData(experienceKey: "test") == nil)
+        #expect(persistence2.getSavedExperiencePointsData(experienceKey: "test") == nil)
     }
 
     // MARK: - Edge Cases
@@ -219,22 +219,22 @@ struct FileManagerExperiencePointsPersistenceTests {
         let persistence = FileManagerExperiencePointsPersistence()
 
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 0,
             totalEvents: 0,
             createdAt: Date(),
             updatedAt: Date()
         )
 
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
-        #expect(retrieved?.experienceId == "test")
+        #expect(retrieved?.experienceKey == "test")
         #expect(retrieved?.totalPoints == 0)
         #expect(retrieved?.totalEvents == 0)
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     @Test("Save and retrieve large values")
@@ -242,22 +242,22 @@ struct FileManagerExperiencePointsPersistenceTests {
         let persistence = FileManagerExperiencePointsPersistence()
 
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 9999999,
             totalEvents: 500000,
             createdAt: Date(),
             updatedAt: Date()
         )
 
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
-        let retrieved = persistence.getSavedExperiencePointsData(experienceId: "test")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
+        let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
-        #expect(retrieved?.experienceId == "test")
+        #expect(retrieved?.experienceKey == "test")
         #expect(retrieved?.totalPoints == 9999999)
         #expect(retrieved?.totalEvents == 500000)
 
         // Clean up
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
     }
 
     @Test("Retrieve after clearing returns nil")
@@ -266,19 +266,19 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Save data
         let testData = CurrentExperiencePointsData(
-            experienceId: "test",
+            experienceKey: "test",
             totalPoints: 5000,
             totalEvents: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", testData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", testData)
 
         // Clear
-        try persistence.saveCurrentExperiencePointsData(experienceId: "test", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
 
         // Retrieve should return nil
-        #expect(persistence.getSavedExperiencePointsData(experienceId: "test") == nil)
+        #expect(persistence.getSavedExperiencePointsData(experienceKey: "test") == nil)
     }
 
     @Test("Different experienceIds store data separately")
@@ -287,38 +287,38 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Save data for "main" experience
         let mainData = CurrentExperiencePointsData(
-            experienceId: "main",
+            experienceKey: "main",
             totalPoints: 5000,
             totalEvents: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "main", mainData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "main", mainData)
 
         // Save data for "battle" experience
         let battleData = CurrentExperiencePointsData(
-            experienceId: "battle",
+            experienceKey: "battle",
             totalPoints: 7000,
             totalEvents: 150,
             createdAt: Date(),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: "battle", battleData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "battle", battleData)
 
         // Retrieve both and verify they're separate
-        let retrievedMain = persistence.getSavedExperiencePointsData(experienceId: "main")
-        let retrievedBattle = persistence.getSavedExperiencePointsData(experienceId: "battle")
+        let retrievedMain = persistence.getSavedExperiencePointsData(experienceKey: "main")
+        let retrievedBattle = persistence.getSavedExperiencePointsData(experienceKey: "battle")
 
-        #expect(retrievedMain?.experienceId == "main")
+        #expect(retrievedMain?.experienceKey == "main")
         #expect(retrievedMain?.totalPoints == 5000)
         #expect(retrievedMain?.totalEvents == 100)
 
-        #expect(retrievedBattle?.experienceId == "battle")
+        #expect(retrievedBattle?.experienceKey == "battle")
         #expect(retrievedBattle?.totalPoints == 7000)
         #expect(retrievedBattle?.totalEvents == 150)
 
         // Clean up both
-        try persistence.saveCurrentExperiencePointsData(experienceId: "main", nil)
-        try persistence.saveCurrentExperiencePointsData(experienceId: "battle", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "main", nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: "battle", nil)
     }
 }

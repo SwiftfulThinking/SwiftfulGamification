@@ -32,7 +32,7 @@ struct CurrentStreakDataTests {
 
         // When: Creating instance with all fields
         let data = CurrentStreakData(
-            streakId: streakId,
+            streakKey: streakId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
             lastEventDate: lastEventDate,
@@ -47,7 +47,7 @@ struct CurrentStreakDataTests {
         )
 
         // Then: All properties should be set correctly
-        #expect(data.streakId == streakId)
+        #expect(data.streakKey == streakId)
         #expect(data.currentStreak == currentStreak)
         #expect(data.longestStreak == longestStreak)
         #expect(data.lastEventDate == lastEventDate)
@@ -64,10 +64,10 @@ struct CurrentStreakDataTests {
     @Test("Blank factory creates zero streak")
     func testBlankFactoryCreatesZeroStreak() throws {
         // When: Creating blank streak
-        let data = CurrentStreakData.blank(streakId: "workout")
+        let data = CurrentStreakData.blank(streakKey: "workout")
 
         // Then: Should have zero values
-        #expect(data.streakId == "workout")
+        #expect(data.streakKey == "workout")
         #expect(data.currentStreak == 0)
         #expect(data.longestStreak == 0)
         #expect(data.totalEvents == 0)
@@ -83,7 +83,7 @@ struct CurrentStreakDataTests {
         let data = CurrentStreakData.mock()
 
         // Then: Should have default values
-        #expect(data.streakId == "workout")
+        #expect(data.streakKey == "workout")
         #expect(data.currentStreak == 5)
         #expect(data.longestStreak == 10)
         #expect(data.lastEventDate != nil)
@@ -157,7 +157,7 @@ struct CurrentStreakDataTests {
     @Test("Decodes from snake_case keys")
     func testDecodesFromSnakeCase() throws {
         // Given: Streak data
-        let original = CurrentStreakData.mock(streakId: "reading", currentStreak: 10)
+        let original = CurrentStreakData.mock(streakKey: "reading", currentStreak: 10)
 
         // When: Encoding then decoding
         let encoder = JSONEncoder()
@@ -166,7 +166,7 @@ struct CurrentStreakDataTests {
         let decoded = try decoder.decode(CurrentStreakData.self, from: data)
 
         // Then: Should decode correctly
-        #expect(decoded.streakId == "reading")
+        #expect(decoded.streakKey == "reading")
         #expect(decoded.currentStreak == 10)
     }
 
@@ -200,7 +200,7 @@ struct CurrentStreakDataTests {
         let decoded = try decoder.decode(CurrentStreakData.self, from: data)
 
         // Then: Should decode with nil optional fields
-        #expect(decoded.streakId == "minimal")
+        #expect(decoded.streakKey == "minimal")
         #expect(decoded.currentStreak == nil)
         #expect(decoded.longestStreak == nil)
         #expect(decoded.lastEventDate == nil)
@@ -211,7 +211,7 @@ struct CurrentStreakDataTests {
     @Test("status returns .noEvents when no lastEventDate")
     func testStatusNoEvents() throws {
         // Given: Streak with no events
-        let data = CurrentStreakData.blank(streakId: "test")
+        let data = CurrentStreakData.blank(streakKey: "test")
 
         // Then: Status should be noEvents
         if case .noEvents = data.status {
@@ -252,7 +252,7 @@ struct CurrentStreakDataTests {
         // Given: Streak with event 3 days ago
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             lastEventDate: threeDaysAgo,
             lastEventTimezone: TimeZone.current.identifier
         )
@@ -288,7 +288,7 @@ struct CurrentStreakDataTests {
         // Given: Streak with event 2 days ago
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date())!
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             lastEventDate: twoDaysAgo,
             lastEventTimezone: TimeZone.current.identifier
         )
@@ -320,7 +320,7 @@ struct CurrentStreakDataTests {
         // Given: Streak with event 3 days ago
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             lastEventDate: threeDaysAgo,
             lastEventTimezone: TimeZone.current.identifier
         )
@@ -332,7 +332,7 @@ struct CurrentStreakDataTests {
     @Test("daysSinceLastEvent nil when no lastEventDate")
     func testDaysSinceLastEventNil() throws {
         // Given: Streak with no events
-        let data = CurrentStreakData.blank(streakId: "test")
+        let data = CurrentStreakData.blank(streakKey: "test")
 
         // Then: daysSinceLastEvent should be nil
         #expect(data.daysSinceLastEvent == nil)
@@ -528,7 +528,7 @@ struct CurrentStreakDataTests {
     @Test("isValid false when currentStreak negative")
     func testIsValidFalseNegativeStreak() throws {
         // Given: Streak with negative currentStreak
-        let data = CurrentStreakData(streakId: "test", currentStreak: -1)
+        let data = CurrentStreakData(streakKey: "test", currentStreak: -1)
 
         // Then: Should be invalid
         #expect(data.isValid == false)
@@ -538,7 +538,7 @@ struct CurrentStreakDataTests {
     func testIsValidFalseLongestLessThanCurrent() throws {
         // Given: Streak where longest < current (invalid)
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 10,
             longestStreak: 5
         )
@@ -551,7 +551,7 @@ struct CurrentStreakDataTests {
     func testIsValidFalseInvalidTimezone() throws {
         // Given: Streak with invalid timezone
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             lastEventTimezone: "Invalid/Timezone"
         )
 
@@ -563,7 +563,7 @@ struct CurrentStreakDataTests {
     func testIsValidFalseEventsRequired() throws {
         // Given: Streak with eventsRequiredPerDay = 0
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             eventsRequiredPerDay: 0
         )
 
@@ -576,7 +576,7 @@ struct CurrentStreakDataTests {
     @Test("eventParameters includes all streak fields")
     func testEventParametersIncludesAllFields() throws {
         // Given: Streak with known values
-        let data = CurrentStreakData.mock(streakId: "meditation", currentStreak: 7)
+        let data = CurrentStreakData.mock(streakKey: "meditation", currentStreak: 7)
 
         // When: Getting event parameters
         let params = data.eventParameters
@@ -592,7 +592,7 @@ struct CurrentStreakDataTests {
     @Test("eventParameters prefixed with current_streak_")
     func testEventParametersPrefixed() throws {
         // Given: Streak with specific streakId
-        let data = CurrentStreakData.mock(streakId: "running")
+        let data = CurrentStreakData.mock(streakKey: "running")
 
         // When: Getting event parameters
         let params = data.eventParameters
@@ -625,13 +625,13 @@ struct CurrentStreakDataTests {
         // Given: Two instances with identical data
         let date = Date()
         let data1 = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             longestStreak: 10,
             lastEventDate: date
         )
         let data2 = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             longestStreak: 10,
             lastEventDate: date
@@ -644,8 +644,8 @@ struct CurrentStreakDataTests {
     @Test("Different streakId makes instances unequal")
     func testEquatableUnequalStreakId() throws {
         // Given: Two instances differing only in streakId
-        let data1 = CurrentStreakData(streakId: "workout")
-        let data2 = CurrentStreakData(streakId: "reading")
+        let data1 = CurrentStreakData(streakKey: "workout")
+        let data2 = CurrentStreakData(streakKey: "reading")
 
         // Then: Should not be equal
         #expect(data1 != data2)
@@ -654,8 +654,8 @@ struct CurrentStreakDataTests {
     @Test("Different currentStreak makes instances unequal")
     func testEquatableUnequalCurrentStreak() throws {
         // Given: Two instances differing only in currentStreak
-        let data1 = CurrentStreakData(streakId: "test", currentStreak: 5)
-        let data2 = CurrentStreakData(streakId: "test", currentStreak: 10)
+        let data1 = CurrentStreakData(streakKey: "test", currentStreak: 5)
+        let data2 = CurrentStreakData(streakKey: "test", currentStreak: 10)
 
         // Then: Should not be equal
         #expect(data1 != data2)
@@ -667,7 +667,7 @@ struct CurrentStreakDataTests {
     func testIsDataStaleWhenUpdatedAtNil() throws {
         // Given: Streak with no updatedAt
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: nil
         )
@@ -681,7 +681,7 @@ struct CurrentStreakDataTests {
         // Given: Streak updated 30 minutes ago
         let thirtyMinutesAgo = Date().addingTimeInterval(-30 * 60)
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: thirtyMinutesAgo
         )
@@ -695,7 +695,7 @@ struct CurrentStreakDataTests {
         // Given: Streak updated 2 hours ago
         let twoHoursAgo = Date().addingTimeInterval(-2 * 60 * 60)
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: twoHoursAgo
         )
@@ -709,7 +709,7 @@ struct CurrentStreakDataTests {
         // Given: Streak updated exactly 1 hour ago
         let oneHourAgo = Date().addingTimeInterval(-60 * 60)
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: oneHourAgo
         )
@@ -722,7 +722,7 @@ struct CurrentStreakDataTests {
     func testIsDataStaleWithCurrentUpdate() throws {
         // Given: Streak updated now
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: Date()
         )
@@ -736,7 +736,7 @@ struct CurrentStreakDataTests {
         // Given: Streak updated 24 hours ago
         let oneDayAgo = Date().addingTimeInterval(-24 * 60 * 60)
         let data = CurrentStreakData(
-            streakId: "test",
+            streakKey: "test",
             currentStreak: 5,
             updatedAt: oneDayAgo
         )

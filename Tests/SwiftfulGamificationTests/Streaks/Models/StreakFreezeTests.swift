@@ -21,11 +21,11 @@ struct StreakFreezeTests {
         let streakId = "workout"
 
         // When: Creating freeze with required fields only
-        let freeze = StreakFreeze(id: id, streakId: streakId)
+        let freeze = StreakFreeze(id: id, streakKey: streakId)
 
         // Then: Should create valid freeze with nil optional fields
         #expect(freeze.id == id)
-        #expect(freeze.streakId == streakId)
+        #expect(freeze.streakKey == streakId)
         #expect(freeze.earnedDate == nil)
         #expect(freeze.usedDate == nil)
         #expect(freeze.expiresAt == nil)
@@ -39,7 +39,7 @@ struct StreakFreezeTests {
         // Then: Should create valid freeze with default values
         #expect(!freeze.id.isEmpty)
         #expect(UUID(uuidString: freeze.id) != nil)
-        #expect(freeze.streakId == "workout")
+        #expect(freeze.streakKey == "workout")
         #expect(freeze.earnedDate != nil)
         #expect(freeze.usedDate == nil)
         #expect(freeze.expiresAt == nil)
@@ -100,7 +100,7 @@ struct StreakFreezeTests {
         let expiresAt = Date(timeIntervalSince1970: 1612137600)
         let freeze = StreakFreeze(
             id: "freeze-123",
-            streakId: "meditation",
+            streakKey: "meditation",
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: expiresAt
@@ -133,7 +133,7 @@ struct StreakFreezeTests {
         let earnedDate = Date(timeIntervalSince1970: 1609459200)
         let freeze = StreakFreeze(
             id: "freeze-789",
-            streakId: "reading",
+            streakKey: "reading",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil
@@ -147,7 +147,7 @@ struct StreakFreezeTests {
 
         // Then: Should decode all properties correctly
         #expect(decoded.id == "freeze-789")
-        #expect(decoded.streakId == "reading")
+        #expect(decoded.streakKey == "reading")
         #expect(decoded.earnedDate == earnedDate)
         #expect(decoded.usedDate == nil)
         #expect(decoded.expiresAt == nil)
@@ -158,7 +158,7 @@ struct StreakFreezeTests {
         // Given: Original freeze with all fields
         let original = StreakFreeze(
             id: "roundtrip-test",
-            streakId: "journaling",
+            streakKey: "journaling",
             earnedDate: Date(timeIntervalSince1970: 1609459200),
             usedDate: Date(timeIntervalSince1970: 1609545600),
             expiresAt: Date(timeIntervalSince1970: 1612137600)
@@ -173,7 +173,7 @@ struct StreakFreezeTests {
         // Then: Should preserve all data
         #expect(decoded == original)
         #expect(decoded.id == original.id)
-        #expect(decoded.streakId == original.streakId)
+        #expect(decoded.streakKey == original.streakKey)
         #expect(decoded.earnedDate == original.earnedDate)
         #expect(decoded.usedDate == original.usedDate)
         #expect(decoded.expiresAt == original.expiresAt)
@@ -186,7 +186,7 @@ struct StreakFreezeTests {
         // Given: Freeze with usedDate set
         let freeze = StreakFreeze(
             id: "used-freeze",
-            streakId: "workout",
+            streakKey: "workout",
             usedDate: Date()
         )
 
@@ -199,7 +199,7 @@ struct StreakFreezeTests {
         // Given: Freeze with no usedDate
         let freeze = StreakFreeze(
             id: "unused-freeze",
-            streakId: "workout",
+            streakKey: "workout",
             usedDate: nil
         )
 
@@ -212,7 +212,7 @@ struct StreakFreezeTests {
         // Given: Freeze with no expiration date (never expires)
         let freeze = StreakFreeze(
             id: "no-expiry",
-            streakId: "workout",
+            streakKey: "workout",
             expiresAt: nil
         )
 
@@ -226,7 +226,7 @@ struct StreakFreezeTests {
         let pastDate = Date().addingTimeInterval(-86400) // 1 day ago
         let freeze = StreakFreeze(
             id: "expired",
-            streakId: "workout",
+            streakKey: "workout",
             expiresAt: pastDate
         )
 
@@ -240,7 +240,7 @@ struct StreakFreezeTests {
         let futureDate = Date().addingTimeInterval(86400) // 1 day from now
         let freeze = StreakFreeze(
             id: "not-expired",
-            streakId: "workout",
+            streakKey: "workout",
             expiresAt: futureDate
         )
 
@@ -253,7 +253,7 @@ struct StreakFreezeTests {
         // Given: Freeze that is unused and not expired
         let freeze = StreakFreeze(
             id: "available",
-            streakId: "workout",
+            streakKey: "workout",
             usedDate: nil,
             expiresAt: nil
         )
@@ -269,7 +269,7 @@ struct StreakFreezeTests {
         // Given: Freeze that has been used
         let freeze = StreakFreeze(
             id: "used",
-            streakId: "workout",
+            streakKey: "workout",
             usedDate: Date()
         )
 
@@ -284,7 +284,7 @@ struct StreakFreezeTests {
         let pastDate = Date().addingTimeInterval(-86400) // 1 day ago
         let freeze = StreakFreeze(
             id: "expired",
-            streakId: "workout",
+            streakKey: "workout",
             usedDate: nil,
             expiresAt: pastDate
         )
@@ -304,7 +304,7 @@ struct StreakFreezeTests {
         let expiresAt = Date(timeIntervalSince1970: 1612137600) // After earned
         let freeze = StreakFreeze(
             id: "valid-freeze",
-            streakId: "workout",
+            streakKey: "workout",
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: expiresAt
@@ -317,7 +317,7 @@ struct StreakFreezeTests {
     @Test("isValid false when ID empty")
     func testIsValidFalseEmptyId() throws {
         // Given: Freeze with empty ID
-        let freeze = StreakFreeze(id: "", streakId: "workout")
+        let freeze = StreakFreeze(id: "", streakKey: "workout")
 
         // Then: Should be invalid
         #expect(freeze.isValid == false)
@@ -330,7 +330,7 @@ struct StreakFreezeTests {
         let usedDate = Date(timeIntervalSince1970: 1609459200) // Before earned!
         let freeze = StreakFreeze(
             id: "invalid-dates",
-            streakId: "workout",
+            streakKey: "workout",
             earnedDate: earnedDate,
             usedDate: usedDate
         )
@@ -346,7 +346,7 @@ struct StreakFreezeTests {
         let expiresAt = Date(timeIntervalSince1970: 1609459200) // Before earned!
         let freeze = StreakFreeze(
             id: "invalid-expiry",
-            streakId: "workout",
+            streakKey: "workout",
             earnedDate: earnedDate,
             expiresAt: expiresAt
         )
@@ -364,7 +364,7 @@ struct StreakFreezeTests {
         let usedDate = Date(timeIntervalSince1970: 1609545600)
         let freeze = StreakFreeze(
             id: "analytics-test",
-            streakId: "meditation",
+            streakKey: "meditation",
             earnedDate: earnedDate,
             usedDate: usedDate,
             expiresAt: nil
@@ -386,7 +386,7 @@ struct StreakFreezeTests {
     @Test("eventParameters prefixed with streak_freeze_")
     func testEventParametersPrefixed() throws {
         // Given: Freeze with specific streakId
-        let freeze = StreakFreeze(id: "test", streakId: "running")
+        let freeze = StreakFreeze(id: "test", streakKey: "running")
 
         // When: Getting event parameters
         let params = freeze.eventParameters
@@ -425,14 +425,14 @@ struct StreakFreezeTests {
         let earnedDate = Date(timeIntervalSince1970: 1609459200)
         let freeze1 = StreakFreeze(
             id: "same-id",
-            streakId: "cardio",
+            streakKey: "cardio",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil
         )
         let freeze2 = StreakFreeze(
             id: "same-id",
-            streakId: "cardio",
+            streakKey: "cardio",
             earnedDate: earnedDate,
             usedDate: nil,
             expiresAt: nil
@@ -445,8 +445,8 @@ struct StreakFreezeTests {
     @Test("Different IDs make freezes unequal")
     func testEquatableUnequalId() throws {
         // Given: Two freezes differing only in ID
-        let freeze1 = StreakFreeze(id: "id-1", streakId: "workout")
-        let freeze2 = StreakFreeze(id: "id-2", streakId: "workout")
+        let freeze1 = StreakFreeze(id: "id-1", streakKey: "workout")
+        let freeze2 = StreakFreeze(id: "id-2", streakKey: "workout")
 
         // Then: Should not be equal
         #expect(freeze1 != freeze2)
@@ -455,8 +455,8 @@ struct StreakFreezeTests {
     @Test("Different streakIds make freezes unequal")
     func testEquatableUnequalStreakId() throws {
         // Given: Two freezes differing only in streakId
-        let freeze1 = StreakFreeze(id: "same-id", streakId: "workout")
-        let freeze2 = StreakFreeze(id: "same-id", streakId: "meditation")
+        let freeze1 = StreakFreeze(id: "same-id", streakKey: "workout")
+        let freeze2 = StreakFreeze(id: "same-id", streakKey: "meditation")
 
         // Then: Should not be equal
         #expect(freeze1 != freeze2)

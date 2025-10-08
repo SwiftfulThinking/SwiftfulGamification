@@ -24,7 +24,7 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: data)
 
         // Then: Should store the data
-        let saved = persistence.getSavedExperiencePointsData(experienceId: data.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: data.experienceKey)
         #expect(saved == data)
     }
 
@@ -37,7 +37,7 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: initialData)
 
         // When: Getting saved data
-        let saved = persistence.getSavedExperiencePointsData(experienceId: initialData.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: initialData.experienceKey)
 
         // Then: Should return initial data
         #expect(saved == initialData)
@@ -51,10 +51,10 @@ struct MockLocalExperiencePointsPersistenceTests {
 
         // When: Saving new data
         let newData = CurrentExperiencePointsData.mock(totalPoints: 10000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: newData.experienceId, newData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: newData.experienceKey, newData)
 
         // Then: Should return new data
-        let saved = persistence.getSavedExperiencePointsData(experienceId: newData.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: newData.experienceKey)
         #expect(saved == newData)
         #expect(saved?.totalPoints == 10000)
     }
@@ -64,15 +64,15 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("saveExperiencePointsData persists new data")
     func testSaveExperiencePointsDataPersists() throws {
         // Given: Persistence with blank data
-        let blank = CurrentExperiencePointsData.blank(experienceId: "test")
+        let blank = CurrentExperiencePointsData.blank(experienceKey: "test")
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Saving new XP data
         let newData = CurrentExperiencePointsData.mock(totalPoints: 15000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: newData.experienceId, newData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: newData.experienceKey, newData)
 
         // Then: New data should be persisted
-        let saved = persistence.getSavedExperiencePointsData(experienceId: newData.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: newData.experienceKey)
         #expect(saved == newData)
     }
 
@@ -84,13 +84,13 @@ struct MockLocalExperiencePointsPersistenceTests {
 
         // When: Saving multiple times
         let data1 = CurrentExperiencePointsData.mock(totalPoints: 10000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: data1.experienceId, data1)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: data1.experienceKey, data1)
 
         let data2 = CurrentExperiencePointsData.mock(totalPoints: 20000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: data2.experienceId, data2)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: data2.experienceKey, data2)
 
         // Then: Only last data should be saved
-        let saved = persistence.getSavedExperiencePointsData(experienceId: data2.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: data2.experienceKey)
         #expect(saved == data2)
         #expect(saved?.totalPoints == 20000)
     }
@@ -102,10 +102,10 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: initial)
 
         // When: Saving nil
-        try persistence.saveCurrentExperiencePointsData(experienceId: initial.experienceId, nil)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: initial.experienceKey, nil)
 
         // Then: Should be cleared
-        let saved = persistence.getSavedExperiencePointsData(experienceId: initial.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: initial.experienceKey)
         #expect(saved == nil)
     }
 
@@ -114,17 +114,17 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("Multiple saves preserve last value")
     func testMultipleSavesPreserveLast() throws {
         // Given: Persistence with blank data
-        let blank = CurrentExperiencePointsData.blank(experienceId: "main")
+        let blank = CurrentExperiencePointsData.blank(experienceKey: "main")
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Saving multiple data objects (all with same default "main" experienceId)
         for i in 1...5 {
             let data = CurrentExperiencePointsData.mock(totalPoints: i * 1000)
-            try persistence.saveCurrentExperiencePointsData(experienceId: data.experienceId, data)
+            try persistence.saveCurrentExperiencePointsData(experienceKey: data.experienceKey, data)
         }
 
         // Then: Last data should be saved (they all have same "main" experienceId from mock)
-        let saved = persistence.getSavedExperiencePointsData(experienceId: "main")
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: "main")
         #expect(saved?.totalPoints == 5000)
     }
 
@@ -135,9 +135,9 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: data)
 
         // When: Getting saved data multiple times
-        let get1 = persistence.getSavedExperiencePointsData(experienceId: data.experienceId)
-        let get2 = persistence.getSavedExperiencePointsData(experienceId: data.experienceId)
-        let get3 = persistence.getSavedExperiencePointsData(experienceId: data.experienceId)
+        let get1 = persistence.getSavedExperiencePointsData(experienceKey: data.experienceKey)
+        let get2 = persistence.getSavedExperiencePointsData(experienceKey: data.experienceKey)
+        let get3 = persistence.getSavedExperiencePointsData(experienceKey: data.experienceKey)
 
         // Then: All should return same data
         #expect(get1 == data)
@@ -150,17 +150,17 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("Save and get maintain data consistency")
     func testSaveAndGetConsistency() throws {
         // Given: Persistence
-        let blank = CurrentExperiencePointsData.blank(experienceId: "test")
+        let blank = CurrentExperiencePointsData.blank(experienceKey: "test")
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Performing multiple save/get cycles
         let data1 = CurrentExperiencePointsData.mock(totalPoints: 3000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: data1.experienceId, data1)
-        let saved1 = persistence.getSavedExperiencePointsData(experienceId: data1.experienceId)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: data1.experienceKey, data1)
+        let saved1 = persistence.getSavedExperiencePointsData(experienceKey: data1.experienceKey)
 
         let data2 = CurrentExperiencePointsData.mock(totalPoints: 7000)
-        try persistence.saveCurrentExperiencePointsData(experienceId: data2.experienceId, data2)
-        let saved2 = persistence.getSavedExperiencePointsData(experienceId: data2.experienceId)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: data2.experienceKey, data2)
+        let saved2 = persistence.getSavedExperiencePointsData(experienceKey: data2.experienceKey)
 
         // Then: Each get should return correct data
         #expect(saved1 == data1)
@@ -170,39 +170,39 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("Different experience IDs are stored separately")
     func testDifferentExperienceIds() throws {
         // Given: Persistence with main XP data
-        let mainData = CurrentExperiencePointsData.blank(experienceId: "main")
+        let mainData = CurrentExperiencePointsData.blank(experienceKey: "main")
         let persistence = MockLocalExperiencePointsPersistence(data: mainData)
 
         // When: Saving battle XP data
-        let battleData = CurrentExperiencePointsData.blank(experienceId: "battle")
-        try persistence.saveCurrentExperiencePointsData(experienceId: battleData.experienceId, battleData)
+        let battleData = CurrentExperiencePointsData.blank(experienceKey: "battle")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: battleData.experienceKey, battleData)
 
         // Then: Both should be saved separately
-        let savedMain = persistence.getSavedExperiencePointsData(experienceId: "main")
-        let savedBattle = persistence.getSavedExperiencePointsData(experienceId: "battle")
+        let savedMain = persistence.getSavedExperiencePointsData(experienceKey: "main")
+        let savedBattle = persistence.getSavedExperiencePointsData(experienceKey: "battle")
 
-        #expect(savedMain?.experienceId == "main")
-        #expect(savedBattle?.experienceId == "battle")
+        #expect(savedMain?.experienceKey == "main")
+        #expect(savedBattle?.experienceKey == "battle")
     }
 
     @Test("Complex XP data is preserved")
     func testComplexDataPreservation() throws {
         // Given: Persistence
-        let blank = CurrentExperiencePointsData.blank(experienceId: "test")
+        let blank = CurrentExperiencePointsData.blank(experienceKey: "test")
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Saving complex data with all fields
         let complexData = CurrentExperiencePointsData(
-            experienceId: "complex",
+            experienceKey: "complex",
             totalPoints: 250000,
             totalEvents: 5000,
             createdAt: Date().addingTimeInterval(-86400 * 60),
             updatedAt: Date()
         )
-        try persistence.saveCurrentExperiencePointsData(experienceId: complexData.experienceId, complexData)
+        try persistence.saveCurrentExperiencePointsData(experienceKey: complexData.experienceKey, complexData)
 
         // Then: All fields should be preserved
-        let saved = persistence.getSavedExperiencePointsData(experienceId: complexData.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: complexData.experienceKey)
         #expect(saved == complexData)
         #expect(saved?.totalPoints == 250000)
         #expect(saved?.totalEvents == 5000)
@@ -215,11 +215,11 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: activeData)
 
         // When: Saving blank data
-        let blank = CurrentExperiencePointsData.blank(experienceId: "main")
-        try persistence.saveCurrentExperiencePointsData(experienceId: blank.experienceId, blank)
+        let blank = CurrentExperiencePointsData.blank(experienceKey: "main")
+        try persistence.saveCurrentExperiencePointsData(experienceKey: blank.experienceKey, blank)
 
         // Then: Blank data should be saved
-        let saved = persistence.getSavedExperiencePointsData(experienceId: blank.experienceId)
+        let saved = persistence.getSavedExperiencePointsData(experienceKey: blank.experienceKey)
         #expect(saved == blank)
         #expect(saved?.totalPoints == 0)
         #expect(saved?.totalEvents == 0)
