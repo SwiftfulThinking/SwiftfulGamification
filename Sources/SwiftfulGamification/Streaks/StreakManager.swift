@@ -88,7 +88,15 @@ public class StreakManager {
     }
 
     public func useStreakFreeze(userId: String, freezeId: String) async throws {
-        try await remote.useStreakFreeze(userId: userId, streakKey: configuration.streakKey, freezeId: freezeId)
+        logger?.trackEvent(event: Event.useStreakFreezeStart(freezeId: freezeId))
+
+        do {
+            try await remote.useStreakFreeze(userId: userId, streakKey: configuration.streakKey, freezeId: freezeId)
+            logger?.trackEvent(event: Event.useStreakFreezeSuccess(freezeId: freezeId))
+        } catch {
+            logger?.trackEvent(event: Event.useStreakFreezeFail(error: error))
+            throw error
+        }
     }
 
     public func getAllStreakFreezes(userId: String) async throws -> [StreakFreeze] {
@@ -169,6 +177,9 @@ extension StreakManager {
         case calculateStreakSuccess(streak: CurrentStreakData)
         case calculateStreakFail(error: Error)
         case freezeAutoConsumed(freezeId: String, date: Date)
+        case useStreakFreezeStart(freezeId: String)
+        case useStreakFreezeSuccess(freezeId: String)
+        case useStreakFreezeFail(error: Error)
 
         var eventName: String {
             switch self {
@@ -182,6 +193,9 @@ extension StreakManager {
             case .calculateStreakSuccess:   return "StreakMan_CalculateStreak_Success"
             case .calculateStreakFail:      return "StreakMan_CalculateStreak_Fail"
             case .freezeAutoConsumed:       return "StreakMan_Freeze_AutoConsumed"
+            case .useStreakFreezeStart:     return "StreakMan_UseStreakFreeze_Start"
+            case .useStreakFreezeSuccess:   return "StreakMan_UseStreakFreeze_Success"
+            case .useStreakFreezeFail:      return "StreakMan_UseStreakFreeze_Fail"
             }
         }
 
@@ -194,7 +208,9 @@ extension StreakManager {
                     "freeze_id": freezeId,
                     "frozen_date": date.timeIntervalSince1970
                 ]
-            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error):
+            case .useStreakFreezeStart(freezeId: let freezeId), .useStreakFreezeSuccess(freezeId: let freezeId):
+                return ["freeze_id": freezeId]
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error), .useStreakFreezeFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -203,9 +219,9 @@ extension StreakManager {
 
         var type: GamificationLogType {
             switch self {
-            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail, .useStreakFreezeFail:
                 return .severe
-            case .calculateStreakSuccess, .freezeAutoConsumed:
+            case .calculateStreakSuccess, .freezeAutoConsumed, .useStreakFreezeSuccess:
                 return .analytic
             default:
                 return .info
