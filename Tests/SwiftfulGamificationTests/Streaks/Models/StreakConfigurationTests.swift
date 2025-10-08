@@ -107,8 +107,8 @@ struct StreakConfigurationTests {
 
     @Test("Mock basic creates default settings")
     func testMockBasicDefaults() throws {
-        // When: Creating a mockBasic configuration
-        let config = StreakConfiguration.mockBasic()
+        // When: Creating a mockDefault configuration
+        let config = StreakConfiguration.mockDefault()
 
         // Then: Should create basic streak configuration
         #expect(config.streakKey == "workout")

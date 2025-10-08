@@ -33,7 +33,7 @@ struct RecentEventsTests {
             ))
         }
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -51,7 +51,7 @@ struct RecentEventsTests {
 
     @Test("Recent events returns empty when no events exist")
     func recentEventsReturnsEmptyWhenNoEvents() async throws {
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: [],
             freezes: [],
@@ -92,7 +92,7 @@ struct RecentEventsTests {
             freezeId: "freeze123"
         ))
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -235,7 +235,7 @@ struct RecentEventsTests {
             ))
         }
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -288,7 +288,7 @@ struct RecentEventsTests {
             timezone: timezone.identifier
         ))
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -385,7 +385,7 @@ struct RecentEventsTests {
             ))
         }
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -419,7 +419,7 @@ struct RecentEventsTests {
             ))
         }
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],
@@ -457,7 +457,7 @@ struct RecentEventsTests {
             }
         }
 
-        let config = StreakConfiguration.mockBasic()
+        let config = StreakConfiguration.mockDefault()
         let (streak, _) = StreakCalculator.calculateStreak(
             events: events,
             freezes: [],

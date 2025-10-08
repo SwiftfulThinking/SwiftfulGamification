@@ -58,8 +58,8 @@ struct ExperiencePointsConfigurationTests {
 
     @Test("Mock basic creates default settings")
     func testMockBasicDefaults() throws {
-        // When: Creating a mockBasic configuration
-        let config = ExperiencePointsConfiguration.mockBasic()
+        // When: Creating a mockDefault configuration
+        let config = ExperiencePointsConfiguration.mockDefault()
 
         // Then: Should create basic XP configuration
         #expect(config.experienceKey == "main")

@@ -45,7 +45,7 @@ public struct ExperiencePointsConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for basic configuration (default settings)
-    public static func mockBasic(experienceKey: String = "main") -> Self {
+    public static func mockDefault(experienceKey: String = "main") -> Self {
         ExperiencePointsConfiguration(
             experienceKey: experienceKey,
             useServerCalculation: false

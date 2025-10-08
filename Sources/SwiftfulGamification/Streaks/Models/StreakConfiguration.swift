@@ -90,7 +90,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     }
 
     /// Mock for basic streak (default settings)
-    public static func mockBasic(streakKey: String = "workout") -> Self {
+    public static func mockDefault(streakKey: String = "workout") -> Self {
         StreakConfiguration(
             streakKey: streakKey,
             eventsRequiredPerDay: 1,

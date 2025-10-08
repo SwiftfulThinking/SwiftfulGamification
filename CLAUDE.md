@@ -274,7 +274,7 @@ SwiftfulGamification/
 #### StreakConfiguration (147 lines)
 - Settings: `streakId`, `eventsRequiredPerDay`, `useServerCalculation`, `leewayHours`, `autoConsumeFreeze`
 - Computed: `isGoalBasedStreak`, `isStrictMode`, `isTravelFriendly`
-- Mock factories: `mockBasic()`, `mockGoalBased()`, `mockLenient()`, `mockTravelFriendly()`, `mockServerCalculation()`
+- Mock factories: `mockDefault()`, `mockGoalBased()`, `mockLenient()`, `mockTravelFriendly()`, `mockServerCalculation()`
 
 #### StreakStatus (enum)
 - Cases: `noEvents`, `active(daysSinceLastEvent:)`, `atRisk`, `broken(daysSinceLastEvent:)`
@@ -372,7 +372,7 @@ SwiftfulGamification/
 
 #### ExperiencePointsConfiguration (55 lines)
 - Settings: `experienceId`, `useServerCalculation`
-- Mock factories: `mock()`, `mockBasic()`, `mockServerCalculation()`
+- Mock factories: `mock()`, `mockDefault()`, `mockServerCalculation()`
 
 ### Utilities
 
