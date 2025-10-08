@@ -82,11 +82,21 @@ public class ProgressManager {
 
     /// Get progress items filtered by metadata field value
     /// - Parameters:
-    ///   - field: Metadata field key to filter by
+    ///   - metadataField: Metadata field key to filter by
     ///   - value: Metadata field value to match
     /// - Returns: Array of progress items matching the metadata filter
-    public func getProgressItems(forField field: String, equalTo value: GamificationDictionaryValue) -> [ProgressItem] {
-        return progressCache.values.filter { $0.metadata[field] == value }
+    public func getProgressItems(forMetadataField metadataField: String, equalTo value: GamificationDictionaryValue) -> [ProgressItem] {
+        return progressCache.values.filter { $0.metadata[metadataField] == value }
+    }
+
+    /// Get maximum progress value for items filtered by metadata field value
+    /// - Parameters:
+    ///   - metadataField: Metadata field key to filter by
+    ///   - value: Metadata field value to match
+    /// - Returns: Maximum progress value (0.0 to 1.0), or 0.0 if no items match
+    public func getMaxProgress(forMetadataField metadataField: String, equalTo value: GamificationDictionaryValue) -> Double {
+        let filtered = progressCache.values.filter { $0.metadata[metadataField] == value }
+        return filtered.map { $0.value }.max() ?? 0.0
     }
 
     /// Update progress value with optimistic update
