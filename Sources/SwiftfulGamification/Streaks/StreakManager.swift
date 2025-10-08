@@ -205,8 +205,10 @@ extension StreakManager {
             switch self {
             case .remoteListenerFail, .saveLocalFail, .calculateStreakFail:
                 return .severe
-            default:
+            case .calculateStreakSuccess, .freezeAutoConsumed:
                 return .analytic
+            default:
+                return .info
             }
         }
     }
