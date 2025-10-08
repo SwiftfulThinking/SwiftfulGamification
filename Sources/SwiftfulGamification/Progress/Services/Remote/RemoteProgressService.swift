@@ -9,12 +9,12 @@ import Foundation
 
 @MainActor
 public protocol RemoteProgressService: Sendable {
-    func getAllProgressItems(userId: String) async throws -> [ProgressItem]
-    func streamProgressUpdates(userId: String) -> (
+    func getAllProgressItems(userId: String, progressKey: String) async throws -> [ProgressItem]
+    func streamProgressUpdates(userId: String, progressKey: String) -> (
         updates: AsyncThrowingStream<ProgressItem, Error>,
         deletions: AsyncThrowingStream<String, Error>
     )
-    func updateProgress(userId: String, item: ProgressItem) async throws
-    func deleteProgress(userId: String, id: String) async throws
-    func deleteAllProgress(userId: String) async throws
+    func updateProgress(userId: String, progressKey: String, item: ProgressItem) async throws
+    func deleteProgress(userId: String, progressKey: String, id: String) async throws
+    func deleteAllProgress(userId: String, progressKey: String) async throws
 }

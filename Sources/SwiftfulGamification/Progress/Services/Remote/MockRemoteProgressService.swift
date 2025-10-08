@@ -14,14 +14,14 @@ public class MockRemoteProgressService: RemoteProgressService {
     @Published private var progressItems: [String: ProgressItem] = [:]
 
     public init(items: [ProgressItem] = []) {
-        items.forEach { progressItems[$0.id] = $0 }
+        items.forEach { progressItems[$0.compositeId] = $0 }
     }
 
-    public func getAllProgressItems(userId: String) async throws -> [ProgressItem] {
-        return Array(progressItems.values)
+    public func getAllProgressItems(userId: String, progressKey: String) async throws -> [ProgressItem] {
+        return progressItems.values.filter { $0.progressKey == progressKey }
     }
 
-    public func streamProgressUpdates(userId: String) -> (
+    public func streamProgressUpdates(userId: String, progressKey: String) -> (
         updates: AsyncThrowingStream<ProgressItem, Error>,
         deletions: AsyncThrowingStream<String, Error>
     ) {
@@ -29,7 +29,7 @@ public class MockRemoteProgressService: RemoteProgressService {
             let task = Task {
                 // Listen for changes (Combine publisher will emit updates)
                 for await items in $progressItems.values {
-                    for item in items.values {
+                    for item in items.values where item.progressKey == progressKey {
                         continuation.yield(item)
                     }
                 }
@@ -49,15 +49,16 @@ public class MockRemoteProgressService: RemoteProgressService {
         return (updates, deletions)
     }
 
-    public func updateProgress(userId: String, item: ProgressItem) async throws {
-        progressItems[item.id] = item
+    public func updateProgress(userId: String, progressKey: String, item: ProgressItem) async throws {
+        progressItems[item.compositeId] = item
     }
 
-    public func deleteProgress(userId: String, id: String) async throws {
-        progressItems.removeValue(forKey: id)
+    public func deleteProgress(userId: String, progressKey: String, id: String) async throws {
+        let compositeId = "\(progressKey)_\(id)"
+        progressItems.removeValue(forKey: compositeId)
     }
 
-    public func deleteAllProgress(userId: String) async throws {
-        progressItems.removeAll()
+    public func deleteAllProgress(userId: String, progressKey: String) async throws {
+        progressItems = progressItems.filter { $0.value.progressKey != progressKey }
     }
 }

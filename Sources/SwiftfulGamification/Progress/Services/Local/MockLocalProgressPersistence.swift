@@ -13,30 +13,32 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
     private var items: [String: ProgressItem] = [:]
 
     public init(items: [ProgressItem] = []) {
-        items.forEach { self.items[$0.id] = $0 }
+        items.forEach { self.items[$0.compositeId] = $0 }
     }
 
-    public func getProgressItem(id: String) -> ProgressItem? {
-        return items[id]
+    public func getProgressItem(progressKey: String, id: String) -> ProgressItem? {
+        let compositeId = "\(progressKey)_\(id)"
+        return items[compositeId]
     }
 
-    public func getAllProgressItems() -> [ProgressItem] {
-        return Array(items.values)
+    public func getAllProgressItems(progressKey: String) -> [ProgressItem] {
+        return items.values.filter { $0.progressKey == progressKey }
     }
 
     public func saveProgressItem(_ item: ProgressItem) throws {
-        items[item.id] = item
+        items[item.compositeId] = item
     }
 
     public func saveProgressItems(_ items: [ProgressItem]) throws {
-        items.forEach { self.items[$0.id] = $0 }
+        items.forEach { self.items[$0.compositeId] = $0 }
     }
 
-    public func deleteProgressItem(id: String) throws {
-        items.removeValue(forKey: id)
+    public func deleteProgressItem(progressKey: String, id: String) throws {
+        let compositeId = "\(progressKey)_\(id)"
+        items.removeValue(forKey: compositeId)
     }
 
-    public func deleteAllProgressItems() throws {
-        items.removeAll()
+    public func deleteAllProgressItems(progressKey: String) throws {
+        items = items.filter { $0.value.progressKey != progressKey }
     }
 }

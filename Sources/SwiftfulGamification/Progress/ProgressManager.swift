@@ -7,6 +7,7 @@ public class ProgressManager {
     private let logger: GamificationLogger?
     private let remote: RemoteProgressService
     private let local: LocalProgressPersistence
+    internal let configuration: ProgressConfiguration
 
     // In-memory cache for synchronous reads
     private var progressCache: [String: Double] = [:]
@@ -16,16 +17,18 @@ public class ProgressManager {
 
     public init(
         services: ProgressServices,
+        configuration: ProgressConfiguration,
         logger: GamificationLogger? = nil
     ) {
         self.remote = services.remote
         self.local = services.local
+        self.configuration = configuration
         self.logger = logger
 
         // Load cached data asynchronously to avoid blocking initialization
         // This enables offline access while preventing startup delays
         Task { @MainActor in
-            let localItems = local.getAllProgressItems()
+            let localItems = local.getAllProgressItems(progressKey: configuration.progressKey)
             for item in localItems {
                 progressCache[item.id] = item.value
             }
@@ -76,7 +79,7 @@ public class ProgressManager {
         logger?.trackEvent(event: Event.updateProgressStart(id: id, value: value))
 
         // Check if new value is higher than existing local value (progress never decreases)
-        let existingLocal = local.getProgressItem(id: id)
+        let existingLocal = local.getProgressItem(progressKey: configuration.progressKey, id: id)
         if let existingValue = existingLocal?.value, value < existingValue {
             logger?.trackEvent(event: Event.updateProgressSuccess(id: id, value: value))
             return // Ignore updates that would decrease progress
@@ -87,6 +90,7 @@ public class ProgressManager {
 
         let item = ProgressItem(
             id: id,
+            progressKey: configuration.progressKey,
             value: value,
             dateCreated: existingLocal?.dateCreated ?? Date(),
             dateModified: Date()
@@ -102,7 +106,7 @@ public class ProgressManager {
 
         // Save to remote
         do {
-            try await remote.updateProgress(userId: userId, item: item)
+            try await remote.updateProgress(userId: userId, progressKey: configuration.progressKey, item: item)
             logger?.trackEvent(event: Event.updateProgressSuccess(id: id, value: value))
         } catch {
             logger?.trackEvent(event: Event.updateProgressFail(error: error))
@@ -125,7 +129,7 @@ public class ProgressManager {
 
         // Delete locally
         do {
-            try local.deleteProgressItem(id: id)
+            try local.deleteProgressItem(progressKey: configuration.progressKey, id: id)
             logger?.trackEvent(event: Event.saveLocalSuccess(id: id))
         } catch {
             logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -133,7 +137,7 @@ public class ProgressManager {
 
         // Delete from remote
         do {
-            try await remote.deleteProgress(userId: userId, id: id)
+            try await remote.deleteProgress(userId: userId, progressKey: configuration.progressKey, id: id)
             logger?.trackEvent(event: Event.deleteProgressSuccess(id: id))
         } catch {
             logger?.trackEvent(event: Event.deleteProgressFail(error: error))
@@ -155,7 +159,7 @@ public class ProgressManager {
 
         // Delete all locally
         do {
-            try local.deleteAllProgressItems()
+            try local.deleteAllProgressItems(progressKey: configuration.progressKey)
             logger?.trackEvent(event: Event.saveLocalSuccess(id: "all"))
         } catch {
             logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -163,7 +167,7 @@ public class ProgressManager {
 
         // Delete all from remote
         do {
-            try await remote.deleteAllProgress(userId: userId)
+            try await remote.deleteAllProgress(userId: userId, progressKey: configuration.progressKey)
             logger?.trackEvent(event: Event.deleteAllProgressSuccess)
         } catch {
             logger?.trackEvent(event: Event.deleteAllProgressFail(error: error))
@@ -177,7 +181,7 @@ public class ProgressManager {
         logger?.trackEvent(event: Event.bulkLoadStart)
 
         do {
-            let items = try await remote.getAllProgressItems(userId: userId)
+            let items = try await remote.getAllProgressItems(userId: userId, progressKey: configuration.progressKey)
 
             // Update cache
             for item in items {
@@ -198,7 +202,7 @@ public class ProgressManager {
 
         remoteListenerTask?.cancel()
 
-        let (updates, deletions) = remote.streamProgressUpdates(userId: userId)
+        let (updates, deletions) = remote.streamProgressUpdates(userId: userId, progressKey: configuration.progressKey)
 
         Task { @MainActor in
             await handleProgressUpdates(updates)
@@ -217,13 +221,14 @@ public class ProgressManager {
                     // Local is ahead - update remote with local value
                     let correctedItem = ProgressItem(
                         id: item.id,
+                        progressKey: configuration.progressKey,
                         value: currentValue,
                         dateCreated: item.dateCreated,
                         dateModified: Date()
                     )
 
                     do {
-                        try await remote.updateProgress(userId: userId ?? "", item: correctedItem)
+                        try await remote.updateProgress(userId: userId ?? "", progressKey: configuration.progressKey, item: correctedItem)
                         logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
                     } catch {
                         logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -253,7 +258,7 @@ public class ProgressManager {
 
                 // Delete locally
                 do {
-                    try local.deleteProgressItem(id: id)
+                    try local.deleteProgressItem(progressKey: configuration.progressKey, id: id)
                     logger?.trackEvent(event: Event.remoteListenerSuccess(id: id))
                 } catch {
                     logger?.trackEvent(event: Event.saveLocalFail(error: error))
