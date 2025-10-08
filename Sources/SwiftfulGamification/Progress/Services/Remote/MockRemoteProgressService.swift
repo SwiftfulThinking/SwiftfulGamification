@@ -49,7 +49,7 @@ public class MockRemoteProgressService: RemoteProgressService {
         return (updates, deletions)
     }
 
-    public func updateProgress(userId: String, progressKey: String, item: ProgressItem) async throws {
+    public func addProgress(userId: String, progressKey: String, item: ProgressItem) async throws {
         progressItems[item.compositeId] = item
     }
 

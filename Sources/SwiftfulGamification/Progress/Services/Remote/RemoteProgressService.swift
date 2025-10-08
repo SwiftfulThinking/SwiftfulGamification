@@ -14,7 +14,7 @@ public protocol RemoteProgressService: Sendable {
         updates: AsyncThrowingStream<ProgressItem, Error>,
         deletions: AsyncThrowingStream<String, Error>
     )
-    func updateProgress(userId: String, progressKey: String, item: ProgressItem) async throws
+    func addProgress(userId: String, progressKey: String, item: ProgressItem) async throws
     func deleteProgress(userId: String, progressKey: String, id: String) async throws
     func deleteAllProgress(userId: String, progressKey: String) async throws
 }

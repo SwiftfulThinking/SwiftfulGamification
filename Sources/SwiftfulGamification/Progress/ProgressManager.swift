@@ -99,39 +99,45 @@ public class ProgressManager {
         return filtered.map { $0.value }.max() ?? 0.0
     }
 
-    /// Update progress value with optimistic update
+    /// Add or update progress value with optimistic update
     /// - Parameters:
     ///   - id: Progress item ID
     ///   - value: Progress value (0.0 to 1.0)
-    public func updateProgress(id: String, value: Double) async throws {
+    ///   - metadata: Optional metadata to merge with existing metadata (new values overwrite old ones)
+    public func addProgress(id: String, value: Double, metadata: [String: GamificationDictionaryValue]? = nil) async throws {
         guard let userId = userId else {
-            logger?.trackEvent(event: Event.updateProgressFail(error: ProgressError.notLoggedIn))
+            logger?.trackEvent(event: Event.addProgressFail(error: ProgressError.notLoggedIn))
             throw ProgressError.notLoggedIn
         }
 
         guard value >= 0.0 && value <= 1.0 else {
-            logger?.trackEvent(event: Event.updateProgressFail(error: ProgressError.invalidValue))
+            logger?.trackEvent(event: Event.addProgressFail(error: ProgressError.invalidValue))
             throw ProgressError.invalidValue
         }
 
-        logger?.trackEvent(event: Event.updateProgressStart(id: id, value: value))
+        logger?.trackEvent(event: Event.addProgressStart(id: id, value: value))
 
         // Check if new value is higher than existing local value (progress never decreases)
         let existingLocal = local.getProgressItem(progressKey: configuration.progressKey, id: id)
         if let existingValue = existingLocal?.value, value < existingValue {
-            logger?.trackEvent(event: Event.updateProgressSuccess(id: id, value: value))
+            logger?.trackEvent(event: Event.addProgressSuccess(id: id, value: value))
             return // Ignore updates that would decrease progress
         }
 
-        // Create updated item, preserving metadata from cache or local storage
+        // Create updated item, merging metadata (new values overwrite old ones)
         let existingItem = progressCache[id] ?? existingLocal
+        var mergedMetadata = existingItem?.metadata ?? [:]
+        if let metadata = metadata {
+            mergedMetadata.merge(metadata) { _, new in new }
+        }
+
         let item = ProgressItem(
             id: id,
             progressKey: configuration.progressKey,
             value: value,
             dateCreated: existingItem?.dateCreated ?? Date(),
             dateModified: Date(),
-            metadata: existingItem?.metadata ?? [:]
+            metadata: mergedMetadata
         )
 
         // Optimistic update: Update cache immediately
@@ -147,10 +153,10 @@ public class ProgressManager {
 
         // Save to remote
         do {
-            try await remote.updateProgress(userId: userId, progressKey: configuration.progressKey, item: item)
-            logger?.trackEvent(event: Event.updateProgressSuccess(id: id, value: value))
+            try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: item)
+            logger?.trackEvent(event: Event.addProgressSuccess(id: id, value: value))
         } catch {
-            logger?.trackEvent(event: Event.updateProgressFail(error: error))
+            logger?.trackEvent(event: Event.addProgressFail(error: error))
             throw error
         }
     }
@@ -270,7 +276,7 @@ public class ProgressManager {
                     )
 
                     do {
-                        try await remote.updateProgress(userId: userId ?? "", progressKey: configuration.progressKey, item: correctedItem)
+                        try await remote.addProgress(userId: userId ?? "", progressKey: configuration.progressKey, item: correctedItem)
                         logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
                     } catch {
                         logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -332,9 +338,9 @@ extension ProgressManager {
         case remoteListenerFail(error: Error)
         case saveLocalSuccess(id: String)
         case saveLocalFail(error: Error)
-        case updateProgressStart(id: String, value: Double)
-        case updateProgressSuccess(id: String, value: Double)
-        case updateProgressFail(error: Error)
+        case addProgressStart(id: String, value: Double)
+        case addProgressSuccess(id: String, value: Double)
+        case addProgressFail(error: Error)
         case deleteProgressStart(id: String)
         case deleteProgressSuccess(id: String)
         case deleteProgressFail(error: Error)
@@ -352,9 +358,9 @@ extension ProgressManager {
             case .remoteListenerFail:       return "ProgressMan_RemoteListener_Fail"
             case .saveLocalSuccess:         return "ProgressMan_SaveLocal_Success"
             case .saveLocalFail:            return "ProgressMan_SaveLocal_Fail"
-            case .updateProgressStart:      return "ProgressMan_UpdateProgress_Start"
-            case .updateProgressSuccess:    return "ProgressMan_UpdateProgress_Success"
-            case .updateProgressFail:       return "ProgressMan_UpdateProgress_Fail"
+            case .addProgressStart:         return "ProgressMan_AddProgress_Start"
+            case .addProgressSuccess:       return "ProgressMan_AddProgress_Success"
+            case .addProgressFail:          return "ProgressMan_AddProgress_Fail"
             case .deleteProgressStart:      return "ProgressMan_DeleteProgress_Start"
             case .deleteProgressSuccess:    return "ProgressMan_DeleteProgress_Success"
             case .deleteProgressFail:       return "ProgressMan_DeleteProgress_Fail"
@@ -370,9 +376,9 @@ extension ProgressManager {
                 return ["progress_count": count]
             case .remoteListenerSuccess(id: let id), .saveLocalSuccess(id: let id), .deleteProgressStart(id: let id), .deleteProgressSuccess(id: let id):
                 return ["progress_id": id]
-            case .updateProgressStart(id: let id, value: let value), .updateProgressSuccess(id: let id, value: let value):
+            case .addProgressStart(id: let id, value: let value), .addProgressSuccess(id: let id, value: let value):
                 return ["progress_id": id, "progress_value": value]
-            case .bulkLoadFail(error: let error), .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .updateProgressFail(error: let error), .deleteProgressFail(error: let error), .deleteAllProgressFail(error: let error):
+            case .bulkLoadFail(error: let error), .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .addProgressFail(error: let error), .deleteProgressFail(error: let error), .deleteAllProgressFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -381,7 +387,7 @@ extension ProgressManager {
 
         var type: GamificationLogType {
             switch self {
-            case .bulkLoadFail, .remoteListenerFail, .saveLocalFail, .updateProgressFail, .deleteProgressFail, .deleteAllProgressFail:
+            case .bulkLoadFail, .remoteListenerFail, .saveLocalFail, .addProgressFail, .deleteProgressFail, .deleteAllProgressFail:
                 return .severe
             case .remoteListenerSuccess, .saveLocalSuccess:
                 return .info // Don't track as analytics - could fire thousands of times
