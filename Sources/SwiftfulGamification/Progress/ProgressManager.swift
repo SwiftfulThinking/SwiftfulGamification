@@ -80,6 +80,15 @@ public class ProgressManager {
         return Array(progressCache.values)
     }
 
+    /// Get progress items filtered by metadata field value
+    /// - Parameters:
+    ///   - field: Metadata field key to filter by
+    ///   - value: Metadata field value to match
+    /// - Returns: Array of progress items matching the metadata filter
+    public func getProgressItems(forField field: String, equalTo value: GamificationDictionaryValue) -> [ProgressItem] {
+        return progressCache.values.filter { $0.metadata[field] == value }
+    }
+
     /// Update progress value with optimistic update
     /// - Parameters:
     ///   - id: Progress item ID
