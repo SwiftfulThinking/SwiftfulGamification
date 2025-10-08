@@ -10,7 +10,7 @@ public class ProgressManager {
     internal let configuration: ProgressConfiguration
 
     // In-memory cache for synchronous reads
-    private var progressCache: [String: Double] = [:]
+    private var progressCache: [String: ProgressItem] = [:]
 
     private var userId: String?
     private var remoteListenerTask: Task<Void, Error>?
@@ -30,7 +30,7 @@ public class ProgressManager {
         Task { @MainActor in
             let localItems = local.getAllProgressItems(progressKey: configuration.progressKey)
             for item in localItems {
-                progressCache[item.id] = item.value
+                progressCache[item.id] = item
             }
         }
     }
@@ -58,7 +58,26 @@ public class ProgressManager {
     /// - Parameter id: Progress item ID
     /// - Returns: Progress value (0.0 to 1.0), or 0.0 if not found
     public func getProgress(id: String) -> Double {
-        return progressCache[id] ?? 0.0
+        return progressCache[id]?.value ?? 0.0
+    }
+
+    /// Get full progress item synchronously from in-memory cache
+    /// - Parameter id: Progress item ID
+    /// - Returns: Progress item, or nil if not found
+    public func getProgressItem(id: String) -> ProgressItem? {
+        return progressCache[id]
+    }
+
+    /// Get all progress values synchronously from in-memory cache
+    /// - Returns: Dictionary of all progress values [id: value]
+    public func getAllProgress() -> [String: Double] {
+        return progressCache.mapValues { $0.value }
+    }
+
+    /// Get all progress items synchronously from in-memory cache
+    /// - Returns: Array of all progress items
+    public func getAllProgressItems() -> [ProgressItem] {
+        return Array(progressCache.values)
     }
 
     /// Update progress value with optimistic update
@@ -85,16 +104,19 @@ public class ProgressManager {
             return // Ignore updates that would decrease progress
         }
 
-        // Optimistic update: Update cache immediately
-        progressCache[id] = value
-
+        // Create updated item, preserving metadata from cache or local storage
+        let existingItem = progressCache[id] ?? existingLocal
         let item = ProgressItem(
             id: id,
             progressKey: configuration.progressKey,
             value: value,
-            dateCreated: existingLocal?.dateCreated ?? Date(),
-            dateModified: Date()
+            dateCreated: existingItem?.dateCreated ?? Date(),
+            dateModified: Date(),
+            metadata: existingItem?.metadata ?? [:]
         )
+
+        // Optimistic update: Update cache immediately
+        progressCache[id] = item
 
         // Save locally
         do {
@@ -185,7 +207,7 @@ public class ProgressManager {
 
             // Update cache
             for item in items {
-                progressCache[item.id] = item.value
+                progressCache[item.id] = item
             }
 
             // Save all to local storage
@@ -217,14 +239,15 @@ public class ProgressManager {
         do {
             for try await item in updates {
                 // Check if local value is higher than remote (progress should never decrease)
-                if let currentValue = progressCache[item.id], currentValue > item.value {
+                if let currentItem = progressCache[item.id], currentItem.value > item.value {
                     // Local is ahead - update remote with local value
                     let correctedItem = ProgressItem(
                         id: item.id,
                         progressKey: configuration.progressKey,
-                        value: currentValue,
+                        value: currentItem.value,
                         dateCreated: item.dateCreated,
-                        dateModified: Date()
+                        dateModified: Date(),
+                        metadata: currentItem.metadata
                     )
 
                     do {
@@ -235,7 +258,7 @@ public class ProgressManager {
                     }
                 } else {
                     // Remote is equal or ahead - update local
-                    progressCache[item.id] = item.value
+                    progressCache[item.id] = item
 
                     do {
                         try local.saveProgressItem(item)
