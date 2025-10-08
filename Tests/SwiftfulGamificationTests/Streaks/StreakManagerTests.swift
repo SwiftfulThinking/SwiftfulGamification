@@ -239,7 +239,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding event
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(id: "event1")
 
         // Give calculation time to complete
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -263,7 +263,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(id: "event1")
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -287,7 +287,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(id: "event1")
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -310,9 +310,9 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding 3 events rapidly
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
-        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent(id: "event1")
 
         try await Task.sleep(nanoseconds: 150_000_000) // Wait for all calculations
 
@@ -424,10 +424,11 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Adding freeze
         let freezeId = "freeze-1"
-        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
+        try await manager.addStreakFreeze(id: freezeId)
 
         // Then: Freeze should be added to remote
         let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakKey: "workout")
@@ -444,9 +445,10 @@ struct StreakManagerTests {
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Getting all freezes
-        let freezes = try await manager.getAllStreakFreezes(userId: "user123")
+        let freezes = try await manager.getAllStreakFreezes()
 
         // Then: Should return both freezes
         #expect(freezes.count == 2)
@@ -468,7 +470,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Manually using freeze
-        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+        try await manager.useStreakFreeze(freezeId: "freeze-1")
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -531,7 +533,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Manually recalculating
-        manager.recalculateStreak(userId: "user123")
+        manager.recalculateStreak()
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -554,7 +556,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Manually recalculating
-        manager.recalculateStreak(userId: "user123")
+        manager.recalculateStreak()
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -677,7 +679,7 @@ struct StreakManagerTests {
 
         // When: Adding a freeze
         let freezeId = "freeze-1"
-        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
+        try await manager.addStreakFreeze(id: freezeId)
 
         // Then: Should log start and success events
         #expect(logger.trackedEvents.contains("StreakMan_AddStreakFreeze_Start"))
@@ -698,7 +700,7 @@ struct StreakManagerTests {
 
         // When: Adding a freeze successfully
         let freezeId = "freeze-1"
-        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
+        try await manager.addStreakFreeze(id: freezeId)
 
         // Then: Success event should be marked as .analytic
         let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_AddStreakFreeze_Success")
@@ -722,7 +724,7 @@ struct StreakManagerTests {
         logger.trackedEvents.removeAll()
 
         // When: Using a freeze
-        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+        try await manager.useStreakFreeze(freezeId: "freeze-1")
 
         // Then: Should log start and success events
         #expect(logger.trackedEvents.contains("StreakMan_UseStreakFreeze_Start"))
@@ -744,7 +746,7 @@ struct StreakManagerTests {
         logger.eventTypes.removeAll()
 
         // When: Using a freeze successfully
-        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+        try await manager.useStreakFreeze(freezeId: "freeze-1")
 
         // Then: Success event should be marked as .analytic
         let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_UseStreakFreeze_Success")
@@ -809,9 +811,10 @@ struct StreakManagerTests {
 
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Getting all events
-        let events = try await manager.getAllStreakEvents(userId: "user123")
+        let events = try await manager.getAllStreakEvents()
 
         // Then: Should return all events
         #expect(events.count == 2)
@@ -827,12 +830,13 @@ struct StreakManagerTests {
 
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Deleting all events
-        try await manager.deleteAllStreakEvents(userId: "user123")
+        try await manager.deleteAllStreakEvents()
 
         // Then: Events should be cleared
-        let events = try await manager.getAllStreakEvents(userId: "user123")
+        let events = try await manager.getAllStreakEvents()
         #expect(events.isEmpty)
     }
 
@@ -971,7 +975,7 @@ struct StreakManagerTests {
 
         // When: Adding another event later today
         let laterToday = Calendar.current.date(byAdding: .hour, value: 2, to: today)!
-        try await manager.addStreakEvent(userId: "user123", id: "event1", timestamp: laterToday)
+        try await manager.addStreakEvent(id: "event1", timestamp: laterToday)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should stay at 3 (same day), but totalEvents increases
@@ -996,7 +1000,7 @@ struct StreakManagerTests {
 
         // When: Adding event today (after 2-day gap)
         let today = Date()
-        try await manager.addStreakEvent(userId: "user123", id: "event1", timestamp: today)
+        try await manager.addStreakEvent(id: "event1", timestamp: today)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should reset to 1
@@ -1027,7 +1031,7 @@ struct StreakManagerTests {
         let streakBeforeFreeze = manager.currentStreakData.currentStreak
 
         // When: Manually using freeze (without recalculation)
-        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+        try await manager.useStreakFreeze(freezeId: "freeze-1")
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // Then: Streak should NOT update (this is current behavior - potential bug)
@@ -1058,10 +1062,10 @@ struct StreakManagerTests {
         let streakBefore = manager.currentStreakData.currentStreak
 
         // Manually use freeze
-        try await manager.useStreakFreeze(userId: "user123", freezeId: "freeze-1")
+        try await manager.useStreakFreeze(freezeId: "freeze-1")
 
         // When: Triggering recalculation
-        manager.recalculateStreak(userId: "user123")
+        manager.recalculateStreak()
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: After recalculation, streak should remain broken since manual freeze

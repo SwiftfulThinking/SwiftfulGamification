@@ -11,6 +11,7 @@ public class StreakManager {
 
     public private(set) var currentStreakData: CurrentStreakData
     private var currentStreakListenerTask: Task<Void, Error>?
+    private var userId: String?
 
     public init(
         services: StreakServices,
@@ -27,6 +28,7 @@ public class StreakManager {
     // MARK: - Public API
 
     public func logIn(userId: String) async throws {
+        self.userId = userId
         addCurrentStreakListener(userId: userId)
         calculateStreak(userId: userId)
     }
@@ -34,6 +36,7 @@ public class StreakManager {
     public func logOut() {
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = nil
+        userId = nil
         currentStreakData = CurrentStreakData.blank(streakKey: configuration.streakKey)
     }
 
@@ -70,11 +73,14 @@ public class StreakManager {
 
     @discardableResult
     public func addStreakEvent(
-        userId: String,
         id: String,
         timestamp: Date = Date(),
         metadata: [String: GamificationDictionaryValue] = [:]
     ) async throws -> StreakEvent {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+
         let event = StreakEvent(
             id: id,
             timestamp: timestamp,
@@ -88,11 +94,17 @@ public class StreakManager {
         return event
     }
 
-    public func getAllStreakEvents(userId: String) async throws -> [StreakEvent] {
-        try await remote.getAllEvents(userId: userId, streakKey: configuration.streakKey)
+    public func getAllStreakEvents() async throws -> [StreakEvent] {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+        return try await remote.getAllEvents(userId: userId, streakKey: configuration.streakKey)
     }
 
-    public func deleteAllStreakEvents(userId: String) async throws {
+    public func deleteAllStreakEvents() async throws {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
         try await remote.deleteAllEvents(userId: userId, streakKey: configuration.streakKey)
     }
 
@@ -100,10 +112,13 @@ public class StreakManager {
 
     @discardableResult
     public func addStreakFreeze(
-        userId: String,
         id: String,
         expiresAt: Date? = nil
     ) async throws -> StreakFreeze {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+
         let freeze = StreakFreeze(
             id: id,
             streakKey: configuration.streakKey,
@@ -125,7 +140,11 @@ public class StreakManager {
         return freeze
     }
 
-    public func useStreakFreeze(userId: String, freezeId: String) async throws {
+    public func useStreakFreeze(freezeId: String) async throws {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+
         logger?.trackEvent(event: Event.useStreakFreezeStart(freezeId: freezeId))
 
         do {
@@ -137,11 +156,17 @@ public class StreakManager {
         }
     }
 
-    public func getAllStreakFreezes(userId: String) async throws -> [StreakFreeze] {
-        try await remote.getAllStreakFreezes(userId: userId, streakKey: configuration.streakKey)
+    public func getAllStreakFreezes() async throws -> [StreakFreeze] {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+        return try await remote.getAllStreakFreezes(userId: userId, streakKey: configuration.streakKey)
     }
 
-    public func recalculateStreak(userId: String) {
+    public func recalculateStreak() {
+        guard let userId = userId else {
+            return
+        }
         calculateStreak(userId: userId)
     }
 
@@ -201,6 +226,14 @@ public class StreakManager {
         }
     }
 }
+
+// MARK: - Errors
+
+public enum StreakError: Error {
+    case notLoggedIn
+}
+
+// MARK: - Analytics Events
 
 extension StreakManager {
 

@@ -11,6 +11,7 @@ public class ExperiencePointsManager {
 
     public private(set) var currentExperiencePointsData: CurrentExperiencePointsData
     private var currentDataListenerTask: Task<Void, Error>?
+    private var userId: String?
 
     public init(
         services: ExperiencePointsServices,
@@ -27,6 +28,7 @@ public class ExperiencePointsManager {
     // MARK: - Public API
 
     public func logIn(userId: String) async throws {
+        self.userId = userId
         addCurrentDataListener(userId: userId)
         calculateExperiencePoints(userId: userId)
     }
@@ -34,6 +36,7 @@ public class ExperiencePointsManager {
     public func logOut() {
         currentDataListenerTask?.cancel()
         currentDataListenerTask = nil
+        userId = nil
         currentExperiencePointsData = CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
     }
 
@@ -70,11 +73,14 @@ public class ExperiencePointsManager {
 
     @discardableResult
     public func addExperiencePoints(
-        userId: String,
         id: String,
         points: Int,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) async throws -> ExperiencePointsEvent {
+        guard let userId = userId else {
+            throw ExperiencePointsError.notLoggedIn
+        }
+
         let event = ExperiencePointsEvent(
             id: id,
             experienceKey: configuration.experienceKey,
@@ -87,26 +93,34 @@ public class ExperiencePointsManager {
         return event
     }
 
-    public func getAllExperiencePointsEvents(userId: String) async throws -> [ExperiencePointsEvent] {
-        try await remote.getAllEvents(userId: userId, experienceKey: configuration.experienceKey)
+    public func getAllExperiencePointsEvents() async throws -> [ExperiencePointsEvent] {
+        guard let userId = userId else {
+            throw ExperiencePointsError.notLoggedIn
+        }
+        return try await remote.getAllEvents(userId: userId, experienceKey: configuration.experienceKey)
     }
 
-    public func deleteAllExperiencePointsEvents(userId: String) async throws {
+    public func deleteAllExperiencePointsEvents() async throws {
+        guard let userId = userId else {
+            throw ExperiencePointsError.notLoggedIn
+        }
         try await remote.deleteAllEvents(userId: userId, experienceKey: configuration.experienceKey)
     }
 
-    public func recalculateExperiencePoints(userId: String) {
+    public func recalculateExperiencePoints() {
+        guard let userId = userId else {
+            return
+        }
         calculateExperiencePoints(userId: userId)
     }
 
     /// Gets all experience points events matching a specific metadata field value
     /// - Parameters:
-    ///   - userId: User ID
     ///   - field: Metadata field key to filter by
     ///   - value: Metadata field value to match
     /// - Returns: Events matching the metadata filter
-    public func getAllExperiencePointsEvents(userId: String, forField field: String, equalTo value: GamificationDictionaryValue) async throws -> [ExperiencePointsEvent] {
-        let allEvents = try await getAllExperiencePointsEvents(userId: userId)
+    public func getAllExperiencePointsEvents(forField field: String, equalTo value: GamificationDictionaryValue) async throws -> [ExperiencePointsEvent] {
+        let allEvents = try await getAllExperiencePointsEvents()
         return ExperiencePointsCalculator.getEventsForMetadata(events: allEvents, field: field, value: value)
     }
 
@@ -146,6 +160,14 @@ public class ExperiencePointsManager {
         }
     }
 }
+
+// MARK: - Errors
+
+public enum ExperiencePointsError: Error {
+    case notLoggedIn
+}
+
+// MARK: - Analytics Events
 
 extension ExperiencePointsManager {
 

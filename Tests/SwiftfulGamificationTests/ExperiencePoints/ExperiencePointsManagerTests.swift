@@ -186,7 +186,7 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding XP event
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 100)
+        try await manager.addExperiencePoints(id: "event1", points: 100)
 
         // Give calculation time to complete
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -210,7 +210,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
+        try await manager.addExperiencePoints(id: "event1", points: 50)
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -233,7 +233,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
+        try await manager.addExperiencePoints(id: "event1", points: 50)
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -252,11 +252,11 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding multiple events
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 100)
+        try await manager.addExperiencePoints(id: "event1", points: 100)
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 250)
+        try await manager.addExperiencePoints(id: "event1", points: 250)
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
+        try await manager.addExperiencePoints(id: "event1", points: 50)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Total should be sum of all events
@@ -373,7 +373,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Manually recalculating
-        manager.recalculateExperiencePoints(userId: "user123")
+        manager.recalculateExperiencePoints()
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -395,7 +395,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Manually recalculating
-        manager.recalculateExperiencePoints(userId: "user123")
+        manager.recalculateExperiencePoints()
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -507,9 +507,10 @@ struct ExperiencePointsManagerTests {
 
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Getting all events
-        let events = try await manager.getAllExperiencePointsEvents(userId: "user123")
+        let events = try await manager.getAllExperiencePointsEvents()
 
         // Then: Should return all events
         #expect(events.count == 2)
@@ -525,12 +526,13 @@ struct ExperiencePointsManagerTests {
 
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Deleting all events
-        try await manager.deleteAllExperiencePointsEvents(userId: "user123")
+        try await manager.deleteAllExperiencePointsEvents()
 
         // Then: Events should be cleared
-        let events = try await manager.getAllExperiencePointsEvents(userId: "user123")
+        let events = try await manager.getAllExperiencePointsEvents()
         #expect(events.isEmpty)
     }
 
@@ -603,7 +605,7 @@ struct ExperiencePointsManagerTests {
         #expect(manager.currentExperiencePointsData.totalEvents == 1)
 
         // When: Adding another event
-        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 750)
+        try await manager.addExperiencePoints(id: "event1", points: 750)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 1250
@@ -700,9 +702,10 @@ struct ExperiencePointsManagerTests {
 
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
+        try await manager.logIn(userId: "user123")
 
         // When: Getting events for source = "quest"
-        let questEvents = try await manager.getAllExperiencePointsEvents(userId: "user123", forField: "source", equalTo: .string("quest"))
+        let questEvents = try await manager.getAllExperiencePointsEvents(forField: "source", equalTo: .string("quest"))
 
         // Then: Should return only quest events
         #expect(questEvents.count == 2)
