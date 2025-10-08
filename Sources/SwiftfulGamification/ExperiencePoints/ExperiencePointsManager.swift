@@ -176,7 +176,7 @@ extension ExperiencePointsManager {
             case .remoteListenerFail, .saveLocalFail, .calculateXPFail:
                 return .severe
             default:
-                return .analytic
+                return .info
             }
         }
     }
