@@ -239,8 +239,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding event
-        let event = StreakEvent.mock()
-        try await manager.addStreakEvent(userId: "user123", event: event)
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
 
         // Give calculation time to complete
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -264,7 +263,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock())
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -288,7 +287,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock())
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -311,9 +310,9 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding 3 events rapidly
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock())
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock())
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock())
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
+        try await manager.addStreakEvent(userId: "user123", id: "event1")
 
         try await Task.sleep(nanoseconds: 150_000_000) // Wait for all calculations
 
@@ -427,8 +426,8 @@ struct StreakManagerTests {
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Adding freeze
-        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
-        try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
+        let freezeId = "freeze-1"
+        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
 
         // Then: Freeze should be added to remote
         let freezes = try await remote.getAllStreakFreezes(userId: "user123", streakKey: "workout")
@@ -677,8 +676,8 @@ struct StreakManagerTests {
         logger.trackedEvents.removeAll()
 
         // When: Adding a freeze
-        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
-        try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
+        let freezeId = "freeze-1"
+        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
 
         // Then: Should log start and success events
         #expect(logger.trackedEvents.contains("StreakMan_AddStreakFreeze_Start"))
@@ -698,8 +697,8 @@ struct StreakManagerTests {
         logger.eventTypes.removeAll()
 
         // When: Adding a freeze successfully
-        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
-        try await manager.addStreakFreeze(userId: "user123", freeze: freeze)
+        let freezeId = "freeze-1"
+        try await manager.addStreakFreeze(userId: "user123", id: freezeId)
 
         // Then: Success event should be marked as .analytic
         let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_AddStreakFreeze_Success")
@@ -972,7 +971,7 @@ struct StreakManagerTests {
 
         // When: Adding another event later today
         let laterToday = Calendar.current.date(byAdding: .hour, value: 2, to: today)!
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock(timestamp: laterToday))
+        try await manager.addStreakEvent(userId: "user123", id: "event1", timestamp: laterToday)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should stay at 3 (same day), but totalEvents increases
@@ -997,7 +996,7 @@ struct StreakManagerTests {
 
         // When: Adding event today (after 2-day gap)
         let today = Date()
-        try await manager.addStreakEvent(userId: "user123", event: StreakEvent.mock(timestamp: today))
+        try await manager.addStreakEvent(userId: "user123", id: "event1", timestamp: today)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should reset to 1
@@ -1047,7 +1046,7 @@ struct StreakManagerTests {
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
         try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
 
-        let freeze = StreakFreeze.mockUnused(id: "freeze-1")
+        let freeze = StreakFreeze.mockUnused(id: "freeze-1", streakKey: "workout")
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: freeze)
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: false)

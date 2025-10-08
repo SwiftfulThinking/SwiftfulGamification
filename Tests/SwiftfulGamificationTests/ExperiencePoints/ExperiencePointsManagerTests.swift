@@ -186,8 +186,7 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding XP event
-        let event = ExperiencePointsEvent.mock(experienceKey: "main", points: 100)
-        try await manager.addExperiencePoints(userId: "user123", event: event)
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 100)
 
         // Give calculation time to complete
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -211,7 +210,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -234,7 +233,7 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -253,11 +252,11 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding multiple events
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 100))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 100)
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 250))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 250)
         try await Task.sleep(nanoseconds: 100_000_000)
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 50))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 50)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Total should be sum of all events
@@ -604,7 +603,7 @@ struct ExperiencePointsManagerTests {
         #expect(manager.currentExperiencePointsData.totalEvents == 1)
 
         // When: Adding another event
-        try await manager.addExperiencePoints(userId: "user123", event: ExperiencePointsEvent.mock(experienceKey: "main", points: 750))
+        try await manager.addExperiencePoints(userId: "user123", id: "event1", points: 750)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 1250

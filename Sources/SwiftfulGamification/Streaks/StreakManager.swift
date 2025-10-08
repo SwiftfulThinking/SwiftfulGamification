@@ -68,9 +68,24 @@ public class StreakManager {
         }
     }
 
-    public func addStreakEvent(userId: String, event: StreakEvent) async throws {
+    @discardableResult
+    public func addStreakEvent(
+        userId: String,
+        id: String,
+        timestamp: Date = Date(),
+        metadata: [String: GamificationDictionaryValue] = [:]
+    ) async throws -> StreakEvent {
+        let event = StreakEvent(
+            id: id,
+            timestamp: timestamp,
+            timezone: TimeZone.current.identifier,
+            isFreeze: false,
+            freezeId: nil,
+            metadata: metadata
+        )
         try await remote.addEvent(userId: userId, streakKey: configuration.streakKey, event: event)
         calculateStreak(userId: userId)
+        return event
     }
 
     public func getAllStreakEvents(userId: String) async throws -> [StreakEvent] {
@@ -83,7 +98,20 @@ public class StreakManager {
 
     // MARK: - Freeze Management
 
-    public func addStreakFreeze(userId: String, freeze: StreakFreeze) async throws {
+    @discardableResult
+    public func addStreakFreeze(
+        userId: String,
+        id: String,
+        expiresAt: Date? = nil
+    ) async throws -> StreakFreeze {
+        let freeze = StreakFreeze(
+            id: id,
+            streakKey: configuration.streakKey,
+            earnedDate: Date(),
+            usedDate: nil,
+            expiresAt: expiresAt
+        )
+
         logger?.trackEvent(event: Event.addStreakFreezeStart(freezeId: freeze.id))
 
         do {
@@ -93,6 +121,8 @@ public class StreakManager {
             logger?.trackEvent(event: Event.addStreakFreezeFail(error: error))
             throw error
         }
+
+        return freeze
     }
 
     public func useStreakFreeze(userId: String, freezeId: String) async throws {

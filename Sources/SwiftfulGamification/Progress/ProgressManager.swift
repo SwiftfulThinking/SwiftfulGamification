@@ -104,7 +104,9 @@ public class ProgressManager {
     ///   - id: Progress item ID
     ///   - value: Progress value (0.0 to 1.0)
     ///   - metadata: Optional metadata to merge with existing metadata (new values overwrite old ones)
-    public func addProgress(id: String, value: Double, metadata: [String: GamificationDictionaryValue]? = nil) async throws {
+    /// - Returns: The created or updated ProgressItem
+    @discardableResult
+    public func addProgress(id: String, value: Double, metadata: [String: GamificationDictionaryValue]? = nil) async throws -> ProgressItem {
         guard let userId = userId else {
             logger?.trackEvent(event: Event.addProgressFail(error: ProgressError.notLoggedIn))
             throw ProgressError.notLoggedIn
@@ -121,7 +123,7 @@ public class ProgressManager {
         let existingLocal = local.getProgressItem(progressKey: configuration.progressKey, id: id)
         if let existingValue = existingLocal?.value, value < existingValue {
             logger?.trackEvent(event: Event.addProgressSuccess(id: id, value: value))
-            return // Ignore updates that would decrease progress
+            return existingLocal! // Ignore updates that would decrease progress, return existing item
         }
 
         // Create updated item, merging metadata (new values overwrite old ones)
@@ -159,6 +161,8 @@ public class ProgressManager {
             logger?.trackEvent(event: Event.addProgressFail(error: error))
             throw error
         }
+
+        return item
     }
 
     /// Delete a single progress item

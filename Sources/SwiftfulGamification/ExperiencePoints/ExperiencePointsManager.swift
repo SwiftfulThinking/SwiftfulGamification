@@ -68,9 +68,23 @@ public class ExperiencePointsManager {
         }
     }
 
-    public func addExperiencePoints(userId: String, event: ExperiencePointsEvent) async throws {
+    @discardableResult
+    public func addExperiencePoints(
+        userId: String,
+        id: String,
+        points: Int,
+        metadata: [String: GamificationDictionaryValue] = [:]
+    ) async throws -> ExperiencePointsEvent {
+        let event = ExperiencePointsEvent(
+            id: id,
+            experienceKey: configuration.experienceKey,
+            timestamp: Date(),
+            points: points,
+            metadata: metadata
+        )
         try await remote.addEvent(userId: userId, experienceKey: configuration.experienceKey, event: event)
         calculateExperiencePoints(userId: userId)
+        return event
     }
 
     public func getAllExperiencePointsEvents(userId: String) async throws -> [ExperiencePointsEvent] {
