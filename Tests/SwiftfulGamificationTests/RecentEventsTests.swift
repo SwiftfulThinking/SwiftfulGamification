@@ -14,8 +14,8 @@ struct RecentEventsTests {
 
     // MARK: - Basic Recent Events Tests
 
-    @Test("Recent events includes last 10 days")
-    func recentEventsIncludesLast10Days() async throws {
+    @Test("Recent events includes last 60 days")
+    func recentEventsIncludesLast60Days() async throws {
         let timezone = TimeZone(identifier: "America/New_York")!
         var calendar = Calendar.current
         calendar.timeZone = timezone
@@ -40,13 +40,13 @@ struct RecentEventsTests {
             configuration: config
         )
 
-        // Should have exactly 10 days of events
+        // Should have all 15 days of events (within 60 day window)
         let recentEvents = streak.recentEvents ?? []
         let uniqueDays = Set(recentEvents.map { event in
             calendar.startOfDay(for: event.timestamp)
         })
 
-        #expect(uniqueDays.count == 10)
+        #expect(uniqueDays.count == 15)
     }
 
     @Test("Recent events returns empty when no events exist")
@@ -434,8 +434,8 @@ struct RecentEventsTests {
         }
     }
 
-    @Test("Recent events exactly 10 unique days even with many events")
-    func recentEventsExactly10UniqueDays() async throws {
+    @Test("Recent events includes all days within 60 day window even with many events")
+    func recentEventsIncludesAllDaysWithinWindow() async throws {
         let timezone = TimeZone(identifier: "America/New_York")!
         var calendar = Calendar.current
         calendar.timeZone = timezone
@@ -466,16 +466,16 @@ struct RecentEventsTests {
 
         let recentEvents = streak.recentEvents ?? []
 
-        // Should have events from exactly 10 unique days
+        // Should have events from all 15 unique days (within 60 day window)
         let uniqueDays = Set(recentEvents.map { event in
             calendar.startOfDay(for: event.timestamp)
         })
 
-        #expect(uniqueDays.count == 10)
+        #expect(uniqueDays.count == 15)
 
-        // Calendar days should also return 10 days
+        // Calendar days should also return 15 days
         let calendarDays = streak.getCalendarDaysWithEvents(timezone: timezone)
-        #expect(calendarDays.count == 10)
+        #expect(calendarDays.count == 15)
     }
 }
 

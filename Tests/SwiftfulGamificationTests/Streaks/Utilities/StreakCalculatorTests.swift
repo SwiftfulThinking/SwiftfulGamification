@@ -289,10 +289,11 @@ struct StreakCalculatorTests {
     @Test("Goal-based: Day with 4/3 events continues streak")
     func testGoalBasedContinuesStreakWhenGoalExceeded() throws {
         // Given: Today 4 events, yesterday 5 events (goal is 3)
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
 
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
@@ -325,10 +326,11 @@ struct StreakCalculatorTests {
     @Test("Goal-based: todayEventCount calculated correctly")
     func testGoalBasedTodayEventCount() throws {
         // Given: 5 events today, 3 events yesterday
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
 
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
