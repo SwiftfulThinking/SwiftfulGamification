@@ -181,6 +181,23 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         return true
     }
 
+    // MARK: - Helpers
+
+    /// Returns a copy of this data with an updated userId
+    public func updatingUserId(_ userId: String) -> CurrentExperiencePointsData {
+        CurrentExperiencePointsData(
+            experienceKey: experienceKey,
+            userId: userId,
+            totalPoints: totalPoints,
+            totalEvents: totalEvents,
+            todayEventCount: todayEventCount,
+            lastEventDate: lastEventDate,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            recentEvents: recentEvents
+        )
+    }
+
     // MARK: - Analytics
 
     /// Event parameters for analytics logging

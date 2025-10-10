@@ -11,7 +11,10 @@ public class ExperiencePointsManager {
 
     public private(set) var currentExperiencePointsData: CurrentExperiencePointsData
     private var currentDataListenerTask: Task<Void, Error>?
-    private var userId: String?
+
+    private var userId: String? {
+        currentExperiencePointsData.userId
+    }
 
     public init(
         services: ExperiencePointsServices,
@@ -33,7 +36,10 @@ public class ExperiencePointsManager {
             logOut()
         }
 
-        self.userId = userId
+        if currentExperiencePointsData.userId != userId {
+            currentExperiencePointsData = currentExperiencePointsData.updatingUserId(userId)
+        }
+
         addCurrentDataListener(userId: userId)
         calculateExperiencePoints(userId: userId)
     }
@@ -41,7 +47,6 @@ public class ExperiencePointsManager {
     public func logOut() {
         currentDataListenerTask?.cancel()
         currentDataListenerTask = nil
-        userId = nil
         currentExperiencePointsData = CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
     }
 
@@ -52,9 +57,11 @@ public class ExperiencePointsManager {
         currentDataListenerTask = Task {
             do {
                 for try await value in remote.streamCurrentExperiencePoints(userId: userId, experienceKey: configuration.experienceKey) {
-                    self.currentExperiencePointsData = value
-                    logger?.trackEvent(event: Event.remoteListenerSuccess(data: value))
-                    logger?.addUserProperties(dict: value.eventParameters, isHighPriority: false)
+                    // Preserve userId if incoming data doesn't have it
+                    let updatedValue = value.userId == nil ? value.updatingUserId(userId) : value
+                    self.currentExperiencePointsData = updatedValue
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(data: updatedValue))
+                    logger?.addUserProperties(dict: updatedValue.eventParameters, isHighPriority: false)
                     self.saveCurrentDataLocally()
                 }
             } catch {
