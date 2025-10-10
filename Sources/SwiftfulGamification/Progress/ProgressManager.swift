@@ -74,6 +74,9 @@ public class ProgressManager {
     /// - Parameter id: Progress item ID
     /// - Returns: Progress value (0.0 to 1.0), or 0.0 if not found
     public func getProgress(id: String) -> Double {
+        if progressCache.isEmpty {
+            return local.getProgressItem(progressKey: configuration.progressKey, id: id)?.value ?? 0.0
+        }
         return progressCache[id]?.value ?? 0.0
     }
 
@@ -81,18 +84,28 @@ public class ProgressManager {
     /// - Parameter id: Progress item ID
     /// - Returns: Progress item, or nil if not found
     public func getProgressItem(id: String) -> ProgressItem? {
+        if progressCache.isEmpty {
+            return local.getProgressItem(progressKey: configuration.progressKey, id: id)
+        }
         return progressCache[id]
     }
 
     /// Get all progress values synchronously from in-memory cache
     /// - Returns: Dictionary of all progress values [id: value]
     public func getAllProgress() -> [String: Double] {
+        if progressCache.isEmpty {
+            let items = local.getAllProgressItems(progressKey: configuration.progressKey)
+            return Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.value) })
+        }
         return progressCache.mapValues { $0.value }
     }
 
     /// Get all progress items synchronously from in-memory cache
     /// - Returns: Array of all progress items
     public func getAllProgressItems() -> [ProgressItem] {
+        if progressCache.isEmpty {
+            return local.getAllProgressItems(progressKey: configuration.progressKey)
+        }
         return Array(progressCache.values)
     }
 
@@ -102,6 +115,10 @@ public class ProgressManager {
     ///   - value: Metadata field value to match
     /// - Returns: Array of progress items matching the metadata filter
     public func getProgressItems(forMetadataField metadataField: String, equalTo value: GamificationDictionaryValue) -> [ProgressItem] {
+        if progressCache.isEmpty {
+            let items = local.getAllProgressItems(progressKey: configuration.progressKey)
+            return items.filter { $0.metadata[metadataField] == value }
+        }
         return progressCache.values.filter { $0.metadata[metadataField] == value }
     }
 
@@ -111,6 +128,11 @@ public class ProgressManager {
     ///   - value: Metadata field value to match
     /// - Returns: Maximum progress value (0.0 to 1.0), or 0.0 if no items match
     public func getMaxProgress(forMetadataField metadataField: String, equalTo value: GamificationDictionaryValue) -> Double {
+        if progressCache.isEmpty {
+            let items = local.getAllProgressItems(progressKey: configuration.progressKey)
+            let filtered = items.filter { $0.metadata[metadataField] == value }
+            return filtered.map { $0.value }.max() ?? 0.0
+        }
         let filtered = progressCache.values.filter { $0.metadata[metadataField] == value }
         return filtered.map { $0.value }.max() ?? 0.0
     }
