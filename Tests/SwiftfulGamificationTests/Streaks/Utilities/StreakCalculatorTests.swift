@@ -1913,4 +1913,84 @@ struct StreakCalculatorTests {
         #expect(result.freezeConsumptions.count > 0)
         #expect(duration < 1.0)
     }
+
+    // MARK: - userId Preservation Tests
+
+    @Test("Preserves userId when provided")
+    func testPreservesUserIdWhenProvided() throws {
+        // Given: Events and a userId
+        let now = Date()
+        let events = [StreakEvent.mock(timestamp: now)]
+        let config = StreakConfiguration(streakKey: "workout")
+        let userId = "test_user_123"
+
+        // When: Calculating streak with userId
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            configuration: config,
+            userId: userId,
+            currentDate: now
+        )
+
+        // Then: userId should be preserved in result
+        #expect(result.streak.userId == userId)
+    }
+
+    @Test("userId is nil when not provided")
+    func testUserIdNilWhenNotProvided() throws {
+        // Given: Events but no userId
+        let now = Date()
+        let events = [StreakEvent.mock(timestamp: now)]
+        let config = StreakConfiguration(streakKey: "workout")
+
+        // When: Calculating streak without userId
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: userId should be nil
+        #expect(result.streak.userId == nil)
+    }
+
+    @Test("Preserves userId when recalculating after adding event")
+    func testPreservesUserIdWhenRecalculating() throws {
+        // Given: Existing 6-day streak with userId
+        let now = Date()
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        // Create events for the last 6 days (including today)
+        let existingEvents = (0..<6).map { daysAgo in
+            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+        }
+        let userId = "test_user_123"
+
+        // Initial calculation
+        let initialResult = StreakCalculator.calculateStreak(
+            events: existingEvents,
+            configuration: StreakConfiguration(streakKey: "workout"),
+            userId: userId,
+            currentDate: now
+        )
+        #expect(initialResult.streak.currentStreak == 6)
+        #expect(initialResult.streak.userId == userId)
+
+        // When: Simulating next day and adding new event
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: now)!
+        let newEvent = StreakEvent.mock(timestamp: tomorrow)
+        let allEvents = existingEvents + [newEvent]
+
+        let updatedResult = StreakCalculator.calculateStreak(
+            events: allEvents,
+            configuration: StreakConfiguration(streakKey: "workout"),
+            userId: userId,
+            currentDate: tomorrow
+        )
+
+        // Then: userId should still be preserved and streak should increase
+        #expect(updatedResult.streak.currentStreak == 7)
+        #expect(updatedResult.streak.userId == userId)
+    }
 }
