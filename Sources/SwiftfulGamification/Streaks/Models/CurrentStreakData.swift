@@ -505,6 +505,48 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         )
     }
 
+    /// Mock with injected recent events (calculates streak from events)
+    public static func mockWithRecentEvents(
+        streakKey: String = "workout",
+        userId: String? = "mock_user_123",
+        recentEvents: [StreakEvent],
+        eventsRequiredPerDay: Int = 1,
+        freezesRemaining: Int = 2
+    ) -> Self {
+        guard !recentEvents.isEmpty else {
+            return blank(streakKey: streakKey)
+        }
+
+        let configuration = StreakConfiguration(
+            streakKey: streakKey,
+            eventsRequiredPerDay: eventsRequiredPerDay,
+            useServerCalculation: false
+        )
+
+        let (calculatedStreak, _) = StreakCalculator.calculateStreak(
+            events: recentEvents,
+            configuration: configuration,
+            userId: userId
+        )
+
+        return CurrentStreakData(
+            streakKey: streakKey,
+            userId: userId,
+            currentStreak: calculatedStreak.currentStreak,
+            longestStreak: calculatedStreak.longestStreak,
+            lastEventDate: calculatedStreak.lastEventDate,
+            lastEventTimezone: calculatedStreak.lastEventTimezone,
+            streakStartDate: calculatedStreak.streakStartDate,
+            totalEvents: calculatedStreak.totalEvents,
+            freezesRemaining: freezesRemaining,
+            createdAt: calculatedStreak.createdAt,
+            updatedAt: calculatedStreak.updatedAt,
+            eventsRequiredPerDay: eventsRequiredPerDay,
+            todayEventCount: calculatedStreak.todayEventCount,
+            recentEvents: recentEvents
+        )
+    }
+
     /// Mock with goal-based streak
     public static func mockGoalBased(
         streakKey: String = "workout",
