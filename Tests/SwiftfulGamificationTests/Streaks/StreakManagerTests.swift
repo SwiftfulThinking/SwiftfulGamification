@@ -131,7 +131,6 @@ struct StreakManagerTests {
         // Given: Client-side calculation enabled
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
@@ -150,7 +149,6 @@ struct StreakManagerTests {
         // Given: Server-side calculation enabled
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
@@ -169,7 +167,6 @@ struct StreakManagerTests {
         // Given: Manager logged in with active listener
         let initialStreak = CurrentStreakData.mock(currentStreak: 5)
         let services = MockStreakServices(streak: initialStreak)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 

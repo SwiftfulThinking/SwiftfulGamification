@@ -486,8 +486,6 @@ struct ProgressManagerTests {
         // Note: This test relies on optimistic update behavior
         try await Task.sleep(nanoseconds: 10_000_000)
         #expect(manager.getProgress(id: "item1") == 0.75)
-
-        try await updateTask.value
     }
 
     @Test("addProgress saves to local storage")
