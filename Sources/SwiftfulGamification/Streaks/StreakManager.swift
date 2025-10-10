@@ -11,7 +11,10 @@ public class StreakManager {
 
     public private(set) var currentStreakData: CurrentStreakData
     private var currentStreakListenerTask: Task<Void, Error>?
-    private var userId: String?
+
+    private var userId: String? {
+        currentStreakData.userId
+    }
 
     public init(
         services: StreakServices,
@@ -33,7 +36,10 @@ public class StreakManager {
             logOut()
         }
 
-        self.userId = userId
+        if currentStreakData.userId != userId {
+            currentStreakData = currentStreakData.updatingUserId(userId)
+        }
+
         addCurrentStreakListener(userId: userId)
         calculateStreak(userId: userId)
     }
@@ -41,7 +47,6 @@ public class StreakManager {
     public func logOut() {
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = nil
-        userId = nil
         currentStreakData = CurrentStreakData.blank(streakKey: configuration.streakKey)
     }
 
@@ -52,9 +57,11 @@ public class StreakManager {
         currentStreakListenerTask = Task {
             do {
                 for try await value in remote.streamCurrentStreak(userId: userId, streakKey: configuration.streakKey) {
-                    self.currentStreakData = value
-                    logger?.trackEvent(event: Event.remoteListenerSuccess(streak: value))
-                    logger?.addUserProperties(dict: value.eventParameters, isHighPriority: false)
+                    // Always preserve userId from logIn (ensure consistency)
+                    let updatedValue = value.userId != userId ? value.updatingUserId(userId) : value
+                    self.currentStreakData = updatedValue
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(streak: updatedValue))
+                    logger?.addUserProperties(dict: updatedValue.eventParameters, isHighPriority: false)
                     self.saveCurrentStreakLocally()
                 }
             } catch {

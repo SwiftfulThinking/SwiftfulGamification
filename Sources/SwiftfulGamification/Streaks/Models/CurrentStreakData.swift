@@ -17,6 +17,9 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Streak identifier (e.g., "workout", "reading")
     public let streakKey: String
 
+    /// User identifier
+    public let userId: String?
+
     /// Current consecutive streak count
     public let currentStreak: Int?
 
@@ -57,6 +60,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     public init(
         streakKey: String,
+        userId: String? = nil,
         currentStreak: Int? = nil,
         longestStreak: Int? = nil,
         lastEventDate: Date? = nil,
@@ -71,6 +75,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         recentEvents: [StreakEvent]? = nil
     ) {
         self.streakKey = streakKey
+        self.userId = userId
         self.currentStreak = currentStreak
         self.longestStreak = longestStreak
         self.lastEventDate = lastEventDate
@@ -89,6 +94,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     public enum CodingKeys: String, CodingKey {
         case streakKey = "streak_id"
+        case userId = "user_id"
         case currentStreak = "current_streak"
         case longestStreak = "longest_streak"
         case lastEventDate = "last_event_date"
@@ -296,6 +302,28 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         return min(current / required, 1.0)
     }
 
+    // MARK: - Helpers
+
+    /// Returns a copy of this data with an updated userId
+    public func updatingUserId(_ userId: String) -> CurrentStreakData {
+        CurrentStreakData(
+            streakKey: streakKey,
+            userId: userId,
+            currentStreak: currentStreak,
+            longestStreak: longestStreak,
+            lastEventDate: lastEventDate,
+            lastEventTimezone: lastEventTimezone,
+            streakStartDate: streakStartDate,
+            totalEvents: totalEvents,
+            freezesRemaining: freezesRemaining,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            eventsRequiredPerDay: eventsRequiredPerDay,
+            todayEventCount: todayEventCount,
+            recentEvents: recentEvents
+        )
+    }
+
     // MARK: - Validation
 
     /// Validates data integrity
@@ -329,6 +357,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             "current_streak_streak_id": streakKey
         ]
 
+        if let userId = userId { params["current_streak_user_id"] = userId }
         if let current = currentStreak { params["current_streak_current_streak"] = current }
         if let longest = longestStreak { params["current_streak_longest_streak"] = longest }
         if let total = totalEvents { params["current_streak_total_events"] = total }
@@ -347,6 +376,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     public static func mock(
         streakKey: String = "workout",
+        userId: String? = "mock_user_123",
         currentStreak: Int = 5,
         longestStreak: Int = 10,
         lastEventDate: Date = Date(),
@@ -361,6 +391,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     ) -> Self {
         CurrentStreakData(
             streakKey: streakKey,
+            userId: userId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
             lastEventDate: lastEventDate,
@@ -404,10 +435,12 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Mock with active streak
     public static func mockActive(
         streakKey: String = "workout",
+        userId: String? = "mock_user_123",
         currentStreak: Int = 7
     ) -> Self {
         CurrentStreakData(
             streakKey: streakKey,
+            userId: userId,
             currentStreak: currentStreak,
             longestStreak: max(currentStreak, 10),
             lastEventDate: Date(),
@@ -425,11 +458,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Mock with streak at risk (yesterday was last event)
     public static func mockAtRisk(
         streakKey: String = "workout",
+        userId: String? = "mock_user_123",
         currentStreak: Int = 5
     ) -> Self {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
         return CurrentStreakData(
             streakKey: streakKey,
+            userId: userId,
             currentStreak: currentStreak,
             longestStreak: max(currentStreak, 8),
             lastEventDate: yesterday,
@@ -447,11 +482,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Mock with goal-based streak
     public static func mockGoalBased(
         streakKey: String = "workout",
+        userId: String? = "mock_user_123",
         eventsRequiredPerDay: Int = 3,
         todayEventCount: Int = 1
     ) -> Self {
         CurrentStreakData(
             streakKey: streakKey,
+            userId: userId,
             currentStreak: 4,
             longestStreak: 7,
             lastEventDate: Date(),
