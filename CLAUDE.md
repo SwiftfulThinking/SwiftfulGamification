@@ -233,15 +233,16 @@ SwiftfulGamification/
 ## Implemented Features
 
 ### StreakManager
-- **Public API**: `StreakManager.swift` (213 lines)
+- **Public API**: `StreakManager.swift` (234 lines)
   - `@MainActor` + `@Observable` for SwiftUI integration
   - Lifecycle: `logIn(userId:)`, `logOut()`
-  - Event management: `addStreakEvent()`, `getAllStreakEvents()`, `deleteAllStreakEvents()`
-  - Freeze management: `addStreakFreeze()`, `useStreakFreeze()`, `getAllStreakFreezes()`
-  - Recalculation: `recalculateStreak(userId:)`
+  - Stores userId internally after login (no userId required in method calls)
+  - Event management: `addStreakEvent(id:timestamp:metadata:)`, `getAllStreakEvents()`, `deleteAllStreakEvents()`
+  - Freeze management: `addStreakFreeze(id:expiresAt:)`, `useStreakFreeze(freezeId:)`, `getAllStreakFreezes()`
+  - Recalculation: `recalculateStreak()`
   - Auto-freeze consumption (when configured)
   - Remote listener with local persistence
-  - Comprehensive analytics tracking (12 events)
+  - Comprehensive analytics tracking (15 events)
 
 ### Service Protocols
 - **StreakServices**: Container protocol for dependency injection
@@ -256,6 +257,8 @@ SwiftfulGamification/
 - Goal-based: `eventsRequiredPerDay`, `todayEventCount`, `isGoalMet`, `goalProgress`
 - Freeze support: `freezesRemaining`, `freezesNeededToSaveStreak`, `canStreakBeSaved`
 - Status: `status`, `isStreakActive`, `isStreakAtRisk`, `daysSinceLastEvent`
+- Recent data: `recentEvents` (last 10 days for calendar display)
+- Calendar helpers: `getCalendarDaysWithEvents()`, `getCalendarDaysWithEventsThisWeek()`, `getTodayTotalEvents()`
 - Mock factories: `blank()`, `mock()`, `mockActive()`, `mockAtRisk()`, `mockGoalBased()`
 - Analytics: `eventParameters`
 
@@ -306,6 +309,7 @@ SwiftfulGamification/
 5. **Freeze Auto-Consumption**: Fills gaps with oldest available freezes (FIFO)
 6. **Longest Streak**: Calculates all-time longest consecutive run
 7. **Streak Start Date**: Calculated by walking back from today
+8. **Recent Events**: Stores last 10 calendar days of events for calendar UI display
 
 ### Freeze Behavior
 - **Auto-Consume**: Enabled by default (`autoConsumeFreeze: true`)
@@ -330,22 +334,30 @@ SwiftfulGamification/
 - `StreakMan_SaveLocal_Start/Success/Fail`
 - `StreakMan_CalculateStreak_Start/Success/Fail`
 - `StreakMan_Freeze_AutoConsumed`
+- `StreakMan_AddStreakFreeze_Start/Success/Fail`
+- `StreakMan_UseStreakFreeze_Start/Success/Fail`
 
 **Event Parameters:**
 - All streak data: `current_streak_*` prefix
 - All events: `streak_event_*` prefix
 - All freezes: `streak_freeze_*` prefix
 
+**Event Types:**
+- Fail events: `.severe`
+- Success events (calculation, freeze consumption): `.analytic`
+- All other events: `.info`
+
 ### ExperiencePointsManager
-- **Public API**: `ExperiencePointsManager.swift` (179 lines)
+- **Public API**: `ExperiencePointsManager.swift` (228 lines)
   - `@MainActor` + `@Observable` for SwiftUI integration
   - Lifecycle: `logIn(userId:)`, `logOut()`
-  - Event management: `addExperiencePoints()`, `getAllExperiencePointsEvents()`, `deleteAllExperiencePointsEvents()`
+  - Stores userId internally after login (no userId required in method calls)
+  - Event management: `addExperiencePoints(id:points:metadata:)`, `getAllExperiencePointsEvents()`, `deleteAllExperiencePointsEvents()`
   - Metadata filtering: `getAllExperiencePointsEvents(forField:equalTo:)` - Get XP events filtered by metadata
-  - Recalculation: `recalculateExperiencePoints(userId:)`
+  - Recalculation: `recalculateExperiencePoints()`
   - Client-side and server-side calculation support
   - Remote listener with local persistence
-  - Comprehensive analytics tracking (9 events)
+  - Comprehensive analytics tracking (12 events)
 
 ### Service Protocols
 - **ExperiencePointsServices**: Container protocol for dependency injection
@@ -391,7 +403,7 @@ SwiftfulGamification/
 #### XP Calculation Logic
 1. **Simple Summation**: Total points = sum of all event points
 2. **Event Counting**: Tracks total events and today's event count
-3. **Recent Events**: Maintains last 10 calendar days of events
+3. **Recent Events**: Stores last 10 calendar days of events for calendar UI display
 4. **Metadata Filtering**: Query events by custom metadata fields
 5. **Timezone Awareness**: Day calculations respect user timezone
 
@@ -411,10 +423,15 @@ SwiftfulGamification/
 - `XPMan_RemoteListener_Start/Success/Fail`
 - `XPMan_SaveLocal_Start/Success/Fail`
 - `XPMan_CalculateXP_Start/Success/Fail`
+- `XPMan_AddExperiencePoints_Start/Success/Fail`
 
 **Event Parameters:**
 - All XP data: `current_xp_*` prefix
 - All events: `xp_event_*` prefix
+
+**Event Types:**
+- Fail events: `.severe`
+- All other events: `.info`
 
 ## Commit Style Guidelines
 
