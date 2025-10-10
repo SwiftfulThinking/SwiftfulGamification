@@ -440,29 +440,32 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = "mock_user_123",
         currentStreak: Int = 7
     ) -> Self {
-        // Generate recent events to match the current streak
+        // Generate recent events for the previous N days (NOT including today)
+        // This represents a streak where the last event was yesterday
         var calendar = Calendar.current
         calendar.timeZone = .current
 
-        let recentEvents = (0..<currentStreak).map { daysAgo in
+        let recentEvents = (1...currentStreak).map { daysAgo in
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
             return StreakEvent.mock(timestamp: date)
         }
+
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
         return CurrentStreakData(
             streakKey: streakKey,
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: max(currentStreak, 10),
-            lastEventDate: Date(),
+            lastEventDate: yesterday,
             lastEventTimezone: TimeZone.current.identifier,
-            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: Date()),
+            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 5,
             freezesRemaining: 2,
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
-            updatedAt: Date(),
+            updatedAt: yesterday,
             eventsRequiredPerDay: 1,
-            todayEventCount: 1,
+            todayEventCount: 0,
             recentEvents: recentEvents
         )
     }
