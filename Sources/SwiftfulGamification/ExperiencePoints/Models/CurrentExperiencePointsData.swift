@@ -35,7 +35,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// UTC timestamp of last update
     public let updatedAt: Date?
 
-    /// Recent events for display (last 10 days)
+    /// Recent events for display (last 60 days)
     public let recentEvents: [ExperiencePointsEvent]?
 
     // MARK: - Initialization

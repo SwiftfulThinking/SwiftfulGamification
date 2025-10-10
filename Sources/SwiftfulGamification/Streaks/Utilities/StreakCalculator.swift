@@ -183,10 +183,10 @@ public struct StreakCalculator {
         // COUNT REMAINING FREEZES
         let freezesRemaining = availableFreezes.count
 
-        // GET RECENT EVENTS (last 10 days, accounting for leeway)
+        // GET RECENT EVENTS (last 60 days, accounting for leeway)
         let recentEvents = getRecentEvents(
             events: events,
-            days: 10,
+            days: 60,
             timezone: timezone,
             leewayHours: configuration.leewayHours,
             currentDate: currentDate

@@ -39,10 +39,10 @@ public struct ExperiencePointsCalculator {
         // LAST EVENT INFO
         let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
 
-        // GET RECENT EVENTS (last 10 days)
+        // GET RECENT EVENTS (last 60 days)
         let recentEvents = getRecentEvents(
             events: events,
-            days: 10,
+            days: 60,
             timezone: timezone,
             currentDate: currentDate
         )

@@ -50,7 +50,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Goal-based: number of events logged today
     public let todayEventCount: Int?
 
-    /// Recent events for calendar display (last 10 days)
+    /// Recent events for calendar display (last 60 days)
     public let recentEvents: [StreakEvent]?
 
     // MARK: - Initialization

@@ -257,7 +257,7 @@ SwiftfulGamification/
 - Goal-based: `eventsRequiredPerDay`, `todayEventCount`, `isGoalMet`, `goalProgress`
 - Freeze support: `freezesRemaining`, `freezesNeededToSaveStreak`, `canStreakBeSaved`
 - Status: `status`, `isStreakActive`, `isStreakAtRisk`, `daysSinceLastEvent`
-- Recent data: `recentEvents` (last 10 days for calendar display)
+- Recent data: `recentEvents` (last 60 days for calendar display)
 - Calendar helpers: `getCalendarDaysWithEvents()`, `getCalendarDaysWithEventsThisWeek()`, `getTodayTotalEvents()`
 - Mock factories: `blank()`, `mock()`, `mockActive()`, `mockAtRisk()`, `mockGoalBased()`
 - Analytics: `eventParameters`
@@ -309,7 +309,7 @@ SwiftfulGamification/
 5. **Freeze Auto-Consumption**: Fills gaps with oldest available freezes (FIFO)
 6. **Longest Streak**: Calculates all-time longest consecutive run
 7. **Streak Start Date**: Calculated by walking back from today
-8. **Recent Events**: Stores last 10 calendar days of events for calendar UI display
+8. **Recent Events**: Stores last 60 calendar days of events for calendar UI display
 
 ### Freeze Behavior
 - **Auto-Consume**: Enabled by default (`autoConsumeFreeze: true`)
@@ -369,7 +369,7 @@ SwiftfulGamification/
 
 #### CurrentExperiencePointsData (289 lines)
 - Core properties: `totalPoints`, `totalEvents`, `todayEventCount`, `lastEventDate`
-- Recent data: `recentEvents` (last 10 days of events)
+- Recent data: `recentEvents` (last 60 days of events)
 - Timestamps: `createdAt`, `updatedAt`
 - Calendar helpers: `getCalendarDaysWithEvents()`, `getCalendarDaysWithEventsThisWeek()`, `getTodayTotalPoints()`
 - Computed: `isDataStale`, `daysSinceLastEvent`
@@ -393,7 +393,7 @@ SwiftfulGamification/
 - Simple accumulation: Sums all event points
 - `calculateExperiencePoints()` - Main calculation method
 - `getTodayEventCount()` - Timezone-aware today count
-- `getRecentEvents()` - Last 10 days of events
+- `getRecentEvents()` - Last 60 days of events
 - `getTotalPointsForMetadata()` - Sum points filtered by metadata field
 - `getEventsForMetadata()` - Get events filtered by metadata field
 - Returns: `CurrentExperiencePointsData`
@@ -403,7 +403,7 @@ SwiftfulGamification/
 #### XP Calculation Logic
 1. **Simple Summation**: Total points = sum of all event points
 2. **Event Counting**: Tracks total events and today's event count
-3. **Recent Events**: Stores last 10 calendar days of events for calendar UI display
+3. **Recent Events**: Stores last 60 calendar days of events for calendar UI display
 4. **Metadata Filtering**: Query events by custom metadata fields
 5. **Timezone Awareness**: Day calculations respect user timezone
 
