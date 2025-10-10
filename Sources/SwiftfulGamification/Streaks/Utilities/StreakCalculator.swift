@@ -16,6 +16,7 @@ public struct StreakCalculator {
     ///   - events: All events for the user
     ///   - freezes: Available freezes for auto-consumption
     ///   - configuration: Streak configuration
+    ///   - userId: User ID to store in the streak data
     ///   - currentDate: Current date (for testing, defaults to Date())
     ///   - timezone: Timezone for calculations (defaults to current)
     /// - Returns: Tuple of (calculated streak, array of freeze consumptions with dates)
@@ -23,6 +24,7 @@ public struct StreakCalculator {
         events: [StreakEvent],
         freezes: [StreakFreeze] = [],
         configuration: StreakConfiguration,
+        userId: String? = nil,
         currentDate: Date = Date(),
         timezone: TimeZone = .current
     ) -> (streak: CurrentStreakData, freezeConsumptions: [FreezeConsumption]) {
@@ -194,6 +196,7 @@ public struct StreakCalculator {
 
         let streak = CurrentStreakData(
             streakKey: configuration.streakKey,
+            userId: userId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
             lastEventDate: lastEvent?.timestamp,

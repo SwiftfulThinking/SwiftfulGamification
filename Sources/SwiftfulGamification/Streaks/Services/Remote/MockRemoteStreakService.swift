@@ -18,6 +18,10 @@ public class MockRemoteStreakService: RemoteStreakService {
     public init(streak: CurrentStreakData? = nil) {
         if let streak = streak {
             self.currentStreaks[streak.streakKey] = streak
+            // Initialize events from the streak's recentEvents
+            if let recentEvents = streak.recentEvents {
+                self.events[streak.streakKey] = recentEvents
+            }
         }
     }
 

@@ -206,7 +206,8 @@ public class StreakManager {
                     let (calculatedStreak, freezeConsumptions) = StreakCalculator.calculateStreak(
                         events: events,
                         freezes: freezes,
-                        configuration: configuration
+                        configuration: configuration,
+                        userId: userId
                     )
 
                     // Auto-consume freezes if needed
