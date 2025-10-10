@@ -114,10 +114,11 @@ struct StreakCalculatorTests {
     @Test("Handles multiple events on same day")
     func testHandlesMultipleEventsPerDay() throws {
         // Given: 3 events today, 2 events yesterday
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
 
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
@@ -220,9 +221,11 @@ struct StreakCalculatorTests {
     @Test("Calculates goal-based streak with eventsRequiredPerDay = 3")
     func testCalculatesGoalBasedStreak() throws {
         // Given: 3 days with 3+ events each
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
+
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
 
         let events = [
             // Today: 3 events
@@ -257,10 +260,11 @@ struct StreakCalculatorTests {
     @Test("Goal-based: Day with 2/3 events breaks streak")
     func testGoalBasedBreaksStreakWhenGoalNotMet() throws {
         // Given: Today 3 events, yesterday 2 events (goal is 3)
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
 
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
@@ -1126,9 +1130,11 @@ struct StreakCalculatorTests {
     @Test("Goal-based: Freeze fills day that missed goal")
     func testGoalBasedFreezesFillMissedGoal() throws {
         // Given: Goal is 3 events/day, one day has only 2 events
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
+
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
 
         let events = [
             // Today: 3 events (meets goal)
@@ -1804,9 +1810,11 @@ struct StreakCalculatorTests {
     @Test("Handles configuration changes mid-streak")
     func testHandlesConfigurationChanges() throws {
         // Given: Events suitable for different configurations
-        let now = Date()
         var calendar = Calendar.current
         calendar.timeZone = .current
+
+        // Use noon to avoid midnight boundary issues
+        let now = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
 
         // 3 days with varying event counts
         let events = [
