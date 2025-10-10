@@ -6,40 +6,43 @@
 //
 
 import Foundation
-import SwiftData
 import IdentifiableByString
 
 /// Represents a single progress item tracked by a user
 ///
+/// **Architecture Note:**
+/// This is the public domain model used throughout the SwiftfulGamification API.
+/// For SwiftData persistence, this converts to/from ProgressItemEntity in the persistence layer.
+///
 /// **Storage Architecture:**
 /// - `id`: User-provided identifier (e.g., "world1", "level5")
-/// - `compositeId`: Internal composite key for SwiftData uniqueness ("{progressKey}_{id}")
+/// - `compositeId`: Computed composite key ("{progressKey}_{id}") for uniqueness
 /// - Firestore document path: `swiftful_progress/{userId}/{progressKey}/items/{id}`
-/// - SwiftData uses `compositeId` as unique index to prevent conflicts across different progressKeys
-@Model
-public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
+public struct ProgressItem: Sendable, Codable, StringIdentifiable {
     /// User-provided identifier (e.g., "world1", "level5")
     /// Used as Firestore document ID
-    public var id: String
-
-    /// Composite unique identifier for SwiftData: "{progressKey}_{id}"
-    /// Prevents conflicts when same ID exists in different progressKeys
-    @Attribute(.unique) public var compositeId: String
+    public let id: String
 
     /// Progress key for grouping items (e.g., "level", "achievements")
-    public var progressKey: String
+    public let progressKey: String
 
     /// Progress value between 0.0 and 1.0
-    public var value: Double
+    public let value: Double
 
     /// UTC timestamp when the progress item was created
-    public var dateCreated: Date
+    public let dateCreated: Date
 
     /// UTC timestamp when the progress item was last modified
-    public var dateModified: Date
+    public let dateModified: Date
 
     /// Custom metadata associated with this item (for developer-defined data and filtering)
-    public var metadata: [String: GamificationDictionaryValue]
+    public let metadata: [String: GamificationDictionaryValue]
+
+    /// Composite unique identifier: "{progressKey}_{id}"
+    /// Prevents conflicts when same ID exists in different progressKeys
+    public var compositeId: String {
+        "\(progressKey)_\(id)"
+    }
 
     // MARK: - Initialization
 
@@ -53,7 +56,6 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
     ) {
         self.id = id
         self.progressKey = progressKey
-        self.compositeId = "\(progressKey)_\(id)"
         self.value = value
         self.dateCreated = dateCreated
         self.dateModified = dateModified
@@ -91,6 +93,17 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
         return true
     }
 
+    // MARK: - Codable
+
+    public enum CodingKeys: String, CodingKey {
+        case id
+        case progressKey = "progress_key"
+        case value
+        case dateCreated = "date_created"
+        case dateModified = "date_modified"
+        case metadata
+    }
+
     // MARK: - Mock Factory
 
     public static func mock(
@@ -107,43 +120,6 @@ public final class ProgressItem: @unchecked Sendable, StringIdentifiable {
             dateCreated: dateCreated,
             dateModified: dateModified
         )
-    }
-}
-
-// MARK: - Codable Support
-
-extension ProgressItem: Codable {
-    enum CodingKeys: String, CodingKey {
-        case id
-        case compositeId = "composite_id"
-        case progressKey = "progress_key"
-        case value
-        case dateCreated = "date_created"
-        case dateModified = "date_modified"
-        case metadata
-    }
-
-    public convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let id = try container.decode(String.self, forKey: .id)
-        let progressKey = try container.decode(String.self, forKey: .progressKey)
-        let value = try container.decode(Double.self, forKey: .value)
-        let dateCreated = try container.decode(Date.self, forKey: .dateCreated)
-        let dateModified = try container.decode(Date.self, forKey: .dateModified)
-        let metadata = try container.decodeIfPresent([String: GamificationDictionaryValue].self, forKey: .metadata) ?? [:]
-
-        self.init(id: id, progressKey: progressKey, value: value, dateCreated: dateCreated, dateModified: dateModified, metadata: metadata)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(compositeId, forKey: .compositeId)
-        try container.encode(progressKey, forKey: .progressKey)
-        try container.encode(value, forKey: .value)
-        try container.encode(dateCreated, forKey: .dateCreated)
-        try container.encode(dateModified, forKey: .dateModified)
-        try container.encode(metadata, forKey: .metadata)
     }
 }
 
