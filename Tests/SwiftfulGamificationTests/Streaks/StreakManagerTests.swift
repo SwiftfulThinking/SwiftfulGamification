@@ -207,7 +207,6 @@ struct StreakManagerTests {
     func testLogoutWhileStreaming() async throws {
         // Given: Manager with active stream
         let services = MockStreakServices(streak: .mock())
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout")
         let manager = StreakManager(services: services, configuration: config)
 
@@ -228,7 +227,6 @@ struct StreakManagerTests {
         // Given: Manager in client calculation mode with initial streak
         let initialStreak = CurrentStreakData.blank(streakKey: "workout")
         let services = MockStreakServices(streak: initialStreak)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
 
@@ -250,7 +248,6 @@ struct StreakManagerTests {
         // Given: Client calculation mode
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
@@ -274,7 +271,6 @@ struct StreakManagerTests {
         // Given: Server calculation mode
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: true)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
@@ -297,7 +293,6 @@ struct StreakManagerTests {
         // Given: Manager in client mode
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
@@ -451,8 +446,8 @@ struct StreakManagerTests {
         #expect(freezes.count == 2)
     }
 
-    @Test("Manual freeze usage does not trigger recalculation")
-    func testManualFreezeUsageNoRecalc() async throws {
+    @Test("Manual freeze usage triggers recalculation")
+    func testManualFreezeUsageTriggersRecalc() async throws {
         // Given: Manager with freeze
         let logger = MockGamificationLogger()
         let services = MockStreakServices(streak: nil)
@@ -469,10 +464,10 @@ struct StreakManagerTests {
         // When: Manually using freeze
         try await manager.useStreakFreeze(freezeId: "freeze-1")
 
-        try await Task.sleep(nanoseconds: 50_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then: Should NOT trigger calculation (current behavior - potential bug?)
-        #expect(!logger.trackedEvents.contains("StreakMan_CalculateStreak_Start"))
+        // Then: Should trigger calculation to update freezesRemaining
+        #expect(logger.trackedEvents.contains("StreakMan_CalculateStreak_Start"))
     }
 
     @Test("Auto-consume freeze creates event and marks used (client mode)")

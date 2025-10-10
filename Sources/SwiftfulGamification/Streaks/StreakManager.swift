@@ -146,6 +146,7 @@ public class StreakManager {
         do {
             try await remote.addStreakFreeze(userId: userId, streakKey: configuration.streakKey, freeze: freeze)
             logger?.trackEvent(event: Event.addStreakFreezeSuccess(freezeId: freeze.id))
+            calculateStreak(userId: userId)
         } catch {
             logger?.trackEvent(event: Event.addStreakFreezeFail(error: error))
             throw error
@@ -164,6 +165,7 @@ public class StreakManager {
         do {
             try await remote.useStreakFreeze(userId: userId, streakKey: configuration.streakKey, freezeId: freezeId)
             logger?.trackEvent(event: Event.useStreakFreezeSuccess(freezeId: freezeId))
+            calculateStreak(userId: userId)
         } catch {
             logger?.trackEvent(event: Event.useStreakFreezeFail(error: error))
             throw error

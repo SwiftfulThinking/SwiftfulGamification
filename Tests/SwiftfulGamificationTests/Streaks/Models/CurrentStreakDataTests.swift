@@ -90,16 +90,16 @@ struct CurrentStreakDataTests {
         #expect(data.isValid == true)
     }
 
-    @Test("Mock active creates streak with today's event")
+    @Test("Mock active creates streak for previous N days")
     func testMockActiveCreatesValidStreak() throws {
         // When: Creating mockActive streak
         let data = CurrentStreakData.mockActive(currentStreak: 7)
 
-        // Then: Should be active
+        // Then: Should be active but at risk (last event yesterday)
         #expect(data.currentStreak == 7)
         #expect(data.isStreakActive == true)
-        #expect(data.isStreakAtRisk == false)
-        #expect(data.todayEventCount == 1)
+        #expect(data.isStreakAtRisk == true)  // At risk because no event today
+        #expect(data.todayEventCount == 0)    // No event today yet
     }
 
     @Test("Mock at risk creates streak with yesterday's event")
@@ -224,7 +224,7 @@ struct CurrentStreakDataTests {
     @Test("status returns .active when event today")
     func testStatusActiveToday() throws {
         // Given: Streak with event today
-        let data = CurrentStreakData.mockActive()
+        let data = CurrentStreakData.mock(lastEventDate: Date(), todayEventCount: 1)
 
         // Then: Status should be active
         if case .active = data.status {
@@ -268,7 +268,7 @@ struct CurrentStreakDataTests {
     @Test("isStreakActive true when event today")
     func testIsStreakActiveTrueToday() throws {
         // Given: Streak with event today
-        let data = CurrentStreakData.mockActive()
+        let data = CurrentStreakData.mock(lastEventDate: Date(), todayEventCount: 1)
 
         // Then: Should be active
         #expect(data.isStreakActive == true)
@@ -309,7 +309,7 @@ struct CurrentStreakDataTests {
     @Test("isStreakAtRisk false when event today")
     func testIsStreakAtRiskFalse() throws {
         // Given: Streak with event today
-        let data = CurrentStreakData.mockActive()
+        let data = CurrentStreakData.mock(lastEventDate: Date(), todayEventCount: 1)
 
         // Then: Should not be at risk
         #expect(data.isStreakAtRisk == false)
@@ -490,7 +490,7 @@ struct CurrentStreakDataTests {
     @Test("isGoalMet true for basic streak (1 event)")
     func testIsGoalMetBasicStreak() throws {
         // Given: Basic streak (eventsRequiredPerDay = 1) with 1 event today
-        let data = CurrentStreakData.mockActive()
+        let data = CurrentStreakData.mock(lastEventDate: Date(), eventsRequiredPerDay: 1, todayEventCount: 1)
 
         // Then: Goal should be met
         #expect(data.isGoalMet == true)
