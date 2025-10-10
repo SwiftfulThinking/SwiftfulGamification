@@ -42,6 +42,11 @@ public class ProgressManager {
     // MARK: - Lifecycle
 
     public func logIn(userId: String) async throws {
+        // If userId is changing, log out first to clean up old listeners
+        if let currentUserId = self.userId, currentUserId != userId {
+            logOut()
+        }
+
         self.userId = userId
 
         // Hybrid sync: Bulk load all items, then stream updates

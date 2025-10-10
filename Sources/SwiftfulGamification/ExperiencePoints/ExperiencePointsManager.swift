@@ -28,6 +28,11 @@ public class ExperiencePointsManager {
     // MARK: - Public API
 
     public func logIn(userId: String) async throws {
+        // If userId is changing, log out first to clean up old listeners
+        if let currentUserId = self.userId, currentUserId != userId {
+            logOut()
+        }
+
         self.userId = userId
         addCurrentDataListener(userId: userId)
         calculateExperiencePoints(userId: userId)
