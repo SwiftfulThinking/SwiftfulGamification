@@ -456,7 +456,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             streakKey: streakKey,
             userId: userId,
             currentStreak: currentStreak,
-            longestStreak: max(currentStreak, 10),
+            longestStreak: currentStreak,
             lastEventDate: yesterday,
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
@@ -491,7 +491,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             streakKey: streakKey,
             userId: userId,
             currentStreak: currentStreak,
-            longestStreak: max(currentStreak, 8),
+            longestStreak: currentStreak,
             lastEventDate: yesterday,
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
@@ -533,14 +533,16 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             recentEvents.append(StreakEvent.mock(timestamp: eventDate))
         }
 
+        let currentStreak = 4
+
         return CurrentStreakData(
             streakKey: streakKey,
             userId: userId,
-            currentStreak: 4,
-            longestStreak: 7,
+            currentStreak: currentStreak,
+            longestStreak: currentStreak,
             lastEventDate: Date(),
             lastEventTimezone: TimeZone.current.identifier,
-            streakStartDate: Calendar.current.date(byAdding: .day, value: -4, to: Date()),
+            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: Date()),
             totalEvents: 15,
             freezesRemaining: 2,
             createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date()),
