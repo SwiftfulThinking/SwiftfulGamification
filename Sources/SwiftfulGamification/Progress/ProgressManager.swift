@@ -25,6 +25,10 @@ public class ProgressManager {
         self.configuration = configuration
         self.logger = logger
 
+        self.configure()
+    }
+    
+    private func configure() {
         // Load cached data asynchronously to avoid blocking initialization
         // This enables offline access while preventing startup delays
         Task { @MainActor in

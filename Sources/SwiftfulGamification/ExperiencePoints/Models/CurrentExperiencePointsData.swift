@@ -17,6 +17,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Experience identifier (e.g., "main", "battle", "quest")
     public let experienceKey: String
 
+    /// User identifier
+    public let userId: String?
+
     /// Total experience points accumulated
     public let totalPoints: Int?
 
@@ -42,6 +45,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
     public init(
         experienceKey: String,
+        userId: String? = nil,
         totalPoints: Int? = nil,
         totalEvents: Int? = nil,
         todayEventCount: Int? = nil,
@@ -51,6 +55,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         recentEvents: [ExperiencePointsEvent]? = nil
     ) {
         self.experienceKey = experienceKey
+        self.userId = userId
         self.totalPoints = totalPoints
         self.totalEvents = totalEvents
         self.todayEventCount = todayEventCount
@@ -64,6 +69,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
     public enum CodingKeys: String, CodingKey {
         case experienceKey = "experience_id"
+        case userId = "user_id"
         case totalPoints = "total_points"
         case totalEvents = "total_events"
         case todayEventCount = "today_event_count"
@@ -183,6 +189,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             "current_xp_experience_id": experienceKey
         ]
 
+        if let userId = userId { params["current_xp_user_id"] = userId }
         if let total = totalPoints { params["current_xp_total_points"] = total }
         if let events = totalEvents { params["current_xp_total_events"] = events }
         if let today = todayEventCount { params["current_xp_today_event_count"] = today }
@@ -197,6 +204,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
     public static func mock(
         experienceKey: String = "main",
+        userId: String? = "mock_user_123",
         totalPoints: Int = 1500,
         totalEvents: Int = 25,
         todayEventCount: Int = 3,
@@ -206,6 +214,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     ) -> Self {
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
+            userId: userId,
             totalPoints: totalPoints,
             totalEvents: totalEvents,
             todayEventCount: todayEventCount,
@@ -238,10 +247,12 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Mock with active XP earning
     public static func mockActive(
         experienceKey: String = "main",
+        userId: String? = "mock_user_123",
         totalPoints: Int = 2500
     ) -> Self {
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
+            userId: userId,
             totalPoints: totalPoints,
             totalEvents: 50,
             todayEventCount: 5,
@@ -254,6 +265,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Mock with recent activity
     public static func mockWithRecentEvents(
         experienceKey: String = "main",
+        userId: String? = "mock_user_123",
         eventCount: Int = 10
     ) -> Self {
         let events = (0..<eventCount).map { daysAgo in
@@ -264,6 +276,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
+            userId: userId,
             totalPoints: totalPoints,
             totalEvents: eventCount,
             todayEventCount: 1,

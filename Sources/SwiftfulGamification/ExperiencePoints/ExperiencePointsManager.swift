@@ -155,7 +155,8 @@ public class ExperiencePointsManager {
 
                     let calculatedData = ExperiencePointsCalculator.calculateExperiencePoints(
                         events: events,
-                        configuration: configuration
+                        configuration: configuration,
+                        userId: userId
                     )
 
                     currentExperiencePointsData = calculatedData

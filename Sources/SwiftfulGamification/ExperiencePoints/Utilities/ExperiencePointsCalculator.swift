@@ -13,12 +13,14 @@ public struct ExperiencePointsCalculator {
     /// - Parameters:
     ///   - events: All XP events for the user
     ///   - configuration: Experience points configuration
+    ///   - userId: User identifier (optional, for persistence)
     ///   - currentDate: Current date (for testing, defaults to Date())
     ///   - timezone: Timezone for calculations (defaults to current)
     /// - Returns: Calculated experience points data
     public static func calculateExperiencePoints(
         events: [ExperiencePointsEvent],
         configuration: ExperiencePointsConfiguration,
+        userId: String? = nil,
         currentDate: Date = Date(),
         timezone: TimeZone = .current
     ) -> CurrentExperiencePointsData {
@@ -49,6 +51,7 @@ public struct ExperiencePointsCalculator {
 
         return CurrentExperiencePointsData(
             experienceKey: configuration.experienceKey,
+            userId: userId,
             totalPoints: totalPoints,
             totalEvents: events.count,
             todayEventCount: todayEventCount,
