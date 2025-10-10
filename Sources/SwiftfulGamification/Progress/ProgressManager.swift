@@ -208,9 +208,9 @@ public class ProgressManager {
         // Clear cache
         progressCache.removeAll()
 
-        // Delete all locally
+        // Delete all locally (runs on background thread)
         do {
-            try local.deleteAllProgressItems(progressKey: configuration.progressKey)
+            try await local.deleteAllProgressItems(progressKey: configuration.progressKey)
             logger?.trackEvent(event: Event.saveLocalSuccess(id: "all"))
         } catch {
             logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -239,8 +239,8 @@ public class ProgressManager {
                 progressCache[item.id] = item
             }
 
-            // Save all to local storage
-            try local.saveProgressItems(items)
+            // Save all to local storage (runs on background thread)
+            try await local.saveProgressItems(items)
 
             logger?.trackEvent(event: Event.bulkLoadSuccess(count: items.count))
         } catch {

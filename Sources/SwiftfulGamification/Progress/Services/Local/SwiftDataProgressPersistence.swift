@@ -57,20 +57,41 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
         try mainContext.save()
     }
 
-    public func saveProgressItems(_ items: [ProgressItem]) throws {
-        // Batch operation: update existing items or insert new ones
+    // MARK: - Background Operations
+
+    /// Save or update multiple progress items (runs on background thread for better performance)
+    /// Uses batch fetch optimization: 1 query instead of N queries
+    nonisolated public func saveProgressItems(_ items: [ProgressItem]) async throws {
+        guard !items.isEmpty else { return }
+
+        // Create background context - this runs off the main actor
+        let backgroundContext = ModelContext(container)
+
+        // Batch fetch optimization: fetch all existing items once instead of N queries
+        let progressKey = items[0].progressKey
+        let descriptor = FetchDescriptor<ProgressItemEntity>(
+            predicate: #Predicate { $0.progressKey == progressKey }
+        )
+        let existingEntities = (try? backgroundContext.fetch(descriptor)) ?? []
+
+        // Create lookup dictionary for O(1) access
+        var existingByCompositeId: [String: ProgressItemEntity] = [:]
+        for entity in existingEntities {
+            existingByCompositeId[entity.compositeId] = entity
+        }
+
+        // Update existing or insert new
         for item in items {
-            let descriptor = FetchDescriptor<ProgressItemEntity>(
-                predicate: #Predicate { $0.compositeId == item.compositeId }
-            )
-            if let existing = try? mainContext.fetch(descriptor).first {
+            if let existing = existingByCompositeId[item.compositeId] {
                 existing.update(from: item)
             } else {
                 let entity = ProgressItemEntity.from(item)
-                mainContext.insert(entity)
+                backgroundContext.insert(entity)
             }
         }
-        try mainContext.save()
+
+        // Single save for all operations
+        try backgroundContext.save()
     }
 
     public func deleteProgressItem(progressKey: String, id: String) throws {
@@ -84,14 +105,18 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
         }
     }
 
-    public func deleteAllProgressItems(progressKey: String) throws {
+    /// Delete all progress items for a specific progressKey (runs on background thread)
+    nonisolated public func deleteAllProgressItems(progressKey: String) async throws {
+        // Create background context - this runs off the main actor
+        let backgroundContext = ModelContext(container)
+
         let descriptor = FetchDescriptor<ProgressItemEntity>(
             predicate: #Predicate { $0.progressKey == progressKey }
         )
-        let allEntities = (try? mainContext.fetch(descriptor)) ?? []
+        let allEntities = (try? backgroundContext.fetch(descriptor)) ?? []
         for entity in allEntities {
-            mainContext.delete(entity)
+            backgroundContext.delete(entity)
         }
-        try mainContext.save()
+        try backgroundContext.save()
     }
 }

@@ -142,7 +142,7 @@ struct MockLocalProgressPersistenceTests {
     // MARK: - Save Multiple Items Tests
 
     @Test("saveProgressItems adds multiple new items")
-    func testSaveProgressItemsAddsMultiple() throws {
+    func testSaveProgressItemsAddsMultiple() async throws {
         // Given: Empty persistence
         let persistence = MockLocalProgressPersistence()
 
@@ -151,7 +151,7 @@ struct MockLocalProgressPersistenceTests {
             ProgressItem.mock(id: "item1", value: 0.3),
             ProgressItem.mock(id: "item2", value: 0.7)
         ]
-        try persistence.saveProgressItems(items)
+        try await persistence.saveProgressItems(items)
 
         // Then: Should add all items
         let saved = persistence.getAllProgressItems(progressKey: "default")
@@ -159,7 +159,7 @@ struct MockLocalProgressPersistenceTests {
     }
 
     @Test("saveProgressItems updates existing and adds new")
-    func testSaveProgressItemsMixed() throws {
+    func testSaveProgressItemsMixed() async throws {
         // Given: Persistence with one item
         let original = ProgressItem.mock(id: "item1", value: 0.3)
         let persistence = MockLocalProgressPersistence(items: [original])
@@ -169,7 +169,7 @@ struct MockLocalProgressPersistenceTests {
             ProgressItem(id: "item1", progressKey: "default", value: 0.8),
             ProgressItem.mock(id: "item2", value: 0.5)
         ]
-        try persistence.saveProgressItems(items)
+        try await persistence.saveProgressItems(items)
 
         // Then: Should have both items with correct values
         let saved = persistence.getAllProgressItems(progressKey: "default")
@@ -179,12 +179,12 @@ struct MockLocalProgressPersistenceTests {
     }
 
     @Test("saveProgressItems handles empty array")
-    func testSaveProgressItemsEmpty() throws {
+    func testSaveProgressItemsEmpty() async throws {
         // Given: Persistence with items
         let persistence = MockLocalProgressPersistence(items: [ProgressItem.mock(id: "item1")])
 
         // When: Saving empty array
-        try persistence.saveProgressItems([])
+        try await persistence.saveProgressItems([])
 
         // Then: Should not affect existing items
         let items = persistence.getAllProgressItems(progressKey: "default")
@@ -227,7 +227,7 @@ struct MockLocalProgressPersistenceTests {
     // MARK: - Delete All Tests
 
     @Test("deleteAllProgressItems removes all")
-    func testDeleteAllProgressItemsRemovesAll() throws {
+    func testDeleteAllProgressItemsRemovesAll() async throws {
         // Given: Persistence with multiple items
         let items = [
             ProgressItem.mock(id: "item1", value: 0.1),
@@ -237,7 +237,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Deleting all items
-        try persistence.deleteAllProgressItems(progressKey: "default")
+        try await persistence.deleteAllProgressItems(progressKey: "default")
 
         // Then: Should remove all items
         let remaining = persistence.getAllProgressItems(progressKey: "default")
@@ -245,12 +245,12 @@ struct MockLocalProgressPersistenceTests {
     }
 
     @Test("deleteAllProgressItems handles empty persistence")
-    func testDeleteAllProgressItemsEmpty() throws {
+    func testDeleteAllProgressItemsEmpty() async throws {
         // Given: Empty persistence
         let persistence = MockLocalProgressPersistence()
 
         // When: Deleting all items
-        try persistence.deleteAllProgressItems(progressKey: "default")
+        try await persistence.deleteAllProgressItems(progressKey: "default")
 
         // Then: Should not throw
         let items = persistence.getAllProgressItems(progressKey: "default")
@@ -302,7 +302,7 @@ struct MockLocalProgressPersistenceTests {
     }
 
     @Test("deleteAllProgressItems only deletes items for specified progressKey")
-    func testDeleteAllProgressItemsFiltersByProgressKey() throws {
+    func testDeleteAllProgressItemsFiltersByProgressKey() async throws {
         // Given: Persistence with items from different progressKeys
         let items = [
             ProgressItem(id: "item1", progressKey: "world_1", value: 0.3),
@@ -311,7 +311,7 @@ struct MockLocalProgressPersistenceTests {
         let persistence = MockLocalProgressPersistence(items: items)
 
         // When: Deleting all items for world_1
-        try persistence.deleteAllProgressItems(progressKey: "world_1")
+        try await persistence.deleteAllProgressItems(progressKey: "world_1")
 
         // Then: Should only delete world_1 items
         let world1Items = persistence.getAllProgressItems(progressKey: "world_1")

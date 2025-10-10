@@ -19,11 +19,13 @@ public protocol LocalProgressPersistence: Sendable {
     func saveProgressItem(_ item: ProgressItem) throws
 
     /// Save or update multiple progress items (for bulk load)
-    func saveProgressItems(_ items: [ProgressItem]) throws
+    /// Runs on background thread for better performance with large batches
+    nonisolated func saveProgressItems(_ items: [ProgressItem]) async throws
 
     /// Delete a progress item by composite ID (progressKey_id)
     func deleteProgressItem(progressKey: String, id: String) throws
 
     /// Delete all progress items for a specific progressKey
-    func deleteAllProgressItems(progressKey: String) throws
+    /// Runs on background thread for better performance with large datasets
+    nonisolated func deleteAllProgressItems(progressKey: String) async throws
 }

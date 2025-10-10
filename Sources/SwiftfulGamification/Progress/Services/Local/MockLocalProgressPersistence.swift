@@ -29,8 +29,10 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
         items[item.compositeId] = item
     }
 
-    public func saveProgressItems(_ items: [ProgressItem]) throws {
-        items.forEach { self.items[$0.compositeId] = $0 }
+    nonisolated public func saveProgressItems(_ items: [ProgressItem]) async throws {
+        await MainActor.run {
+            items.forEach { self.items[$0.compositeId] = $0 }
+        }
     }
 
     public func deleteProgressItem(progressKey: String, id: String) throws {
@@ -38,7 +40,9 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
         items.removeValue(forKey: compositeId)
     }
 
-    public func deleteAllProgressItems(progressKey: String) throws {
-        items = items.filter { $0.value.progressKey != progressKey }
+    nonisolated public func deleteAllProgressItems(progressKey: String) async throws {
+        await MainActor.run {
+            items = items.filter { $0.value.progressKey != progressKey }
+        }
     }
 }
