@@ -119,4 +119,21 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
         }
         try backgroundContext.save()
     }
+
+    // MARK: - UserId Persistence
+
+    public func saveUserId(_ userId: String, progressKey: String) {
+        let key = "ProgressManager_userId_\(progressKey)"
+        if userId.isEmpty {
+            UserDefaults.standard.removeObject(forKey: key)
+        } else {
+            UserDefaults.standard.set(userId, forKey: key)
+        }
+    }
+
+    public func getUserId(progressKey: String) -> String? {
+        let key = "ProgressManager_userId_\(progressKey)"
+        let userId = UserDefaults.standard.string(forKey: key)
+        return userId?.isEmpty == true ? nil : userId
+    }
 }

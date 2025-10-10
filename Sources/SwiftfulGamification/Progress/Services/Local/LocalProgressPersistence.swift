@@ -28,4 +28,10 @@ public protocol LocalProgressPersistence: Sendable {
     /// Delete all progress items for a specific progressKey
     /// Runs on background thread for better performance with large datasets
     nonisolated func deleteAllProgressItems(progressKey: String) async throws
+
+    /// Save userId for a specific progressKey
+    func saveUserId(_ userId: String, progressKey: String)
+
+    /// Get saved userId for a specific progressKey
+    func getUserId(progressKey: String) -> String?
 }

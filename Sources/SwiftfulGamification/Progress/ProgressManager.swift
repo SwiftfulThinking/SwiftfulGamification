@@ -29,6 +29,9 @@ public class ProgressManager {
     }
     
     private func configure() {
+        // Load userId from local persistence
+        userId = local.getUserId(progressKey: configuration.progressKey)
+
         // Load cached data asynchronously to avoid blocking initialization
         // This enables offline access while preventing startup delays
         Task { @MainActor in
@@ -47,7 +50,10 @@ public class ProgressManager {
             logOut()
         }
 
-        self.userId = userId
+        if self.userId != userId {
+            self.userId = userId
+            local.saveUserId(userId, progressKey: configuration.progressKey)
+        }
 
         // Hybrid sync: Bulk load all items, then stream updates
         await bulkLoadProgress(userId: userId)
@@ -58,6 +64,7 @@ public class ProgressManager {
         remoteListenerTask?.cancel()
         remoteListenerTask = nil
         userId = nil
+        local.saveUserId("", progressKey: configuration.progressKey) // Clear by saving empty string
         progressCache.removeAll()
     }
 

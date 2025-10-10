@@ -11,6 +11,7 @@ import Foundation
 public final class MockLocalProgressPersistence: LocalProgressPersistence {
 
     private var items: [String: ProgressItem] = [:]
+    private var userIds: [String: String] = [:]
 
     public init(items: [ProgressItem] = []) {
         items.forEach { self.items[$0.compositeId] = $0 }
@@ -44,5 +45,18 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
         await MainActor.run {
             items = items.filter { $0.value.progressKey != progressKey }
         }
+    }
+
+    public func saveUserId(_ userId: String, progressKey: String) {
+        if userId.isEmpty {
+            userIds.removeValue(forKey: progressKey)
+        } else {
+            userIds[progressKey] = userId
+        }
+    }
+
+    public func getUserId(progressKey: String) -> String? {
+        let userId = userIds[progressKey]
+        return userId?.isEmpty == true ? nil : userId
     }
 }
