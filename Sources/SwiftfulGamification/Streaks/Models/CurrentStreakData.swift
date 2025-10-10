@@ -387,7 +387,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         createdAt: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
         updatedAt: Date = Date(),
         eventsRequiredPerDay: Int = 1,
-        todayEventCount: Int = 1
+        todayEventCount: Int = 1,
+        recentEvents: [StreakEvent]? = nil
     ) -> Self {
         CurrentStreakData(
             streakKey: streakKey,
@@ -402,7 +403,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             createdAt: createdAt,
             updatedAt: updatedAt,
             eventsRequiredPerDay: eventsRequiredPerDay,
-            todayEventCount: todayEventCount
+            todayEventCount: todayEventCount,
+            recentEvents: recentEvents
         )
     }
 
@@ -438,7 +440,16 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = "mock_user_123",
         currentStreak: Int = 7
     ) -> Self {
-        CurrentStreakData(
+        // Generate recent events to match the current streak
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let recentEvents = (0..<currentStreak).map { daysAgo in
+            let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
+            return StreakEvent.mock(timestamp: date)
+        }
+
+        return CurrentStreakData(
             streakKey: streakKey,
             userId: userId,
             currentStreak: currentStreak,
@@ -451,7 +462,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
             updatedAt: Date(),
             eventsRequiredPerDay: 1,
-            todayEventCount: 1
+            todayEventCount: 1,
+            recentEvents: recentEvents
         )
     }
 
@@ -462,6 +474,16 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         currentStreak: Int = 5
     ) -> Self {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+
+        // Generate recent events to match the current streak (ending yesterday)
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        let recentEvents = (1...currentStreak).map { daysAgo in
+            let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
+            return StreakEvent.mock(timestamp: date)
+        }
+
         return CurrentStreakData(
             streakKey: streakKey,
             userId: userId,
@@ -475,7 +497,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
             updatedAt: yesterday,
             eventsRequiredPerDay: 1,
-            todayEventCount: 0
+            todayEventCount: 0,
+            recentEvents: recentEvents
         )
     }
 
@@ -486,7 +509,28 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         eventsRequiredPerDay: Int = 3,
         todayEventCount: Int = 1
     ) -> Self {
-        CurrentStreakData(
+        // Generate recent events for a 4-day streak with goal-based requirements
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+
+        var recentEvents: [StreakEvent] = []
+
+        // Days 0-3 (yesterday and before): eventsRequiredPerDay events each
+        for daysAgo in 1...4 {
+            let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
+            for hour in 0..<eventsRequiredPerDay {
+                let eventDate = date.addingTimeInterval(TimeInterval(hour * 3600))
+                recentEvents.append(StreakEvent.mock(timestamp: eventDate))
+            }
+        }
+
+        // Today: todayEventCount events
+        for hour in 0..<todayEventCount {
+            let eventDate = Date().addingTimeInterval(TimeInterval(hour * 3600))
+            recentEvents.append(StreakEvent.mock(timestamp: eventDate))
+        }
+
+        return CurrentStreakData(
             streakKey: streakKey,
             userId: userId,
             currentStreak: 4,
@@ -499,7 +543,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date()),
             updatedAt: Date(),
             eventsRequiredPerDay: eventsRequiredPerDay,
-            todayEventCount: todayEventCount
+            todayEventCount: todayEventCount,
+            recentEvents: recentEvents
         )
     }
 }

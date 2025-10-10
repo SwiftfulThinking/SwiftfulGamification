@@ -47,7 +47,7 @@ public class ProgressManager {
     public func logIn(userId: String) async throws {
         // If userId is changing, log out first to clean up old listeners
         if self.userId != userId {
-            logOut()
+            await logOut()
         }
 
         if self.userId != userId {
@@ -60,10 +60,11 @@ public class ProgressManager {
         addRemoteListener(userId: userId)
     }
 
-    public func logOut() {
+    public func logOut() async {
         remoteListenerTask?.cancel()
         remoteListenerTask = nil
         userId = nil
+        try? await local.deleteAllProgressItems(progressKey: configuration.progressKey)
         local.saveUserId("", progressKey: configuration.progressKey) // Clear by saving empty string
         progressCache.removeAll()
     }

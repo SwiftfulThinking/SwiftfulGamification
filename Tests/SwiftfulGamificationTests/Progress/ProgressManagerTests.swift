@@ -412,7 +412,7 @@ struct ProgressManagerTests {
         try await manager.logIn(userId: "user123")
 
         // When: Logging out
-        manager.logOut()
+        await manager.logOut()
 
         // Then: Cache should be cleared
         #expect(manager.getProgress(id: "item1") == 0.0)

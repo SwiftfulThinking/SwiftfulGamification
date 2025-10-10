@@ -47,7 +47,9 @@ public class ExperiencePointsManager {
     public func logOut() {
         currentDataListenerTask?.cancel()
         currentDataListenerTask = nil
-        currentExperiencePointsData = CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
+        let blank = CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
+        try? local.saveCurrentExperiencePointsData(experienceKey: configuration.experienceKey, blank)
+        currentExperiencePointsData = blank
     }
 
     private func addCurrentDataListener(userId: String) {

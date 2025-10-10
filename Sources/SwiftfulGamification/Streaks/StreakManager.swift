@@ -47,7 +47,9 @@ public class StreakManager {
     public func logOut() {
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = nil
-        currentStreakData = CurrentStreakData.blank(streakKey: configuration.streakKey)
+        let blank = CurrentStreakData.blank(streakKey: configuration.streakKey)
+        try? local.saveCurrentStreakData(streakKey: configuration.streakKey, blank)
+        currentStreakData = blank
     }
 
     private func addCurrentStreakListener(userId: String) {
