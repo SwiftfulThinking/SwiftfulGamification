@@ -32,7 +32,7 @@ public class ExperiencePointsManager {
 
     public func logIn(userId: String) async throws {
         // If userId is changing, log out first to clean up old listeners
-        if let currentUserId = self.userId, currentUserId != userId {
+        if self.userId != userId {
             logOut()
         }
 
