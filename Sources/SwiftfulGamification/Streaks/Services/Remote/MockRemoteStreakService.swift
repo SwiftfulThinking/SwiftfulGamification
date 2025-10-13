@@ -22,6 +22,19 @@ public class MockRemoteStreakService: RemoteStreakService {
             if let recentEvents = streak.recentEvents {
                 self.events[streak.streakKey] = recentEvents
             }
+            // Initialize freezes based on freezesAvailableCount
+            if let freezesCount = streak.freezesAvailableCount, freezesCount > 0 {
+                let mockFreezes = (0..<freezesCount).map { index in
+                    StreakFreeze(
+                        id: "mock_freeze_\(index)",
+                        streakKey: streak.streakKey,
+                        earnedDate: Date().addingTimeInterval(-Double(index + 1) * 86400), // Earned 1, 2, 3... days ago
+                        usedDate: nil,
+                        expiresAt: nil
+                    )
+                }
+                self.freezes[streak.streakKey] = mockFreezes
+            }
         }
     }
 
