@@ -17,6 +17,10 @@ public class MockRemoteExperiencePointsService: RemoteExperiencePointsService {
     public init(data: CurrentExperiencePointsData? = nil) {
         if let data = data {
             self.currentData[data.experienceKey] = data
+            // Initialize events from the data's recentEvents
+            if let recentEvents = data.recentEvents {
+                self.events[data.experienceKey] = recentEvents
+            }
         }
     }
 
