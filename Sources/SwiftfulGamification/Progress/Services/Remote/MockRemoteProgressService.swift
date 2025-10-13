@@ -12,6 +12,7 @@ import Combine
 public class MockRemoteProgressService: RemoteProgressService {
 
     @Published private var progressItems: [String: ProgressItem] = [:]
+    private var deletionContinuations: [UUID: AsyncThrowingStream<String, Error>.Continuation] = [:]
 
     public init(items: [ProgressItem] = []) {
         items.forEach { progressItems[$0.compositeId] = $0 }
@@ -43,9 +44,16 @@ public class MockRemoteProgressService: RemoteProgressService {
             }
         }
 
+        let streamId = UUID()
         let deletions = AsyncThrowingStream<String, Error> { continuation in
-            // Mock doesn't track deletions separately
-            continuation.onTermination = { @Sendable _ in }
+            // Store continuation to emit deletions later
+            self.deletionContinuations[streamId] = continuation
+
+            continuation.onTermination = { @Sendable _ in
+                Task { @MainActor in
+                    self.deletionContinuations.removeValue(forKey: streamId)
+                }
+            }
         }
 
         return (updates, deletions)
@@ -58,9 +66,22 @@ public class MockRemoteProgressService: RemoteProgressService {
     public func deleteProgress(userId: String, progressKey: String, id: String) async throws {
         let compositeId = "\(progressKey)_\(id)"
         progressItems.removeValue(forKey: compositeId)
+
+        // Emit deletion to all active streams
+        for continuation in deletionContinuations.values {
+            continuation.yield(id)
+        }
     }
 
     public func deleteAllProgress(userId: String, progressKey: String) async throws {
+        let itemsToDelete = progressItems.values.filter { $0.progressKey == progressKey }
         progressItems = progressItems.filter { $0.value.progressKey != progressKey }
+
+        // Emit all deletions to active streams
+        for item in itemsToDelete {
+            for continuation in deletionContinuations.values {
+                continuation.yield(item.id)
+            }
+        }
     }
 }
