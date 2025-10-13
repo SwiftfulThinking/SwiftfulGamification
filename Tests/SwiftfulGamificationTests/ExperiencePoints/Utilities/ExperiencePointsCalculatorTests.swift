@@ -27,6 +27,7 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should return blank XP data
+        #expect(result.pointsAllTime == 0)
         #expect(result.pointsToday == 0)
         #expect(result.eventsTodayCount == 0)
     }
@@ -46,6 +47,7 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should have 100 points
+        #expect(result.pointsAllTime == 100)
         #expect(result.pointsToday == 100)
         #expect(result.eventsTodayCount == 1)
     }
@@ -69,6 +71,7 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should sum all points (775 total)
+        #expect(result.pointsAllTime == 775)
         #expect(result.pointsToday == 775)
         #expect(result.eventsTodayCount == 5)
     }
@@ -441,6 +444,7 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Different windows exclude different old events
+        #expect(result.pointsAllTime == 10800) // All events across all time
         #expect(result.pointsToday == 100) // Only today
         #expect(result.pointsLast7Days == 100) // Today only (10 days ago is outside 7-day window)
         #expect(result.pointsLast30Days == 300) // Today + 10 days ago
@@ -461,6 +465,7 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: All time windows should be 0
+        #expect(result.pointsAllTime == 0)
         #expect(result.pointsToday == 0)
         #expect(result.pointsThisWeek == 0)
         #expect(result.pointsLast7Days == 0)
@@ -577,6 +582,88 @@ struct ExperiencePointsCalculatorTests {
 
         // Then: Should only count from Jan 1 onwards (3000)
         #expect(result.pointsThisYear == 3000)
+    }
+
+    // MARK: - All-Time Points Tests
+
+    @Test("pointsAllTime sums all events across all time periods")
+    func testPointsAllTimeSumsAllEvents() throws {
+        // Given: Events across multiple years
+        let calendar = Calendar.current
+        let now = Date()
+
+        let events = [
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100), // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -15, to: now)!, points: 200), // 15 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -3, to: now)!, points: 500), // 3 months ago
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .year, value: -1, to: now)!, points: 1000), // 1 year ago
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .year, value: -3, to: now)!, points: 5000) // 3 years ago
+        ]
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
+
+        // When: Calculating XP
+        let result = ExperiencePointsCalculator.calculateExperiencePoints(
+            events: events,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: pointsAllTime should sum ALL events regardless of date (6800)
+        #expect(result.pointsAllTime == 6800)
+        // While other time windows only include recent events
+        #expect(result.pointsToday == 100)
+        #expect(result.pointsLast30Days == 300)
+        #expect(result.pointsThisYear == 800)
+    }
+
+    @Test("pointsAllTime equals pointsToday when all events are today")
+    func testPointsAllTimeEqualsPointsTodayForTodayEvents() throws {
+        // Given: All events happened today
+        let events = [
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 100),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 250),
+            ExperiencePointsEvent.mock(experienceKey: "main", points: 150)
+        ]
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
+
+        // When: Calculating XP
+        let result = ExperiencePointsCalculator.calculateExperiencePoints(
+            events: events,
+            configuration: config
+        )
+
+        // Then: pointsAllTime should equal pointsToday (500)
+        #expect(result.pointsAllTime == 500)
+        #expect(result.pointsToday == 500)
+        #expect(result.pointsAllTime == result.pointsToday)
+    }
+
+    @Test("pointsAllTime includes events outside all time windows")
+    func testPointsAllTimeIncludesVeryOldEvents() throws {
+        // Given: Very old event that's outside all time windows
+        let calendar = Calendar.current
+        let now = Date()
+        let veryOldDate = calendar.date(byAdding: .year, value: -10, to: now)!
+
+        let events = [
+            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: veryOldDate, points: 100000)
+        ]
+        let config = ExperiencePointsConfiguration(experienceKey: "main")
+
+        // When: Calculating XP
+        let result = ExperiencePointsCalculator.calculateExperiencePoints(
+            events: events,
+            configuration: config,
+            currentDate: now
+        )
+
+        // Then: pointsAllTime includes the old event, but time windows don't
+        #expect(result.pointsAllTime == 100000)
+        #expect(result.pointsToday == 0)
+        #expect(result.pointsThisWeek == 0)
+        #expect(result.pointsThisMonth == 0)
+        #expect(result.pointsThisYear == 0)
+        #expect(result.pointsLast12Months == 0)
     }
 
     // MARK: - Performance Tests

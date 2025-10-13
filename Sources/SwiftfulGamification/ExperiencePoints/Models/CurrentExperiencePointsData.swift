@@ -20,6 +20,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// User identifier
     public let userId: String?
 
+    /// Total points earned all-time
+    public let pointsAllTime: Int?
+
     /// Points earned today
     public let pointsToday: Int?
 
@@ -61,6 +64,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     public init(
         experienceKey: String,
         userId: String? = nil,
+        pointsAllTime: Int? = nil,
         pointsToday: Int? = nil,
         eventsTodayCount: Int? = nil,
         pointsThisWeek: Int? = nil,
@@ -76,6 +80,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     ) {
         self.experienceKey = experienceKey
         self.userId = userId
+        self.pointsAllTime = pointsAllTime
         self.pointsToday = pointsToday
         self.eventsTodayCount = eventsTodayCount
         self.pointsThisWeek = pointsThisWeek
@@ -95,6 +100,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     public enum CodingKeys: String, CodingKey {
         case experienceKey = "experience_id"
         case userId = "user_id"
+        case pointsAllTime = "points_all_time"
         case pointsToday = "points_today"
         case eventsTodayCount = "events_today_count"
         case pointsThisWeek = "points_this_week"
@@ -187,6 +193,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Validates data integrity
     public var isValid: Bool {
         // All Int values must be >= 0
+        if let points = pointsAllTime, points < 0 { return false }
         if let points = pointsToday, points < 0 { return false }
         if let events = eventsTodayCount, events < 0 { return false }
 
@@ -200,6 +207,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
+            pointsAllTime: pointsAllTime,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
             pointsThisWeek: pointsThisWeek,
@@ -224,6 +232,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         ]
 
         if let userId = userId { params["current_xp_user_id"] = userId }
+        if let points = pointsAllTime { params["current_xp_points_all_time"] = points }
         if let points = pointsToday { params["current_xp_points_today"] = points }
         if let events = eventsTodayCount { params["current_xp_events_today_count"] = events }
         if let daysSince = daysSinceLastEvent { params["current_xp_days_since_last_event"] = daysSince }
@@ -259,6 +268,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     public static func blank(experienceKey: String) -> Self {
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
+            pointsAllTime: 0,
             pointsToday: 0,
             eventsTodayCount: 0,
             pointsThisWeek: 0,
@@ -309,12 +319,15 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
             .reduce(0) { $0 + $1.points }
 
+        let allTimePoints = events.reduce(0) { $0 + $1.points }
+
         let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
         let firstEvent = events.min(by: { $0.timestamp < $1.timestamp })
 
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
+            pointsAllTime: allTimePoints,
             pointsToday: todayPoints,
             eventsTodayCount: eventsTodayCount,
             lastEventDate: lastEvent?.timestamp,
@@ -343,6 +356,8 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
             .reduce(0) { $0 + $1.points }
 
+        let allTimePoints = events.reduce(0) { $0 + $1.points }
+
         let eventsTodayCount = events.filter { event in
             calendar.isDate(event.timestamp, inSameDayAs: todayStart)
         }.count
@@ -353,6 +368,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
+            pointsAllTime: allTimePoints,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
             lastEventDate: lastEvent?.timestamp,
