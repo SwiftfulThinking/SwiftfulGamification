@@ -267,15 +267,39 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         userId: String? = "mock_user_123",
         totalPoints: Int = 2500
     ) -> Self {
-        CurrentExperiencePointsData(
+        // Generate mock events that add up to the specified totalPoints
+        let eventCount = 50
+        let pointsPerEvent = totalPoints / eventCount
+        let events = (0..<eventCount).map { daysAgo in
+            ExperiencePointsEvent.mock(
+                daysAgo: daysAgo % 30, // Spread over last 30 days
+                experienceKey: experienceKey,
+                points: pointsPerEvent
+            )
+        }
+
+        // Calculate fields from events (matching ExperiencePointsCalculator logic)
+        let calendar = Calendar.current
+        let today = Date()
+        let todayStart = calendar.startOfDay(for: today)
+
+        let todayEventCount = events.filter { event in
+            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+        }.count
+
+        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
+        let firstEvent = events.min(by: { $0.timestamp < $1.timestamp })
+
+        return CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
             totalPoints: totalPoints,
-            totalEvents: 50,
-            todayEventCount: 5,
-            lastEventDate: Date(),
-            createdAt: Calendar.current.date(byAdding: .month, value: -2, to: Date()),
-            updatedAt: Date()
+            totalEvents: eventCount,
+            todayEventCount: todayEventCount,
+            lastEventDate: lastEvent?.timestamp,
+            createdAt: firstEvent?.timestamp,
+            updatedAt: today,
+            recentEvents: events
         )
     }
 
@@ -289,17 +313,29 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceKey: experienceKey, points: 100 + daysAgo * 10)
         }
 
+        // Calculate fields from events (matching ExperiencePointsCalculator logic)
+        let calendar = Calendar.current
+        let today = Date()
+        let todayStart = calendar.startOfDay(for: today)
+
         let totalPoints = events.reduce(0) { $0 + $1.points }
+
+        let todayEventCount = events.filter { event in
+            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+        }.count
+
+        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
+        let firstEvent = events.min(by: { $0.timestamp < $1.timestamp })
 
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
             totalPoints: totalPoints,
             totalEvents: eventCount,
-            todayEventCount: 1,
-            lastEventDate: Date(),
-            createdAt: Calendar.current.date(byAdding: .day, value: -eventCount, to: Date()),
-            updatedAt: Date(),
+            todayEventCount: todayEventCount,
+            lastEventDate: lastEvent?.timestamp,
+            createdAt: firstEvent?.timestamp,
+            updatedAt: today,
             recentEvents: events
         )
     }
