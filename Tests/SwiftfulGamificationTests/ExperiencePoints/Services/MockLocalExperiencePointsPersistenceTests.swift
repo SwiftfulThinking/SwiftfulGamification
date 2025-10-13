@@ -18,7 +18,7 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("Initializes with provided XP data")
     func testInitializesWithProvidedData() throws {
         // Given: XP data
-        let data = CurrentExperiencePointsData.mock(totalPoints: 5000)
+        let data = CurrentExperiencePointsData.mock(pointsToday: 5000)
 
         // When: Initializing persistence with data
         let persistence = MockLocalExperiencePointsPersistence(data: data)
@@ -33,7 +33,7 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("getSavedExperiencePointsData returns initial data")
     func testGetSavedExperiencePointsDataReturnsInitial() throws {
         // Given: Persistence initialized with data
-        let initialData = CurrentExperiencePointsData.mock(totalPoints: 7000)
+        let initialData = CurrentExperiencePointsData.mock(pointsToday: 7000)
         let persistence = MockLocalExperiencePointsPersistence(data: initialData)
 
         // When: Getting saved data
@@ -46,17 +46,17 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("getSavedExperiencePointsData returns updated data after save")
     func testGetSavedExperiencePointsDataReturnsUpdated() throws {
         // Given: Persistence with initial data
-        let initialData = CurrentExperiencePointsData.mock(totalPoints: 5000)
+        let initialData = CurrentExperiencePointsData.mock(pointsToday: 5000)
         let persistence = MockLocalExperiencePointsPersistence(data: initialData)
 
         // When: Saving new data
-        let newData = CurrentExperiencePointsData.mock(totalPoints: 10000)
+        let newData = CurrentExperiencePointsData.mock(pointsToday: 10000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: newData.experienceKey, newData)
 
         // Then: Should return new data
         let saved = persistence.getSavedExperiencePointsData(experienceKey: newData.experienceKey)
         #expect(saved == newData)
-        #expect(saved?.totalPoints == 10000)
+        #expect(saved?.pointsToday == 10000)
     }
 
     // MARK: - saveExperiencePointsData Tests
@@ -68,7 +68,7 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Saving new XP data
-        let newData = CurrentExperiencePointsData.mock(totalPoints: 15000)
+        let newData = CurrentExperiencePointsData.mock(pointsToday: 15000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: newData.experienceKey, newData)
 
         // Then: New data should be persisted
@@ -79,26 +79,26 @@ struct MockLocalExperiencePointsPersistenceTests {
     @Test("saveExperiencePointsData overwrites previous data")
     func testSaveExperiencePointsDataOverwrites() throws {
         // Given: Persistence with initial data
-        let initial = CurrentExperiencePointsData.mock(totalPoints: 5000)
+        let initial = CurrentExperiencePointsData.mock(pointsToday: 5000)
         let persistence = MockLocalExperiencePointsPersistence(data: initial)
 
         // When: Saving multiple times
-        let data1 = CurrentExperiencePointsData.mock(totalPoints: 10000)
+        let data1 = CurrentExperiencePointsData.mock(pointsToday: 10000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: data1.experienceKey, data1)
 
-        let data2 = CurrentExperiencePointsData.mock(totalPoints: 20000)
+        let data2 = CurrentExperiencePointsData.mock(pointsToday: 20000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: data2.experienceKey, data2)
 
         // Then: Only last data should be saved
         let saved = persistence.getSavedExperiencePointsData(experienceKey: data2.experienceKey)
         #expect(saved == data2)
-        #expect(saved?.totalPoints == 20000)
+        #expect(saved?.pointsToday == 20000)
     }
 
     @Test("saveExperiencePointsData with nil clears data")
     func testSaveExperiencePointsDataWithNil() throws {
         // Given: Persistence with initial data
-        let initial = CurrentExperiencePointsData.mock(totalPoints: 5000)
+        let initial = CurrentExperiencePointsData.mock(pointsToday: 5000)
         let persistence = MockLocalExperiencePointsPersistence(data: initial)
 
         // When: Saving nil
@@ -119,19 +119,19 @@ struct MockLocalExperiencePointsPersistenceTests {
 
         // When: Saving multiple data objects (all with same default "main" experienceId)
         for i in 1...5 {
-            let data = CurrentExperiencePointsData.mock(totalPoints: i * 1000)
+            let data = CurrentExperiencePointsData.mock(pointsToday: i * 1000)
             try persistence.saveCurrentExperiencePointsData(experienceKey: data.experienceKey, data)
         }
 
         // Then: Last data should be saved (they all have same "main" experienceId from mock)
         let saved = persistence.getSavedExperiencePointsData(experienceKey: "main")
-        #expect(saved?.totalPoints == 5000)
+        #expect(saved?.pointsToday == 5000)
     }
 
     @Test("Saved data persists across get calls")
     func testSavedDataPersistsAcrossGets() throws {
         // Given: Persistence with saved data
-        let data = CurrentExperiencePointsData.mock(totalPoints: 12000)
+        let data = CurrentExperiencePointsData.mock(pointsToday: 12000)
         let persistence = MockLocalExperiencePointsPersistence(data: data)
 
         // When: Getting saved data multiple times
@@ -154,11 +154,11 @@ struct MockLocalExperiencePointsPersistenceTests {
         let persistence = MockLocalExperiencePointsPersistence(data: blank)
 
         // When: Performing multiple save/get cycles
-        let data1 = CurrentExperiencePointsData.mock(totalPoints: 3000)
+        let data1 = CurrentExperiencePointsData.mock(pointsToday: 3000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: data1.experienceKey, data1)
         let saved1 = persistence.getSavedExperiencePointsData(experienceKey: data1.experienceKey)
 
-        let data2 = CurrentExperiencePointsData.mock(totalPoints: 7000)
+        let data2 = CurrentExperiencePointsData.mock(pointsToday: 7000)
         try persistence.saveCurrentExperiencePointsData(experienceKey: data2.experienceKey, data2)
         let saved2 = persistence.getSavedExperiencePointsData(experienceKey: data2.experienceKey)
 
@@ -194,8 +194,8 @@ struct MockLocalExperiencePointsPersistenceTests {
         // When: Saving complex data with all fields
         let complexData = CurrentExperiencePointsData(
             experienceKey: "complex",
-            totalPoints: 250000,
-            totalEvents: 5000,
+            pointsToday: 250000,
+            eventsTodayCount: 5000,
             createdAt: Date().addingTimeInterval(-86400 * 60),
             updatedAt: Date()
         )
@@ -204,14 +204,14 @@ struct MockLocalExperiencePointsPersistenceTests {
         // Then: All fields should be preserved
         let saved = persistence.getSavedExperiencePointsData(experienceKey: complexData.experienceKey)
         #expect(saved == complexData)
-        #expect(saved?.totalPoints == 250000)
-        #expect(saved?.totalEvents == 5000)
+        #expect(saved?.pointsToday == 250000)
+        #expect(saved?.eventsTodayCount == 5000)
     }
 
     @Test("Blank data can be saved and retrieved")
     func testBlankDataSaveRetrieve() throws {
         // Given: Persistence with active data
-        let activeData = CurrentExperiencePointsData.mock(totalPoints: 10000)
+        let activeData = CurrentExperiencePointsData.mock(pointsToday: 10000)
         let persistence = MockLocalExperiencePointsPersistence(data: activeData)
 
         // When: Saving blank data
@@ -221,7 +221,7 @@ struct MockLocalExperiencePointsPersistenceTests {
         // Then: Blank data should be saved
         let saved = persistence.getSavedExperiencePointsData(experienceKey: blank.experienceKey)
         #expect(saved == blank)
-        #expect(saved?.totalPoints == 0)
-        #expect(saved?.totalEvents == 0)
+        #expect(saved?.pointsToday == 0)
+        #expect(saved?.eventsTodayCount == 0)
     }
 }

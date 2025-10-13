@@ -27,8 +27,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should return blank XP data
-        #expect(result.totalPoints == 0)
-        #expect(result.totalEvents == 0)
+        #expect(result.pointsToday == 0)
+        #expect(result.eventsTodayCount == 0)
     }
 
     @Test("Calculates XP for single event")
@@ -46,8 +46,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should have 100 points
-        #expect(result.totalPoints == 100)
-        #expect(result.totalEvents == 1)
+        #expect(result.pointsToday == 100)
+        #expect(result.eventsTodayCount == 1)
     }
 
     @Test("Calculates sum of multiple events")
@@ -69,8 +69,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should sum all points (775 total)
-        #expect(result.totalPoints == 775)
-        #expect(result.totalEvents == 5)
+        #expect(result.pointsToday == 775)
+        #expect(result.eventsTodayCount == 5)
     }
 
     @Test("Handles zero-point events")
@@ -90,8 +90,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should count events but not add zero points
-        #expect(result.totalPoints == 150)
-        #expect(result.totalEvents == 3)
+        #expect(result.pointsToday == 150)
+        #expect(result.eventsTodayCount == 3)
     }
 
     @Test("Handles large point values")
@@ -111,8 +111,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should handle large sums
-        #expect(result.totalPoints == 85000)
-        #expect(result.totalEvents == 3)
+        #expect(result.pointsToday == 85000)
+        #expect(result.eventsTodayCount == 3)
     }
 
     // MARK: - Metadata Filtering Tests
@@ -151,20 +151,20 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Returns blank XP data
-        #expect(result.totalPoints == 0)
-        #expect(result.totalEvents == 0)
+        #expect(result.pointsToday == 0)
+        #expect(result.eventsTodayCount == 0)
         #expect(result.experienceKey == "main")
     }
 
     @Test("Handles events sorted in random order")
     func testHandlesRandomlySortedEvents() throws {
-        // Given: Events in random order
+        // Given: Events today in random order
         let now = Date()
         let events = [
-            ExperiencePointsEvent.mock(id: "3", experienceKey: "main", timestamp: now.addingTimeInterval(-172800), points: 75),
+            ExperiencePointsEvent.mock(id: "3", experienceKey: "main", timestamp: now, points: 75),
             ExperiencePointsEvent.mock(id: "1", experienceKey: "main", timestamp: now, points: 100),
-            ExperiencePointsEvent.mock(id: "4", experienceKey: "main", timestamp: now.addingTimeInterval(-259200), points: 50),
-            ExperiencePointsEvent.mock(id: "2", experienceKey: "main", timestamp: now.addingTimeInterval(-86400), points: 200)
+            ExperiencePointsEvent.mock(id: "4", experienceKey: "main", timestamp: now, points: 50),
+            ExperiencePointsEvent.mock(id: "2", experienceKey: "main", timestamp: now, points: 200)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -174,9 +174,9 @@ struct ExperiencePointsCalculatorTests {
             configuration: config
         )
 
-        // Then: Should correctly sum regardless of order
-        #expect(result.totalPoints == 425)
-        #expect(result.totalEvents == 4)
+        // Then: Should correctly sum all today's points regardless of order
+        #expect(result.pointsToday == 425)
+        #expect(result.eventsTodayCount == 4)
     }
 
     // MARK: - Edge Cases
@@ -196,8 +196,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should handle large value
-        #expect(result.totalPoints == 1000000)
-        #expect(result.totalEvents == 1)
+        #expect(result.pointsToday == 1000000)
+        #expect(result.eventsTodayCount == 1)
     }
 
     @Test("Handles very long event list")
@@ -215,8 +215,8 @@ struct ExperiencePointsCalculatorTests {
         )
 
         // Then: Should correctly sum all events
-        #expect(result.totalPoints == 10000)
-        #expect(result.totalEvents == 1000)
+        #expect(result.pointsToday == 10000)
+        #expect(result.eventsTodayCount == 1000)
     }
 
     @Test("Returns correct experienceId in result")
@@ -281,7 +281,7 @@ struct ExperiencePointsCalculatorTests {
         let duration = Date().timeIntervalSince(startTime)
 
         // Then: Should complete in reasonable time (<1 second)
-        #expect(result.totalEvents == 10000)
+        #expect(result.eventsTodayCount == 10000)
         #expect(duration < 1.0) // Should be very fast
     }
 }

@@ -26,16 +26,16 @@ struct CurrentExperiencePointsDataTests {
         // When: Creating instance with all fields
         let data = CurrentExperiencePointsData(
             experienceKey: experienceId,
-            totalPoints: totalPoints,
-            totalEvents: totalEvents,
+            pointsToday: totalPoints,
+            eventsTodayCount: totalEvents,
             createdAt: createdAt,
             updatedAt: updatedAt
         )
 
         // Then: All properties should be set correctly
         #expect(data.experienceKey == experienceId)
-        #expect(data.totalPoints == totalPoints)
-        #expect(data.totalEvents == totalEvents)
+        #expect(data.pointsToday == totalPoints)
+        #expect(data.eventsTodayCount == totalEvents)
         #expect(data.createdAt == createdAt)
         #expect(data.updatedAt == updatedAt)
     }
@@ -47,8 +47,8 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should have zero values
         #expect(data.experienceKey == "main")
-        #expect(data.totalPoints == 0)
-        #expect(data.totalEvents == 0)
+        #expect(data.pointsToday == 0)
+        #expect(data.eventsTodayCount == 0)
     }
 
     @Test("Mock factory creates valid data")
@@ -58,20 +58,20 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should have default values
         #expect(data.experienceKey == "main")
-        #expect(data.totalPoints == 1500)
-        #expect(data.totalEvents == 25)
+        #expect(data.pointsToday == 150)
+        #expect(data.eventsTodayCount == 3)
         #expect(data.isValid == true)
     }
 
     @Test("Mock factory with custom values")
     func testMockFactoryWithCustomValues() throws {
         // When: Creating mock with custom values
-        let data = CurrentExperiencePointsData.mock(experienceKey: "battle", totalPoints: 7500, totalEvents: 200)
+        let data = CurrentExperiencePointsData.mock(experienceKey: "battle", pointsToday: 7500, eventsTodayCount: 200)
 
         // Then: Should have custom values
         #expect(data.experienceKey == "battle")
-        #expect(data.totalPoints == 7500)
-        #expect(data.totalEvents == 200)
+        #expect(data.pointsToday == 7500)
+        #expect(data.eventsTodayCount == 200)
     }
 
     // MARK: - Codable Tests
@@ -89,19 +89,19 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should use snake_case keys
         #expect(json["experience_id"] != nil)
-        #expect(json["total_points"] != nil)
-        #expect(json["total_events"] != nil)
+        #expect(json["points_today"] != nil)
+        #expect(json["events_today_count"] != nil)
 
         // And: Should not contain camelCase keys
         #expect(json["experienceId"] == nil)
-        #expect(json["totalPoints"] == nil)
-        #expect(json["totalEvents"] == nil)
+        #expect(json["pointsToday"] == nil)
+        #expect(json["eventsTodayCount"] == nil)
     }
 
     @Test("Decodes from snake_case keys")
     func testDecodesFromSnakeCase() throws {
         // Given: XP data
-        let original = CurrentExperiencePointsData.mock(experienceKey: "battle", totalPoints: 3000)
+        let original = CurrentExperiencePointsData.mock(experienceKey: "battle", pointsToday: 3000)
 
         // When: Encoding then decoding
         let encoder = JSONEncoder()
@@ -111,7 +111,7 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should decode correctly
         #expect(decoded.experienceKey == "battle")
-        #expect(decoded.totalPoints == 3000)
+        #expect(decoded.pointsToday == 3000)
     }
 
     @Test("Roundtrip encoding preserves all data")
@@ -145,8 +145,8 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should decode with nil optional fields
         #expect(decoded.experienceKey == "minimal")
-        #expect(decoded.totalPoints == nil)
-        #expect(decoded.totalEvents == nil)
+        #expect(decoded.pointsToday == nil)
+        #expect(decoded.eventsTodayCount == nil)
     }
 
     // MARK: - Validation Tests
@@ -163,7 +163,7 @@ struct CurrentExperiencePointsDataTests {
     @Test("isValid false when totalPoints negative")
     func testIsValidFalseNegativePoints() throws {
         // Given: Data with negative totalPoints
-        let data = CurrentExperiencePointsData(experienceKey: "test", totalPoints: -100)
+        let data = CurrentExperiencePointsData(experienceKey: "test", pointsToday: -100)
 
         // Then: Should be invalid
         #expect(data.isValid == false)
@@ -172,7 +172,7 @@ struct CurrentExperiencePointsDataTests {
     @Test("isValid false when totalEvents negative")
     func testIsValidFalseNegativeEvents() throws {
         // Given: Data with negative totalEvents
-        let data = CurrentExperiencePointsData(experienceKey: "test", totalEvents: -5)
+        let data = CurrentExperiencePointsData(experienceKey: "test", eventsTodayCount: -5)
 
         // Then: Should be invalid
         #expect(data.isValid == false)
@@ -183,15 +183,15 @@ struct CurrentExperiencePointsDataTests {
     @Test("eventParameters includes all XP fields")
     func testEventParametersIncludesAllFields() throws {
         // Given: XP data with known values
-        let data = CurrentExperiencePointsData.mock(experienceKey: "battle", totalPoints: 5000)
+        let data = CurrentExperiencePointsData.mock(experienceKey: "battle", pointsToday: 5000)
 
         // When: Getting event parameters
         let params = data.eventParameters
 
         // Then: Should include all fields with current_xp_ prefix
         #expect(params["current_xp_experience_id"] as? String == "battle")
-        #expect(params["current_xp_total_points"] as? Int == 5000)
-        #expect(params["current_xp_total_events"] != nil)
+        #expect(params["current_xp_points_today"] as? Int == 5000)
+        #expect(params["current_xp_events_today_count"] != nil)
     }
 
     @Test("eventParameters prefixed with current_xp_")
@@ -204,8 +204,8 @@ struct CurrentExperiencePointsDataTests {
 
         // Then: Should prefix all keys with current_xp_
         #expect(params["current_xp_experience_id"] as? String == "quest")
-        #expect(params["current_xp_total_points"] != nil)
-        #expect(params["current_xp_total_events"] != nil)
+        #expect(params["current_xp_points_today"] != nil)
+        #expect(params["current_xp_events_today_count"] != nil)
     }
 
     // MARK: - Equatable Tests
@@ -215,13 +215,13 @@ struct CurrentExperiencePointsDataTests {
         // Given: Two instances with identical data
         let data1 = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
-            totalEvents: 100
+            pointsToday: 5000,
+            eventsTodayCount: 100
         )
         let data2 = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
-            totalEvents: 100
+            pointsToday: 5000,
+            eventsTodayCount: 100
         )
 
         // Then: Should be equal
@@ -241,8 +241,8 @@ struct CurrentExperiencePointsDataTests {
     @Test("Different totalPoints makes instances unequal")
     func testEquatableUnequalTotalPoints() throws {
         // Given: Two instances differing only in totalPoints
-        let data1 = CurrentExperiencePointsData(experienceKey: "test", totalPoints: 1000)
-        let data2 = CurrentExperiencePointsData(experienceKey: "test", totalPoints: 2000)
+        let data1 = CurrentExperiencePointsData(experienceKey: "test", pointsToday: 1000)
+        let data2 = CurrentExperiencePointsData(experienceKey: "test", pointsToday: 2000)
 
         // Then: Should not be equal
         #expect(data1 != data2)
@@ -255,7 +255,7 @@ struct CurrentExperiencePointsDataTests {
         // Given: Data with no updatedAt
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: nil
         )
 
@@ -269,7 +269,7 @@ struct CurrentExperiencePointsDataTests {
         let thirtyMinutesAgo = Date().addingTimeInterval(-30 * 60)
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: thirtyMinutesAgo
         )
 
@@ -283,7 +283,7 @@ struct CurrentExperiencePointsDataTests {
         let twoHoursAgo = Date().addingTimeInterval(-2 * 60 * 60)
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: twoHoursAgo
         )
 
@@ -297,7 +297,7 @@ struct CurrentExperiencePointsDataTests {
         let oneHourAgo = Date().addingTimeInterval(-60 * 60)
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: oneHourAgo
         )
 
@@ -310,7 +310,7 @@ struct CurrentExperiencePointsDataTests {
         // Given: Data updated now
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: Date()
         )
 
@@ -324,7 +324,7 @@ struct CurrentExperiencePointsDataTests {
         let oneDayAgo = Date().addingTimeInterval(-24 * 60 * 60)
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
+            pointsToday: 5000,
             updatedAt: oneDayAgo
         )
 

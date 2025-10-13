@@ -22,8 +22,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Create test data
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
-            totalEvents: 100,
+            pointsToday: 5000,
+            eventsTodayCount: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -37,8 +37,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Verify
         #expect(retrieved != nil)
         #expect(retrieved?.experienceKey == testData.experienceKey)
-        #expect(retrieved?.totalPoints == testData.totalPoints)
-        #expect(retrieved?.totalEvents == testData.totalEvents)
+        #expect(retrieved?.pointsToday == testData.pointsToday)
+        #expect(retrieved?.eventsTodayCount == testData.eventsTodayCount)
 
         // Clean up
         try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
@@ -63,8 +63,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save some data
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 3000,
-            totalEvents: 50,
+            pointsToday: 3000,
+            eventsTodayCount: 50,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -87,8 +87,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save initial data
         let initialData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
-            totalEvents: 100,
+            pointsToday: 5000,
+            eventsTodayCount: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -97,8 +97,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save new data
         let newData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 7000,
-            totalEvents: 150,
+            pointsToday: 7000,
+            eventsTodayCount: 150,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -106,8 +106,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         // Retrieve and verify it's the new data
         let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
-        #expect(retrieved?.totalPoints == 7000)
-        #expect(retrieved?.totalEvents == 150)
+        #expect(retrieved?.pointsToday == 7000)
+        #expect(retrieved?.eventsTodayCount == 150)
 
         // Clean up
         try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
@@ -124,8 +124,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 10000,
-            totalEvents: 250,
+            pointsToday: 10000,
+            eventsTodayCount: 250,
             createdAt: createdDate,
             updatedAt: now
         )
@@ -134,8 +134,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
         #expect(retrieved?.experienceKey == testData.experienceKey)
-        #expect(retrieved?.totalPoints == testData.totalPoints)
-        #expect(retrieved?.totalEvents == testData.totalEvents)
+        #expect(retrieved?.pointsToday == testData.pointsToday)
+        #expect(retrieved?.eventsTodayCount == testData.eventsTodayCount)
 
         // Date comparison (within 1 second tolerance due to JSON encoding precision)
         if let retrievedCreated = retrieved?.createdAt {
@@ -160,8 +160,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: nil,
-            totalEvents: nil,
+            pointsToday: nil,
+            eventsTodayCount: nil,
             createdAt: nil,
             updatedAt: nil
         )
@@ -170,8 +170,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
         #expect(retrieved?.experienceKey == "test")
-        #expect(retrieved?.totalPoints == nil)
-        #expect(retrieved?.totalEvents == nil)
+        #expect(retrieved?.pointsToday == nil)
+        #expect(retrieved?.eventsTodayCount == nil)
         #expect(retrieved?.createdAt == nil)
         #expect(retrieved?.updatedAt == nil)
 
@@ -188,8 +188,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 8000,
-            totalEvents: 200,
+            pointsToday: 8000,
+            eventsTodayCount: 200,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -201,8 +201,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrieved = persistence2.getSavedExperiencePointsData(experienceKey: "test")
 
         #expect(retrieved?.experienceKey == "test")
-        #expect(retrieved?.totalPoints == 8000)
-        #expect(retrieved?.totalEvents == 200)
+        #expect(retrieved?.pointsToday == 8000)
+        #expect(retrieved?.eventsTodayCount == 200)
 
         // Clean up with either instance
         try persistence1.saveCurrentExperiencePointsData(experienceKey: "test", nil)
@@ -220,8 +220,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 0,
-            totalEvents: 0,
+            pointsToday: 0,
+            eventsTodayCount: 0,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -230,8 +230,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
         #expect(retrieved?.experienceKey == "test")
-        #expect(retrieved?.totalPoints == 0)
-        #expect(retrieved?.totalEvents == 0)
+        #expect(retrieved?.pointsToday == 0)
+        #expect(retrieved?.eventsTodayCount == 0)
 
         // Clean up
         try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
@@ -243,8 +243,8 @@ struct FileManagerExperiencePointsPersistenceTests {
 
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 9999999,
-            totalEvents: 500000,
+            pointsToday: 9999999,
+            eventsTodayCount: 500000,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -253,8 +253,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrieved = persistence.getSavedExperiencePointsData(experienceKey: "test")
 
         #expect(retrieved?.experienceKey == "test")
-        #expect(retrieved?.totalPoints == 9999999)
-        #expect(retrieved?.totalEvents == 500000)
+        #expect(retrieved?.pointsToday == 9999999)
+        #expect(retrieved?.eventsTodayCount == 500000)
 
         // Clean up
         try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)
@@ -267,8 +267,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save data
         let testData = CurrentExperiencePointsData(
             experienceKey: "test",
-            totalPoints: 5000,
-            totalEvents: 100,
+            pointsToday: 5000,
+            eventsTodayCount: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -288,8 +288,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save data for "main" experience
         let mainData = CurrentExperiencePointsData(
             experienceKey: "main",
-            totalPoints: 5000,
-            totalEvents: 100,
+            pointsToday: 5000,
+            eventsTodayCount: 100,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -298,8 +298,8 @@ struct FileManagerExperiencePointsPersistenceTests {
         // Save data for "battle" experience
         let battleData = CurrentExperiencePointsData(
             experienceKey: "battle",
-            totalPoints: 7000,
-            totalEvents: 150,
+            pointsToday: 7000,
+            eventsTodayCount: 150,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -310,12 +310,12 @@ struct FileManagerExperiencePointsPersistenceTests {
         let retrievedBattle = persistence.getSavedExperiencePointsData(experienceKey: "battle")
 
         #expect(retrievedMain?.experienceKey == "main")
-        #expect(retrievedMain?.totalPoints == 5000)
-        #expect(retrievedMain?.totalEvents == 100)
+        #expect(retrievedMain?.pointsToday == 5000)
+        #expect(retrievedMain?.eventsTodayCount == 100)
 
         #expect(retrievedBattle?.experienceKey == "battle")
-        #expect(retrievedBattle?.totalPoints == 7000)
-        #expect(retrievedBattle?.totalEvents == 150)
+        #expect(retrievedBattle?.pointsToday == 7000)
+        #expect(retrievedBattle?.eventsTodayCount == 150)
 
         // Clean up both
         try persistence.saveCurrentExperiencePointsData(experienceKey: "main", nil)

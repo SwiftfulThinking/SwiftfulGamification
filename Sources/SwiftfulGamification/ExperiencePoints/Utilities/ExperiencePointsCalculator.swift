@@ -28,11 +28,17 @@ public struct ExperiencePointsCalculator {
             return CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
         }
 
-        // CALCULATE TOTAL POINTS
-        let totalPoints = events.reduce(0) { $0 + $1.points }
+        var calendar = Calendar.current
+        calendar.timeZone = timezone
+        let todayStart = calendar.startOfDay(for: currentDate)
+
+        // CALCULATE POINTS TODAY
+        let pointsToday = events
+            .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
+            .reduce(0) { $0 + $1.points }
 
         // GET TODAY'S EVENT COUNT
-        let todayEventCount = getTodayEventCount(
+        let eventsTodayCount = getTodayEventCount(
             events: events,
             timezone: timezone,
             currentDate: currentDate
@@ -52,9 +58,8 @@ public struct ExperiencePointsCalculator {
         return CurrentExperiencePointsData(
             experienceKey: configuration.experienceKey,
             userId: userId,
-            totalPoints: totalPoints,
-            totalEvents: events.count,
-            todayEventCount: todayEventCount,
+            pointsToday: pointsToday,
+            eventsTodayCount: eventsTodayCount,
             lastEventDate: lastEvent?.timestamp,
             createdAt: events.first?.timestamp,
             updatedAt: currentDate,

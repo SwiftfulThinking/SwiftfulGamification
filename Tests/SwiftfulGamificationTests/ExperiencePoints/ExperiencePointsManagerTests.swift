@@ -28,14 +28,14 @@ struct ExperiencePointsManagerTests {
 
         // Then: Should have blank data
         #expect(manager.currentExperiencePointsData.experienceKey == "main")
-        #expect(manager.currentExperiencePointsData.totalPoints == 0)
-        #expect(manager.currentExperiencePointsData.totalEvents == 0)
+        #expect(manager.currentExperiencePointsData.pointsToday == 0)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 0)
     }
 
     @Test("Manager initializes with saved data from local cache")
     func testInitializationWithSavedData() async throws {
         // Given: Local cache has saved data
-        let savedData = CurrentExperiencePointsData.mock(totalPoints: 5000, totalEvents: 100)
+        let savedData = CurrentExperiencePointsData.mock(pointsToday: 5000, eventsTodayCount: 100)
         struct TestServices: ExperiencePointsServices {
             let remote: RemoteExperiencePointsService
             let local: LocalExperiencePointsPersistence
@@ -49,14 +49,14 @@ struct ExperiencePointsManagerTests {
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // Then: Should load saved data
-        #expect(manager.currentExperiencePointsData.totalPoints == 5000)
-        #expect(manager.currentExperiencePointsData.totalEvents == 100)
+        #expect(manager.currentExperiencePointsData.pointsToday == 5000)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 100)
     }
 
     @Test("Manager handles local cache with mismatched experienceId")
     func testInitializationWithMismatchedExperienceId() async throws {
         // Given: Local cache has data for different experienceId
-        let savedData = CurrentExperiencePointsData.mock(experienceKey: "battle", totalPoints: 2000)
+        let savedData = CurrentExperiencePointsData.mock(experienceKey: "battle", pointsToday: 2000)
         struct TestServices: ExperiencePointsServices {
             let remote: RemoteExperiencePointsService
             let local: LocalExperiencePointsPersistence
@@ -71,7 +71,7 @@ struct ExperiencePointsManagerTests {
 
         // Then: Manager loads blank data for "main" since "battle" doesn't match
         #expect(manager.currentExperiencePointsData.experienceKey == "main")
-        #expect(manager.currentExperiencePointsData.totalPoints == 0)
+        #expect(manager.currentExperiencePointsData.pointsToday == 0)
     }
 
     // MARK: - Login/Logout Tests
@@ -133,7 +133,7 @@ struct ExperiencePointsManagerTests {
     @Test("Logout cancels listeners and resets data")
     func testLogoutCancelsListeners() async throws {
         // Given: Manager logged in with active listener
-        let initialData = CurrentExperiencePointsData.mock(totalPoints: 5000)
+        let initialData = CurrentExperiencePointsData.mock(pointsToday: 5000)
         let services = MockExperiencePointsServices(data: initialData)
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config)
@@ -146,8 +146,8 @@ struct ExperiencePointsManagerTests {
 
         // Then: Data should be reset to blank
         #expect(manager.currentExperiencePointsData.experienceKey == "main")
-        #expect(manager.currentExperiencePointsData.totalPoints == 0)
-        #expect(manager.currentExperiencePointsData.totalEvents == 0)
+        #expect(manager.currentExperiencePointsData.pointsToday == 0)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 0)
     }
 
     @Test("Login called twice without logout cancels previous listener")
@@ -192,8 +192,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
         // Then: Data should be updated
-        #expect(manager.currentExperiencePointsData.totalEvents == 1)
-        #expect(manager.currentExperiencePointsData.totalPoints == 100)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 1)
+        #expect(manager.currentExperiencePointsData.pointsToday == 100)
     }
 
     @Test("Adding event triggers client calculation when useServerCalculation = false")
@@ -260,8 +260,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Then: Total should be sum of all events
-        #expect(manager.currentExperiencePointsData.totalPoints == 400)
-        #expect(manager.currentExperiencePointsData.totalEvents == 3)
+        #expect(manager.currentExperiencePointsData.pointsToday == 400)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 3)
     }
 
     // MARK: - Remote Listener Tests
@@ -269,7 +269,7 @@ struct ExperiencePointsManagerTests {
     @Test("Remote listener updates currentData on change")
     func testRemoteListenerUpdatesData() async throws {
         // Given: Remote service with initial data
-        let initialData = CurrentExperiencePointsData.mock(totalPoints: 1000)
+        let initialData = CurrentExperiencePointsData.mock(pointsToday: 1000)
         let services = MockExperiencePointsServices(data: initialData)
         let remote = services.remote as! MockRemoteExperiencePointsService
         let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
@@ -279,20 +279,20 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Remote updates data
-        let newData = CurrentExperiencePointsData.mock(totalPoints: 2500)
+        let newData = CurrentExperiencePointsData.mock(pointsToday: 2500)
         try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: newData)
 
         // Give listener time to receive update
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // Then: Manager's data should be updated
-        #expect(manager.currentExperiencePointsData.totalPoints == 2500)
+        #expect(manager.currentExperiencePointsData.pointsToday == 2500)
     }
 
     @Test("Remote listener saves to local cache on update")
     func testRemoteListenerSavesLocally() async throws {
         // Given: Manager with remote listener
-        let initialData = CurrentExperiencePointsData.mock(totalPoints: 1000)
+        let initialData = CurrentExperiencePointsData.mock(pointsToday: 1000)
         let services = MockExperiencePointsServices(data: initialData)
         let remote = services.remote as! MockRemoteExperiencePointsService
         let local = services.local as! MockLocalExperiencePointsPersistence
@@ -303,14 +303,14 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Remote updates data
-        let newData = CurrentExperiencePointsData.mock(totalPoints: 3500)
+        let newData = CurrentExperiencePointsData.mock(pointsToday: 3500)
         try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: newData)
 
         try await Task.sleep(nanoseconds: 100_000_000) // Wait for save
 
         // Then: Local cache should have updated data
         let saved = local.getSavedExperiencePointsData(experienceKey: "main")
-        #expect(saved?.totalPoints == 3500)
+        #expect(saved?.pointsToday == 3500)
     }
 
     @Test("Remote listener handles errors gracefully")
@@ -333,7 +333,7 @@ struct ExperiencePointsManagerTests {
     func testRemoteListenerMultipleUpdates() async throws {
         // Given: Manager with listener
         let logger = MockGamificationLogger()
-        let services = MockExperiencePointsServices(data: .mock(totalPoints: 100))
+        let services = MockExperiencePointsServices(data: .mock(pointsToday: 100))
         let remote = services.remote as! MockRemoteExperiencePointsService
         let config = ExperiencePointsConfiguration(experienceKey: "main", useServerCalculation: true)
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
@@ -344,15 +344,15 @@ struct ExperiencePointsManagerTests {
         logger.reset()
 
         // When: Sending multiple rapid updates
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 500))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(pointsToday: 500))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1000))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(pointsToday: 1000))
         try await Task.sleep(nanoseconds: 20_000_000)
-        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(totalPoints: 1500))
+        try await remote.updateCurrentExperiencePoints(userId: "user123", experienceKey: "main", data: CurrentExperiencePointsData.mock(pointsToday: 1500))
         try await Task.sleep(nanoseconds: 20_000_000)
 
         // Then: All updates should be received
-        #expect(manager.currentExperiencePointsData.totalPoints == 1500)
+        #expect(manager.currentExperiencePointsData.pointsToday == 1500)
         let successEvents = logger.trackedEvents.filter { $0 == "XPMan_RemoteListener_Success" }
         #expect(successEvents.count >= 3)
     }
@@ -409,7 +409,7 @@ struct ExperiencePointsManagerTests {
     func testAnalyticsRemoteListenerSuccess() async throws {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
-        let services = MockExperiencePointsServices(data: .mock(totalPoints: 1000))
+        let services = MockExperiencePointsServices(data: .mock(pointsToday: 1000))
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
@@ -445,7 +445,7 @@ struct ExperiencePointsManagerTests {
     func testUserPropertiesUpdated() async throws {
         // Given: Manager with logger
         let logger = MockGamificationLogger()
-        let services = MockExperiencePointsServices(data: .mock(totalPoints: 1000))
+        let services = MockExperiencePointsServices(data: .mock(pointsToday: 1000))
         let config = ExperiencePointsConfiguration(experienceKey: "main")
         let manager = ExperiencePointsManager(services: services, configuration: config, logger: logger)
 
@@ -494,7 +494,7 @@ struct ExperiencePointsManagerTests {
 
         // Then: Should complete successfully with blank data
         #expect(logger.trackedEvents.contains("XPMan_CalculateXP_Success"))
-        #expect(manager.currentExperiencePointsData.totalPoints == 0)
+        #expect(manager.currentExperiencePointsData.pointsToday == 0)
     }
 
     @Test("getAllExperiencePointsEvents returns all events")
@@ -542,8 +542,8 @@ struct ExperiencePointsManagerTests {
     func testInitCalculatesCorrectXP() async throws {
         // Given: Local cache has data with specific values
         let savedData = CurrentExperiencePointsData.mock(
-            totalPoints: 7500,
-            totalEvents: 150
+            pointsToday: 7500,
+            eventsTodayCount: 150
         )
         struct TestServices: ExperiencePointsServices {
             let remote: RemoteExperiencePointsService
@@ -558,8 +558,8 @@ struct ExperiencePointsManagerTests {
         let manager = ExperiencePointsManager(services: services, configuration: config)
 
         // Then: Should have correct XP values from cache
-        #expect(manager.currentExperiencePointsData.totalPoints == 7500)
-        #expect(manager.currentExperiencePointsData.totalEvents == 150)
+        #expect(manager.currentExperiencePointsData.pointsToday == 7500)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 150)
     }
 
     @Test("Login calculates correct XP from multiple events (client mode)")
@@ -581,8 +581,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Should calculate total of 400 points
-        #expect(manager.currentExperiencePointsData.totalPoints == 400)
-        #expect(manager.currentExperiencePointsData.totalEvents == 3)
+        #expect(manager.currentExperiencePointsData.pointsToday == 400)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 3)
     }
 
     @Test("Adding event calculates correct new total (client mode)")
@@ -601,16 +601,16 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Initial XP is 500
-        #expect(manager.currentExperiencePointsData.totalPoints == 500)
-        #expect(manager.currentExperiencePointsData.totalEvents == 1)
+        #expect(manager.currentExperiencePointsData.pointsToday == 500)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 1)
 
         // When: Adding another event
         try await manager.addExperiencePoints(id: "event1", points: 750)
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 1250
-        #expect(manager.currentExperiencePointsData.totalPoints == 1250)
-        #expect(manager.currentExperiencePointsData.totalEvents == 2)
+        #expect(manager.currentExperiencePointsData.pointsToday == 1250)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 2)
     }
 
     @Test("Multiple events on same day accumulate correctly")
@@ -634,8 +634,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 500 (5 × 100)
-        #expect(manager.currentExperiencePointsData.totalPoints == 500)
-        #expect(manager.currentExperiencePointsData.totalEvents == 5)
+        #expect(manager.currentExperiencePointsData.pointsToday == 500)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 5)
     }
 
     @Test("Zero and negative point values handled correctly")
@@ -656,8 +656,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Total should be 100 (zero events count toward totalEvents but not points)
-        #expect(manager.currentExperiencePointsData.totalPoints == 100)
-        #expect(manager.currentExperiencePointsData.totalEvents == 2)
+        #expect(manager.currentExperiencePointsData.pointsToday == 100)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 2)
     }
 
     @Test("Empty events array results in zero XP (client mode)")
@@ -672,8 +672,8 @@ struct ExperiencePointsManagerTests {
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: XP should be 0
-        #expect(manager.currentExperiencePointsData.totalPoints == 0)
-        #expect(manager.currentExperiencePointsData.totalEvents == 0)
+        #expect(manager.currentExperiencePointsData.pointsToday == 0)
+        #expect(manager.currentExperiencePointsData.eventsTodayCount == 0)
     }
 
     // MARK: - Metadata Filtering Tests

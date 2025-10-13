@@ -18,7 +18,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("Initializes with provided XP data")
     func testInitializesWithProvidedData() async throws {
         // Given: XP data
-        let data = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 5000)
+        let data = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 5000)
 
         // When: Initializing service with data
         let service = MockRemoteExperiencePointsService(data: data)
@@ -52,7 +52,7 @@ struct MockRemoteExperiencePointsServiceTests {
         let service = MockRemoteExperiencePointsService(data: initial)
 
         // When: Updating data
-        let newData = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 10000)
+        let newData = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 10000)
         try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: newData)
 
         // Then: Stream should emit new data
@@ -66,7 +66,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("updateCurrentExperiencePoints triggers stream update")
     func testUpdateCurrentExperiencePointsTriggersStream() async throws {
         // Given: Service with stream listener
-        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 5000)
+        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 5000)
         let service = MockRemoteExperiencePointsService(data: initial)
 
         var receivedValues: [CurrentExperiencePointsData] = []
@@ -91,7 +91,7 @@ struct MockRemoteExperiencePointsServiceTests {
         try await Task.sleep(nanoseconds: 10_000_000) // 10ms
 
         // When: Updating data
-        let newData = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 15000)
+        let newData = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 15000)
         try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: newData)
 
         // Give stream time to receive update
@@ -101,7 +101,7 @@ struct MockRemoteExperiencePointsServiceTests {
 
         // Then: Should have received both initial and updated values
         #expect(receivedValues.count >= 1)
-        #expect(receivedValues.last?.totalPoints == 15000)
+        #expect(receivedValues.last?.pointsToday == 15000)
     }
 
     // MARK: - streamCurrentExperiencePoints Tests
@@ -109,7 +109,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("streamCurrentExperiencePoints emits initial value")
     func testStreamEmitsInitialValue() async throws {
         // Given: Service with data
-        let data = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 7000)
+        let data = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 7000)
         let service = MockRemoteExperiencePointsService(data: data)
 
         // When: Streaming
@@ -124,7 +124,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("streamCurrentExperiencePoints emits updates on change")
     func testStreamEmitsUpdates() async throws {
         // Given: Service
-        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 3000)
+        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 3000)
         let service = MockRemoteExperiencePointsService(data: initial)
 
         var receivedValues: [CurrentExperiencePointsData] = []
@@ -143,7 +143,7 @@ struct MockRemoteExperiencePointsServiceTests {
         try await Task.sleep(nanoseconds: 10_000_000)
 
         // When: Updating data
-        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 8000))
+        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 8000))
 
         // Give time for update
         try await Task.sleep(nanoseconds: 10_000_000)
@@ -157,7 +157,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("streamCurrentExperiencePoints multiple listeners receive same value")
     func testStreamMultipleListeners() async throws {
         // Given: Service
-        let data = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 5000)
+        let data = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 5000)
         let service = MockRemoteExperiencePointsService(data: data)
 
         // When: Creating multiple streams
@@ -289,7 +289,7 @@ struct MockRemoteExperiencePointsServiceTests {
     @Test("calculateExperiencePoints is no-op in mock")
     func testCalculateExperiencePointsIsNoOp() async throws {
         // Given: Service
-        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 5000)
+        let initial = CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 5000)
         let service = MockRemoteExperiencePointsService(data: initial)
 
         // When: Calling calculateExperiencePoints
@@ -300,7 +300,7 @@ struct MockRemoteExperiencePointsServiceTests {
         var iterator = stream.makeAsyncIterator()
         let value = try await iterator.next()
 
-        #expect(value?.totalPoints == 5000)
+        #expect(value?.pointsToday == 5000)
     }
 
     @Test("calculateExperiencePoints does not throw")
@@ -323,10 +323,10 @@ struct MockRemoteExperiencePointsServiceTests {
 
         // When: Performing multiple operations
         try await service.addEvent(userId: "user1", experienceKey: "test", event: ExperiencePointsEvent.mock(id: "e1", experienceKey: "test"))
-        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 1000))
+        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 1000))
 
         try await service.addEvent(userId: "user1", experienceKey: "test", event: ExperiencePointsEvent.mock(id: "e2", experienceKey: "test"))
-        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", totalPoints: 2000))
+        try await service.updateCurrentExperiencePoints(userId: "user1", experienceKey: "test", data: CurrentExperiencePointsData.mock(experienceKey: "test", pointsToday: 2000))
 
         // Then: All data should be preserved
         let events = try await service.getAllEvents(userId: "user1", experienceKey: "test")
@@ -336,6 +336,6 @@ struct MockRemoteExperiencePointsServiceTests {
         let data = try await iterator.next()
 
         #expect(events.count == 2)
-        #expect(data?.totalPoints == 2000)
+        #expect(data?.pointsToday == 2000)
     }
 }
