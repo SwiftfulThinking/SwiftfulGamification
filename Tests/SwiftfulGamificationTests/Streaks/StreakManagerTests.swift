@@ -446,30 +446,6 @@ struct StreakManagerTests {
         #expect(freezes.count == 2)
     }
 
-    @Test("Manual freeze usage triggers recalculation")
-    func testManualFreezeUsageTriggersRecalc() async throws {
-        // Given: Manager with freeze
-        let logger = MockGamificationLogger()
-        let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
-        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
-        let manager = StreakManager(services: services, configuration: config, logger: logger)
-
-        try await manager.logIn(userId: "user123")
-        try await Task.sleep(nanoseconds: 50_000_000)
-
-        logger.reset()
-
-        // When: Manually using freeze
-        try await manager.useStreakFreeze(freezeId: "freeze-1")
-
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        // Then: Should trigger calculation to update freezesRemaining
-        #expect(logger.trackedEvents.contains("StreakMan_CalculateStreak_Start"))
-    }
-
     @Test("Auto-consume freeze creates event and marks used (client mode)")
     func testAutoConsumeFreezeCreatesEventAndMarksUsed() async throws {
         // Given: Client mode with broken streak and freeze available
@@ -696,52 +672,6 @@ struct StreakManagerTests {
 
         // Then: Success event should be marked as .analytic
         let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_AddStreakFreeze_Success")
-        #expect(successIndex != nil)
-        if let index = successIndex {
-            #expect(logger.eventTypes[index] == .analytic)
-        }
-    }
-
-    @Test("useStreakFreeze logs start and success events")
-    func testUseStreakFreezeLogsEvents() async throws {
-        // Given: Manager with freeze available
-        let logger = MockGamificationLogger()
-        let services = MockStreakServices(streak: .mock())
-        let remote = services.remote as! MockRemoteStreakService
-        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        let config = StreakConfiguration(streakKey: "workout")
-        let manager = StreakManager(services: services, configuration: config, logger: logger)
-        try await manager.logIn(userId: "user123")
-
-        logger.trackedEvents.removeAll()
-
-        // When: Using a freeze
-        try await manager.useStreakFreeze(freezeId: "freeze-1")
-
-        // Then: Should log start and success events
-        #expect(logger.trackedEvents.contains("StreakMan_UseStreakFreeze_Start"))
-        #expect(logger.trackedEvents.contains("StreakMan_UseStreakFreeze_Success"))
-    }
-
-    @Test("useStreakFreeze success event is marked as analytic")
-    func testUseStreakFreezeSuccessIsAnalytic() async throws {
-        // Given: Manager with freeze available
-        let logger = MockGamificationLogger()
-        let services = MockStreakServices(streak: .mock())
-        let remote = services.remote as! MockRemoteStreakService
-        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-        let config = StreakConfiguration(streakKey: "workout")
-        let manager = StreakManager(services: services, configuration: config, logger: logger)
-        try await manager.logIn(userId: "user123")
-
-        logger.trackedEvents.removeAll()
-        logger.eventTypes.removeAll()
-
-        // When: Using a freeze successfully
-        try await manager.useStreakFreeze(freezeId: "freeze-1")
-
-        // Then: Success event should be marked as .analytic
-        let successIndex = logger.trackedEvents.firstIndex(of: "StreakMan_UseStreakFreeze_Success")
         #expect(successIndex != nil)
         if let index = successIndex {
             #expect(logger.eventTypes[index] == .analytic)
@@ -998,72 +928,6 @@ struct StreakManagerTests {
         // Then: Streak should reset to 1
         #expect(manager.currentStreakData.currentStreak == 1)
         #expect(manager.currentStreakData.totalEvents == 2)
-    }
-
-    @Test("Manual freeze usage does not update streak (requires recalculation)")
-    func testManualFreezeUsageDoesNotUpdateStreak() async throws {
-        // Given: Broken streak with freeze available
-        let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
-
-        let today = Date()
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
-
-        let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
-
-        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
-
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .noFreezes)
-        let manager = StreakManager(services: services, configuration: config)
-
-        try await manager.logIn(userId: "user123")
-        try await Task.sleep(nanoseconds: 150_000_000)
-
-        let streakBeforeFreeze = manager.currentStreakData.currentStreak
-
-        // When: Manually using freeze (without recalculation)
-        try await manager.useStreakFreeze(freezeId: "freeze-1")
-        try await Task.sleep(nanoseconds: 50_000_000)
-
-        // Then: Streak should NOT update (this is current behavior - potential bug)
-        #expect(manager.currentStreakData.currentStreak == streakBeforeFreeze)
-    }
-
-    @Test("Recalculate updates streak after manual freeze usage (client mode)")
-    func testRecalculateUpdatesStreakAfterManualFreeze() async throws {
-        // Given: Broken streak with manually used freeze
-        let services = MockStreakServices(streak: nil)
-        let remote = services.remote as! MockRemoteStreakService
-
-        let today = Date()
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
-
-        let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
-
-        let freeze = StreakFreeze.mockUnused(id: "freeze-1", streakKey: "workout")
-        try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: freeze)
-
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .noFreezes)
-        let manager = StreakManager(services: services, configuration: config)
-
-        try await manager.logIn(userId: "user123")
-        try await Task.sleep(nanoseconds: 150_000_000)
-
-        let streakBefore = manager.currentStreakData.currentStreak
-
-        // Manually use freeze
-        try await manager.useStreakFreeze(freezeId: "freeze-1")
-
-        // When: Triggering recalculation
-        manager.recalculateStreak()
-        try await Task.sleep(nanoseconds: 150_000_000)
-
-        // Then: After recalculation, streak should remain broken since manual freeze
-        // doesn't create a freeze event (only auto-consume does that)
-        // Manual freeze just marks it used without filling gaps
-        #expect(manager.currentStreakData.currentStreak == 1) // Still broken, only today counts
     }
 
     @Test("Goal-based streak calculates correctly with multiple events per day (client mode)")

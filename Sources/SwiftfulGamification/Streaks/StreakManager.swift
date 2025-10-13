@@ -155,23 +155,6 @@ public class StreakManager {
         return freeze
     }
 
-    public func useStreakFreeze(freezeId: String) async throws {
-        guard let userId = userId else {
-            throw StreakError.notLoggedIn
-        }
-
-        logger?.trackEvent(event: Event.useStreakFreezeStart(freezeId: freezeId))
-
-        do {
-            try await remote.useStreakFreeze(userId: userId, streakKey: configuration.streakKey, freezeId: freezeId)
-            logger?.trackEvent(event: Event.useStreakFreezeSuccess(freezeId: freezeId))
-            calculateStreak(userId: userId)
-        } catch {
-            logger?.trackEvent(event: Event.useStreakFreezeFail(error: error))
-            throw error
-        }
-    }
-
     @discardableResult
     public func useStreakFreezes() async throws -> UseFreezesResult {
         guard let userId = userId else {
@@ -370,9 +353,6 @@ extension StreakManager {
         case addStreakFreezeStart(freezeId: String)
         case addStreakFreezeSuccess(freezeId: String)
         case addStreakFreezeFail(error: Error)
-        case useStreakFreezeStart(freezeId: String)
-        case useStreakFreezeSuccess(freezeId: String)
-        case useStreakFreezeFail(error: Error)
         case useStreakFreezesStart
         case useStreakFreezesSuccess(count: Int)
         case useStreakFreezesFail(error: Error)
@@ -393,9 +373,6 @@ extension StreakManager {
             case .addStreakFreezeStart:     return "StreakMan_AddStreakFreeze_Start"
             case .addStreakFreezeSuccess:   return "StreakMan_AddStreakFreeze_Success"
             case .addStreakFreezeFail:      return "StreakMan_AddStreakFreeze_Fail"
-            case .useStreakFreezeStart:     return "StreakMan_UseStreakFreeze_Start"
-            case .useStreakFreezeSuccess:   return "StreakMan_UseStreakFreeze_Success"
-            case .useStreakFreezeFail:      return "StreakMan_UseStreakFreeze_Fail"
             case .useStreakFreezesStart:    return "StreakMan_UseStreakFreezes_Start"
             case .useStreakFreezesSuccess:  return "StreakMan_UseStreakFreezes_Success"
             case .useStreakFreezesFail:     return "StreakMan_UseStreakFreezes_Fail"
@@ -411,11 +388,11 @@ extension StreakManager {
                     "freeze_id": freezeId,
                     "frozen_date": date.timeIntervalSince1970
                 ]
-            case .addStreakFreezeStart(freezeId: let freezeId), .addStreakFreezeSuccess(freezeId: let freezeId), .useStreakFreezeStart(freezeId: let freezeId), .useStreakFreezeSuccess(freezeId: let freezeId):
+            case .addStreakFreezeStart(freezeId: let freezeId), .addStreakFreezeSuccess(freezeId: let freezeId):
                 return ["freeze_id": freezeId]
             case .useStreakFreezesSuccess(count: let count):
                 return ["freezes_used_count": count]
-            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error), .addStreakFreezeFail(error: let error), .useStreakFreezeFail(error: let error), .useStreakFreezesFail(error: let error):
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error), .addStreakFreezeFail(error: let error), .useStreakFreezesFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -424,9 +401,9 @@ extension StreakManager {
 
         var type: GamificationLogType {
             switch self {
-            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail, .addStreakFreezeFail, .useStreakFreezeFail, .useStreakFreezesFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail, .addStreakFreezeFail, .useStreakFreezesFail:
                 return .severe
-            case .calculateStreakSuccess, .freezeAutoConsumed, .freezeManuallyConsumed, .addStreakFreezeSuccess, .useStreakFreezeSuccess, .useStreakFreezesSuccess:
+            case .calculateStreakSuccess, .freezeAutoConsumed, .freezeManuallyConsumed, .addStreakFreezeSuccess, .useStreakFreezesSuccess:
                 return .analytic
             default:
                 return .info
