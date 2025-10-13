@@ -469,7 +469,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     public static func mockActive(
         streakKey: String = "workout",
         userId: String? = "mock_user_123",
-        currentStreak: Int = 7
+        currentStreak: Int = 7,
+        freezesAvailableCount: Int = 2
     ) -> Self {
         // Generate recent events for the previous N days (NOT including today)
         // This represents a streak where the last event was yesterday
@@ -492,7 +493,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 5,
-            freezesAvailableCount: 2,
+            freezesAvailableCount: freezesAvailableCount,
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
             updatedAt: yesterday,
             eventsRequiredPerDay: 1,
