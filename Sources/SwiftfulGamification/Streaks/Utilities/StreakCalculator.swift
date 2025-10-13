@@ -128,7 +128,8 @@ public struct StreakCalculator {
 
                 if !hasStartedStreak && daysBetween == 1 && (checkingOnExpectedDay || leewayApplied) {
                     currentStreak += 1
-                    expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
+                    // Move expectedDate to the event we just counted, then back one more day for the next check
+                    expectedDate = calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
                     hasStartedStreak = true
                     continue
                 }
