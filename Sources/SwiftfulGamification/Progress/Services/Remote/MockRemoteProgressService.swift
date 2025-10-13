@@ -28,8 +28,10 @@ public class MockRemoteProgressService: RemoteProgressService {
         let updates = AsyncThrowingStream<ProgressItem, Error> { continuation in
             let task = Task {
                 // Listen for changes (Combine publisher will emit updates)
-                for await items in $progressItems.values {
-                    for item in items.values where item.progressKey == progressKey {
+                // NOTE: Mock emits ALL items on every change (not just the changed item)
+                // This differs from production but is acceptable for testing
+                for await allItems in $progressItems.values {
+                    for item in allItems where item.progressKey == progressKey {
                         continuation.yield(item)
                     }
                 }
