@@ -260,7 +260,13 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
             pointsToday: 0,
-            eventsTodayCount: 0
+            eventsTodayCount: 0,
+            pointsThisWeek: 0,
+            pointsLast7Days: 0,
+            pointsThisMonth: 0,
+            pointsLast30Days: 0,
+            pointsThisYear: 0,
+            pointsLast12Months: 0
         )
     }
 
