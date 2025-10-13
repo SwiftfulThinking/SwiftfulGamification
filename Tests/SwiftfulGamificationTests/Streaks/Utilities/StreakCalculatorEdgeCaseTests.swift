@@ -53,7 +53,7 @@ struct StreakCalculatorEdgeCaseTests {
             StreakFreeze.mockUnused(id: "freeze-1"),
             StreakFreeze.mockUnused(id: "freeze-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -181,7 +181,7 @@ struct StreakCalculatorEdgeCaseTests {
         let events = [
             StreakEvent.mock(timestamp: twoDaysAgo)
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .noFreezes)
 
         // When: Calculating streak (no freezes)
         let result = StreakCalculator.calculateStreak(
@@ -205,7 +205,7 @@ struct StreakCalculatorEdgeCaseTests {
             StreakEvent.mock(timestamp: now),
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .noFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(

@@ -27,7 +27,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
 
         // And: Computed properties should reflect default state
         #expect(config.isGoalBasedStreak == false) // eventsRequiredPerDay = 1
@@ -42,7 +42,7 @@ struct StreakConfigurationTests {
         let eventsRequiredPerDay = 5
         let useServerCalculation = true
         let leewayHours = 12
-        let autoConsumeFreeze = false
+        let freezeBehavior = FreezeBehavior.noFreezes
 
         // When: Initializing with all custom parameters
         let config = StreakConfiguration(
@@ -50,7 +50,7 @@ struct StreakConfigurationTests {
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: useServerCalculation,
             leewayHours: leewayHours,
-            autoConsumeFreeze: autoConsumeFreeze
+            freezeBehavior: freezeBehavior
         )
 
         // Then: All properties should match the provided values
@@ -58,7 +58,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == eventsRequiredPerDay)
         #expect(config.useServerCalculation == useServerCalculation)
         #expect(config.leewayHours == leewayHours)
-        #expect(config.autoConsumeFreeze == autoConsumeFreeze)
+        #expect(config.freezeBehavior == freezeBehavior)
 
         // And: Computed properties should reflect custom state
         #expect(config.isGoalBasedStreak == true)  // eventsRequiredPerDay = 5 > 1
@@ -102,7 +102,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
     }
 
     @Test("Mock basic creates default settings")
@@ -115,7 +115,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
 
         // And: Should match characteristics of basic streak
         #expect(config.isGoalBasedStreak == false)
@@ -133,7 +133,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 5)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 0)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
 
         // And: Should be recognized as goal-based
         #expect(config.isGoalBasedStreak == true)
@@ -149,7 +149,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 6)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
 
         // And: Should not be strict mode
         #expect(config.isStrictMode == false)
@@ -167,7 +167,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == false)
         #expect(config.leewayHours == 24)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
 
         // And: Should be recognized as travel-friendly
         #expect(config.isTravelFriendly == true)
@@ -184,7 +184,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 1)
         #expect(config.useServerCalculation == true)
         #expect(config.leewayHours == 0)
-        #expect(config.autoConsumeFreeze == true)
+        #expect(config.freezeBehavior == .autoConsumeFreezes)
     }
 
     // MARK: - Codable Tests
@@ -197,7 +197,7 @@ struct StreakConfigurationTests {
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
-            autoConsumeFreeze: false
+            freezeBehavior: .noFreezes
         )
 
         // When: Encoding to JSON
@@ -211,14 +211,14 @@ struct StreakConfigurationTests {
         #expect(json["events_required_per_day"] as? Int == 3)
         #expect(json["use_server_calculation"] as? Bool == true)
         #expect(json["leeway_hours"] as? Int == 6)
-        #expect(json["auto_consume_freeze"] as? Bool == false)
+        #expect(json["freeze_behavior"] as? String == "noFreezes")
 
         // And: Should not contain camelCase keys
         #expect(json["streakId"] == nil)
         #expect(json["eventsRequiredPerDay"] == nil)
         #expect(json["useServerCalculation"] == nil)
         #expect(json["leewayHours"] == nil)
-        #expect(json["autoConsumeFreeze"] == nil)
+        #expect(json["freezeBehavior"] == nil)
     }
 
     @Test("Decodes from snake_case keys")
@@ -230,7 +230,7 @@ struct StreakConfigurationTests {
             "events_required_per_day": 2,
             "use_server_calculation": true,
             "leeway_hours": 12,
-            "auto_consume_freeze": false
+            "freeze_behavior": "noFreezes"
         }
         """
         let data = json.data(using: .utf8)!
@@ -244,7 +244,7 @@ struct StreakConfigurationTests {
         #expect(config.eventsRequiredPerDay == 2)
         #expect(config.useServerCalculation == true)
         #expect(config.leewayHours == 12)
-        #expect(config.autoConsumeFreeze == false)
+        #expect(config.freezeBehavior == .noFreezes)
     }
 
     @Test("Roundtrip preserves all data")
@@ -255,7 +255,7 @@ struct StreakConfigurationTests {
             eventsRequiredPerDay: 7,
             useServerCalculation: false,
             leewayHours: 18,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
 
         // When: Encoding and then decoding
@@ -270,7 +270,7 @@ struct StreakConfigurationTests {
         #expect(decoded.eventsRequiredPerDay == original.eventsRequiredPerDay)
         #expect(decoded.useServerCalculation == original.useServerCalculation)
         #expect(decoded.leewayHours == original.leewayHours)
-        #expect(decoded.autoConsumeFreeze == original.autoConsumeFreeze)
+        #expect(decoded.freezeBehavior == original.freezeBehavior)
     }
 
     // MARK: - Computed Property Tests
@@ -339,14 +339,14 @@ struct StreakConfigurationTests {
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
-            autoConsumeFreeze: false
+            freezeBehavior: .noFreezes
         )
         let config2 = StreakConfiguration(
             streakKey: "workout",
             eventsRequiredPerDay: 3,
             useServerCalculation: true,
             leewayHours: 6,
-            autoConsumeFreeze: false
+            freezeBehavior: .noFreezes
         )
 
         // Then: Should be equal

@@ -38,8 +38,11 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Total number of events logged
     public let totalEvents: Int?
 
-    /// Number of streak freezes remaining
-    public let freezesRemaining: Int?
+    /// Available streak freezes
+    public let freezesAvailable: [StreakFreeze]?
+
+    /// Number of streak freezes available
+    public let freezesAvailableCount: Int?
 
     /// UTC timestamp of first event ever
     public let createdAt: Date?
@@ -67,7 +70,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         lastEventTimezone: String? = nil,
         streakStartDate: Date? = nil,
         totalEvents: Int? = nil,
-        freezesRemaining: Int? = nil,
+        freezesAvailable: [StreakFreeze]? = nil,
+        freezesAvailableCount: Int? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
         eventsRequiredPerDay: Int? = nil,
@@ -82,7 +86,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         self.lastEventTimezone = lastEventTimezone
         self.streakStartDate = streakStartDate
         self.totalEvents = totalEvents
-        self.freezesRemaining = freezesRemaining
+        self.freezesAvailable = freezesAvailable
+        self.freezesAvailableCount = freezesAvailableCount
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.eventsRequiredPerDay = eventsRequiredPerDay
@@ -101,7 +106,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         case lastEventTimezone = "last_event_timezone"
         case streakStartDate = "streak_start_date"
         case totalEvents = "total_events"
-        case freezesRemaining = "freezes_remaining"
+        case freezesAvailable = "freezes_available"
+        case freezesAvailableCount = "freezes_available_count"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case eventsRequiredPerDay = "events_required_per_day"
@@ -264,8 +270,30 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         }
 
         // Check if we have enough freezes to fill the gap
-        let available = freezesRemaining ?? 0
+        let available = freezesAvailableCount ?? 0
         return available >= freezesNeeded
+    }
+
+    /// Status for applying manual streak freezes
+    /// - Returns `.canSaveStreakWithFreezes(count:)` if user can save streak by using the specified number of freezes (and has enough available)
+    /// - Returns `.cannotSaveStreakWithFreezes` if streak is active or not enough freezes available
+    public var applyManualStreakFreezeStatus: ApplyManualStreakFreezeStatus {
+        guard let freezesNeeded = freezesNeededToSaveStreak else {
+            return .cannotSaveStreakWithFreezes
+        }
+
+        // If no freezes needed (streak is active), cannot apply manual freezes
+        if freezesNeeded == 0 {
+            return .cannotSaveStreakWithFreezes
+        }
+
+        // Check if we have enough freezes to fill the gap
+        let available = freezesAvailableCount ?? 0
+        if available >= freezesNeeded {
+            return .canSaveStreakWithFreezes(count: freezesNeeded)
+        }
+
+        return .cannotSaveStreakWithFreezes
     }
 
     /// Should the user be prompted to use a freeze?
@@ -315,7 +343,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: lastEventTimezone,
             streakStartDate: streakStartDate,
             totalEvents: totalEvents,
-            freezesRemaining: freezesRemaining,
+            freezesAvailable: freezesAvailable,
+            freezesAvailableCount: freezesAvailableCount,
             createdAt: createdAt,
             updatedAt: updatedAt,
             eventsRequiredPerDay: eventsRequiredPerDay,
@@ -332,7 +361,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         if let current = currentStreak, current < 0 { return false }
         if let longest = longestStreak, longest < 0 { return false }
         if let total = totalEvents, total < 0 { return false }
-        if let freezes = freezesRemaining, freezes < 0 { return false }
+        if let freezes = freezesAvailableCount, freezes < 0 { return false }
         if let required = eventsRequiredPerDay, required < 1 { return false }
         if let today = todayEventCount, today < 0 { return false }
 
@@ -361,7 +390,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         if let current = currentStreak { params["current_streak_current_streak"] = current }
         if let longest = longestStreak { params["current_streak_longest_streak"] = longest }
         if let total = totalEvents { params["current_streak_total_events"] = total }
-        if let freezes = freezesRemaining { params["current_streak_freezes_remaining"] = freezes }
+        if let freezes = freezesAvailableCount { params["current_streak_freezes_available_count"] = freezes }
         if let required = eventsRequiredPerDay { params["current_streak_events_required_per_day"] = required }
         if let today = todayEventCount { params["current_streak_today_event_count"] = today }
 
@@ -383,7 +412,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         lastEventTimezone: String = TimeZone.current.identifier,
         streakStartDate: Date? = Calendar.current.date(byAdding: .day, value: -5, to: Date()),
         totalEvents: Int = 25,
-        freezesRemaining: Int = 2,
+        freezesAvailable: [StreakFreeze]? = nil,
+        freezesAvailableCount: Int = 2,
         createdAt: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
         updatedAt: Date = Date(),
         eventsRequiredPerDay: Int = 1,
@@ -399,7 +429,8 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: lastEventTimezone,
             streakStartDate: streakStartDate,
             totalEvents: totalEvents,
-            freezesRemaining: freezesRemaining,
+            freezesAvailable: freezesAvailable,
+            freezesAvailableCount: freezesAvailableCount,
             createdAt: createdAt,
             updatedAt: updatedAt,
             eventsRequiredPerDay: eventsRequiredPerDay,
@@ -415,7 +446,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             currentStreak: 0,
             longestStreak: 0,
             totalEvents: 0,
-            freezesRemaining: 0,
+            freezesAvailableCount: 0,
             eventsRequiredPerDay: 1,
             todayEventCount: 0
         )
@@ -428,7 +459,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             currentStreak: 0,
             longestStreak: 0,
             totalEvents: 0,
-            freezesRemaining: 0,
+            freezesAvailableCount: 0,
             eventsRequiredPerDay: 1,
             todayEventCount: 0
         )
@@ -461,7 +492,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 5,
-            freezesRemaining: 2,
+            freezesAvailableCount: 2,
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
             updatedAt: yesterday,
             eventsRequiredPerDay: 1,
@@ -496,7 +527,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 3,
-            freezesRemaining: 1,
+            freezesAvailableCount: 1,
             createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
             updatedAt: yesterday,
             eventsRequiredPerDay: 1,
@@ -511,7 +542,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = "mock_user_123",
         recentEvents: [StreakEvent],
         eventsRequiredPerDay: Int = 1,
-        freezesRemaining: Int = 2
+        freezesAvailableCount: Int = 2
     ) -> Self {
         guard !recentEvents.isEmpty else {
             return blank(streakKey: streakKey)
@@ -538,7 +569,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: calculatedStreak.lastEventTimezone,
             streakStartDate: calculatedStreak.streakStartDate,
             totalEvents: calculatedStreak.totalEvents,
-            freezesRemaining: freezesRemaining,
+            freezesAvailableCount: freezesAvailableCount,
             createdAt: calculatedStreak.createdAt,
             updatedAt: calculatedStreak.updatedAt,
             eventsRequiredPerDay: eventsRequiredPerDay,
@@ -586,7 +617,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             lastEventTimezone: TimeZone.current.identifier,
             streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: Date()),
             totalEvents: 15,
-            freezesRemaining: 2,
+            freezesAvailableCount: 2,
             createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date()),
             updatedAt: Date(),
             eventsRequiredPerDay: eventsRequiredPerDay,

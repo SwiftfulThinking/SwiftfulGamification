@@ -24,7 +24,7 @@ struct CurrentStreakDataTests {
         let lastEventTimezone = "America/New_York"
         let streakStartDate = Date().addingTimeInterval(-86400 * 15)
         let totalEvents = 50
-        let freezesRemaining = 3
+        let freezesAvailableCount = 3
         let createdAt = Date().addingTimeInterval(-86400 * 30)
         let updatedAt = Date()
         let eventsRequiredPerDay = 2
@@ -39,7 +39,8 @@ struct CurrentStreakDataTests {
             lastEventTimezone: lastEventTimezone,
             streakStartDate: streakStartDate,
             totalEvents: totalEvents,
-            freezesRemaining: freezesRemaining,
+            freezesAvailable: nil,
+            freezesAvailableCount: freezesAvailableCount,
             createdAt: createdAt,
             updatedAt: updatedAt,
             eventsRequiredPerDay: eventsRequiredPerDay,
@@ -54,7 +55,7 @@ struct CurrentStreakDataTests {
         #expect(data.lastEventTimezone == lastEventTimezone)
         #expect(data.streakStartDate == streakStartDate)
         #expect(data.totalEvents == totalEvents)
-        #expect(data.freezesRemaining == freezesRemaining)
+        #expect(data.freezesAvailableCount == freezesAvailableCount)
         #expect(data.createdAt == createdAt)
         #expect(data.updatedAt == updatedAt)
         #expect(data.eventsRequiredPerDay == eventsRequiredPerDay)
@@ -71,7 +72,7 @@ struct CurrentStreakDataTests {
         #expect(data.currentStreak == 0)
         #expect(data.longestStreak == 0)
         #expect(data.totalEvents == 0)
-        #expect(data.freezesRemaining == 0)
+        #expect(data.freezesAvailableCount == 0)
         #expect(data.eventsRequiredPerDay == 1)
         #expect(data.todayEventCount == 0)
         #expect(data.lastEventDate == nil)
@@ -372,7 +373,7 @@ struct CurrentStreakDataTests {
     @Test("canStreakBeSaved returns true when active")
     func testCanSaveWhenActive() throws {
         // Given: Active streak
-        let data = CurrentStreakData.mock(lastEventDate: Date(), freezesRemaining: 0)
+        let data = CurrentStreakData.mock(lastEventDate: Date(), freezesAvailableCount: 0)
 
         // Then: Can be saved (no freeze needed)
         #expect(data.canStreakBeSaved == true)
@@ -382,7 +383,7 @@ struct CurrentStreakDataTests {
     func testCanSaveWithSufficientFreezes() throws {
         // Given: 2-day gap, 3 freezes available
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesRemaining: 3)
+        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesAvailableCount: 3)
 
         // Then: Can be saved
         #expect(data.canStreakBeSaved == true)
@@ -392,7 +393,7 @@ struct CurrentStreakDataTests {
     func testCanSaveWithExactFreezes() throws {
         // Given: 2-day gap, exactly 2 freezes
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesRemaining: 2)
+        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesAvailableCount: 2)
 
         // Then: Can be saved
         #expect(data.canStreakBeSaved == true)
@@ -402,7 +403,7 @@ struct CurrentStreakDataTests {
     func testCannotSaveWithInsufficientFreezes() throws {
         // Given: 3-day gap, only 2 freezes available
         let fourDaysAgo = Calendar.current.date(byAdding: .day, value: -4, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: fourDaysAgo, freezesRemaining: 2)
+        let data = CurrentStreakData.mock(lastEventDate: fourDaysAgo, freezesAvailableCount: 2)
 
         // Then: Cannot be saved
         #expect(data.canStreakBeSaved == false)
@@ -412,7 +413,7 @@ struct CurrentStreakDataTests {
     func testCannotSaveWithNoFreezes() throws {
         // Given: Broken streak, no freezes
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesRemaining: 0)
+        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesAvailableCount: 0)
 
         // Then: Cannot be saved
         #expect(data.canStreakBeSaved == false)
@@ -421,7 +422,7 @@ struct CurrentStreakDataTests {
     @Test("shouldPromptFreezeUsage returns false when streak active")
     func testShouldNotPromptWhenActive() throws {
         // Given: Active streak
-        let data = CurrentStreakData.mock(lastEventDate: Date(), freezesRemaining: 5)
+        let data = CurrentStreakData.mock(lastEventDate: Date(), freezesAvailableCount: 5)
 
         // Then: Should not prompt
         #expect(data.shouldPromptFreezeUsage == false)
@@ -431,7 +432,7 @@ struct CurrentStreakDataTests {
     func testShouldNotPromptWhenAtRisk() throws {
         // Given: At risk (yesterday)
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: yesterday, freezesRemaining: 5)
+        let data = CurrentStreakData.mock(lastEventDate: yesterday, freezesAvailableCount: 5)
 
         // Then: Should not prompt (not broken yet)
         #expect(data.shouldPromptFreezeUsage == false)
@@ -441,7 +442,7 @@ struct CurrentStreakDataTests {
     func testShouldPromptWhenBrokenAndSaveable() throws {
         // Given: Broken streak (3 days ago = 2-day gap), 2 freezes available
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesRemaining: 2)
+        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesAvailableCount: 2)
 
         // Then: Should prompt (broken but can be saved)
         #expect(data.shouldPromptFreezeUsage == true)
@@ -451,7 +452,7 @@ struct CurrentStreakDataTests {
     func testShouldNotPromptWhenBrokenButNotSaveable() throws {
         // Given: Broken streak (5 days ago = 4-day gap), only 2 freezes
         let fiveDaysAgo = Calendar.current.date(byAdding: .day, value: -5, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: fiveDaysAgo, freezesRemaining: 2)
+        let data = CurrentStreakData.mock(lastEventDate: fiveDaysAgo, freezesAvailableCount: 2)
 
         // Then: Should not prompt (cannot be saved)
         #expect(data.shouldPromptFreezeUsage == false)
@@ -461,7 +462,7 @@ struct CurrentStreakDataTests {
     func testShouldNotPromptWhenNoFreezes() throws {
         // Given: Broken streak, no freezes
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesRemaining: 0)
+        let data = CurrentStreakData.mock(lastEventDate: threeDaysAgo, freezesAvailableCount: 0)
 
         // Then: Should not prompt
         #expect(data.shouldPromptFreezeUsage == false)

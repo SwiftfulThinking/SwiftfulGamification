@@ -990,7 +990,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
         let freeze = StreakFreeze.mockUnused(id: "freeze-1")
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1022,7 +1022,7 @@ struct StreakCalculatorTests {
             StreakFreeze(id: "freeze-1", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 10)),
             StreakFreeze(id: "freeze-2", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 5))
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1055,7 +1055,7 @@ struct StreakCalculatorTests {
             StreakFreeze(id: "freeze-old", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 30)), // Oldest
             StreakFreeze(id: "freeze-mid", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 10)) // Middle
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1083,7 +1083,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1096,7 +1096,7 @@ struct StreakCalculatorTests {
         // Then: No freezes consumed (no gaps)
         #expect(result.freezeConsumptions.isEmpty)
         #expect(result.streak.currentStreak == 5)
-        #expect(result.streak.freezesRemaining == 1)
+        #expect(result.streak.freezesAvailableCount == 1)
     }
 
     @Test("Does not consume freezes when no gaps")
@@ -1112,7 +1112,7 @@ struct StreakCalculatorTests {
         let freezes = (0..<5).map { i in
             StreakFreeze.mockUnused(id: "freeze-\(i)")
         }
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1124,7 +1124,7 @@ struct StreakCalculatorTests {
 
         // Then: No freezes consumed
         #expect(result.freezeConsumptions.isEmpty)
-        #expect(result.streak.freezesRemaining == 5)
+        #expect(result.streak.freezesAvailableCount == 5)
     }
 
     @Test("Goal-based: Freeze fills day that missed goal")
@@ -1150,7 +1150,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(7200))
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1184,7 +1184,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(10800))
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1196,7 +1196,7 @@ struct StreakCalculatorTests {
 
         // Then: No freezes consumed
         #expect(result.freezeConsumptions.isEmpty)
-        #expect(result.streak.freezesRemaining == 1)
+        #expect(result.streak.freezesAvailableCount == 1)
     }
 
     @Test("Returns empty consumption list when no freezes available")
@@ -1210,7 +1210,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: now),
             StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak with no freezes
         let result = StreakCalculator.calculateStreak(
@@ -1241,7 +1241,7 @@ struct StreakCalculatorTests {
             StreakFreeze.mockUnused(id: "freeze-2"),
             StreakFreeze.mockUnused(id: "freeze-3")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1253,7 +1253,7 @@ struct StreakCalculatorTests {
 
         // Then: Only 1 freeze consumed (for 1 gap), 2 remain
         #expect(result.freezeConsumptions.count == 1)
-        #expect(result.streak.freezesRemaining == 2)
+        #expect(result.streak.freezesAvailableCount == 2)
     }
 
     @Test("Handles more gaps than available freezes")
@@ -1271,7 +1271,7 @@ struct StreakCalculatorTests {
             StreakFreeze.mockUnused(id: "freeze-1"),
             StreakFreeze.mockUnused(id: "freeze-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1284,7 +1284,7 @@ struct StreakCalculatorTests {
         // Then: Consumes 2 freezes, but gap remains (streak still broken)
         #expect(result.freezeConsumptions.count == 2)
         #expect(result.streak.currentStreak == 3) // Can only fill 2 of 3 gaps
-        #expect(result.streak.freezesRemaining == 0)
+        #expect(result.streak.freezesAvailableCount == 0)
     }
 
     @Test("autoConsumeFreeze false: Does not consume freezes automatically")
@@ -1302,7 +1302,7 @@ struct StreakCalculatorTests {
             StreakFreeze.mockUnused(id: "freeze-1"),
             StreakFreeze.mockUnused(id: "freeze-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .noFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1315,7 +1315,7 @@ struct StreakCalculatorTests {
         // Then: No freezes consumed, streak broken
         #expect(result.freezeConsumptions.isEmpty)
         #expect(result.streak.currentStreak == 1) // Only today counts
-        #expect(result.streak.freezesRemaining == 2) // All freezes remain
+        #expect(result.streak.freezesAvailableCount == 2) // All freezes remain
     }
 
     @Test("Ignores used freezes in the list")
@@ -1335,7 +1335,7 @@ struct StreakCalculatorTests {
             StreakFreeze.mockUsed(id: "freeze-used-2"), // Already used
             StreakFreeze.mockUnused(id: "freeze-available-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1349,7 +1349,7 @@ struct StreakCalculatorTests {
         #expect(result.freezeConsumptions.count == 2)
         #expect(result.freezeConsumptions[0].freezeId == "freeze-available-1")
         #expect(result.freezeConsumptions[1].freezeId == "freeze-available-2")
-        #expect(result.streak.freezesRemaining == 0) // Both available freezes used
+        #expect(result.streak.freezesAvailableCount == 0) // Both available freezes used
     }
 
     @Test("Ignores expired freezes in the list")
@@ -1369,7 +1369,7 @@ struct StreakCalculatorTests {
             StreakFreeze.mockExpired(id: "freeze-expired-2"), // Expired
             StreakFreeze.mockUnused(id: "freeze-available-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1383,7 +1383,7 @@ struct StreakCalculatorTests {
         #expect(result.freezeConsumptions.count == 2)
         #expect(result.freezeConsumptions[0].freezeId == "freeze-available-1")
         #expect(result.freezeConsumptions[1].freezeId == "freeze-available-2")
-        #expect(result.streak.freezesRemaining == 0)
+        #expect(result.streak.freezesAvailableCount == 0)
     }
 
     @Test("Handles mix of available, used, and expired freezes")
@@ -1408,7 +1408,7 @@ struct StreakCalculatorTests {
                         earnedDate: Date().addingTimeInterval(-86400 * 5)), // Newer available
             StreakFreeze.mockUsed(id: "freeze-used-2")
         ]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let result = StreakCalculator.calculateStreak(
@@ -1422,7 +1422,7 @@ struct StreakCalculatorTests {
         #expect(result.freezeConsumptions.count == 2)
         #expect(result.freezeConsumptions[0].freezeId == "freeze-old-available") // Oldest first
         #expect(result.freezeConsumptions[1].freezeId == "freeze-new-available")
-        #expect(result.streak.freezesRemaining == 0) // All available freezes used
+        #expect(result.streak.freezesAvailableCount == 0) // All available freezes used
         #expect(result.streak.currentStreak == 3) // 2 gaps filled, streak continues partially
     }
 
@@ -1444,7 +1444,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: day3)
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, freezeBehavior: .autoConsumeFreezes)
 
         // Current: Jan 3, 2024, 9:00 AM
         let current = calendar.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 9, minute: 0))!
@@ -1476,7 +1476,7 @@ struct StreakCalculatorTests {
 
         let events = [StreakEvent.mock(timestamp: day1)]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, freezeBehavior: .autoConsumeFreezes)
 
         // Current: Jan 2, 2024, 3:00 AM (within 6-hour leeway)
         let current = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 3, minute: 0))!
@@ -1493,7 +1493,7 @@ struct StreakCalculatorTests {
         // Then: No freeze needed (within leeway window)
         #expect(result.freezeConsumptions.isEmpty)
         #expect(result.streak.currentStreak == 1)
-        #expect(result.streak.freezesRemaining == 1) // Freeze not consumed
+        #expect(result.streak.freezesAvailableCount == 1) // Freeze not consumed
     }
 
     @Test("Freeze consumption across timezone changes")
@@ -1513,7 +1513,7 @@ struct StreakCalculatorTests {
             StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 4, hour: 23, minute: 0))!)
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // Current: Jan 5, 2024, 1:00 AM PST
         let current = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 5, hour: 1, minute: 0))!
@@ -1534,7 +1534,7 @@ struct StreakCalculatorTests {
         // Result: 2-day streak (Jan 5 freeze + Jan 4 event)
         #expect(result.freezeConsumptions.count == 1)
         #expect(result.streak.currentStreak == 2) // Jan 5 (freeze) and Jan 4 (event)
-        #expect(result.streak.freezesRemaining == 0)
+        #expect(result.streak.freezesAvailableCount == 0)
     }
 
     // MARK: - Longest Streak Tests
@@ -1905,7 +1905,7 @@ struct StreakCalculatorTests {
         let freezes = (0..<100).map { i in
             StreakFreeze.mockUnused(id: "freeze-\(i)")
         }
-        let config = StreakConfiguration(streakKey: "workout", autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
         // When: Calculating streak
         let startTime = Date()

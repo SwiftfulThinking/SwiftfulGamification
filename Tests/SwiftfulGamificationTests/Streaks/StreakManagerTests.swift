@@ -486,7 +486,7 @@ struct StreakManagerTests {
         // Add 2 freezes (enough to fill 2-day gap)
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .autoConsumeFreezes)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers calculation with auto-consume)
@@ -609,7 +609,7 @@ struct StreakManagerTests {
         try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .autoConsumeFreezes)
         let manager = StreakManager(services: services, configuration: config, logger: logger)
 
         // When: Logging in (triggers auto-consume)
@@ -928,7 +928,7 @@ struct StreakManagerTests {
         // Add freeze
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
 
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: true)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .autoConsumeFreezes)
         let manager = StreakManager(services: services, configuration: config)
 
         // When: Logging in (should auto-consume freeze)
@@ -1014,7 +1014,7 @@ struct StreakManagerTests {
 
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
 
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .noFreezes)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")
@@ -1045,7 +1045,7 @@ struct StreakManagerTests {
         let freeze = StreakFreeze.mockUnused(id: "freeze-1", streakKey: "workout")
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: freeze)
 
-        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, autoConsumeFreeze: false)
+        let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .noFreezes)
         let manager = StreakManager(services: services, configuration: config)
 
         try await manager.logIn(userId: "user123")

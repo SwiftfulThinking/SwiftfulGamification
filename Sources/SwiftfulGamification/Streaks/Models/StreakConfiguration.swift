@@ -7,6 +7,32 @@
 
 import Foundation
 
+/// Freeze behavior options for streak management
+public enum FreezeBehavior: String, Codable, Sendable {
+    /// No freeze functionality
+    case noFreezes
+    /// Automatically consume freezes when streak would break
+    case autoConsumeFreezes
+    /// Freezes must be manually consumed by user
+    case manuallyConsumeFreezes
+}
+
+/// Result of manual freeze usage
+public enum UseFreezesResult: Sendable {
+    /// Freezes were used and streak was saved
+    case didUseFreezesAndSavedStreak
+    /// No freezes were used (streak not at risk or no freezes available)
+    case didNotUseFreezes
+}
+
+/// Status for applying manual streak freezes
+public enum ApplyManualStreakFreezeStatus: Sendable, Equatable {
+    /// User can save streak by using the specified number of freezes (and has enough available)
+    case canSaveStreakWithFreezes(count: Int)
+    /// User cannot save streak (either streak is active or not enough freezes available)
+    case cannotSaveStreakWithFreezes
+}
+
 /// Configuration for streak behavior
 public struct StreakConfiguration: Codable, Sendable, Equatable {
     /// Streak identifier (e.g., "workout", "reading")
@@ -21,8 +47,8 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     /// Grace period in hours around midnight (0 = strict, ±X hours = lenient)
     public let leewayHours: Int
 
-    /// Automatically consume a freeze when streak would break
-    public let autoConsumeFreeze: Bool
+    /// Freeze behavior for streak management
+    public let freezeBehavior: FreezeBehavior
 
     // MARK: - Initialization
 
@@ -31,7 +57,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         eventsRequiredPerDay: Int = 1,
         useServerCalculation: Bool = false,
         leewayHours: Int = 0,
-        autoConsumeFreeze: Bool = true
+        freezeBehavior: FreezeBehavior = .autoConsumeFreezes
     ) {
         precondition(eventsRequiredPerDay >= 1, "eventsRequiredPerDay must be >= 1")
         precondition(leewayHours >= 0, "leewayHours must be >= 0")
@@ -41,7 +67,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         self.eventsRequiredPerDay = eventsRequiredPerDay
         self.useServerCalculation = useServerCalculation
         self.leewayHours = leewayHours
-        self.autoConsumeFreeze = autoConsumeFreeze
+        self.freezeBehavior = freezeBehavior
     }
 
     // MARK: - Codable
@@ -51,7 +77,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         case eventsRequiredPerDay = "events_required_per_day"
         case useServerCalculation = "use_server_calculation"
         case leewayHours = "leeway_hours"
-        case autoConsumeFreeze = "auto_consume_freeze"
+        case freezeBehavior = "freeze_behavior"
     }
 
     // MARK: - Computed Properties
@@ -78,14 +104,14 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         eventsRequiredPerDay: Int = 1,
         useServerCalculation: Bool = false,
         leewayHours: Int = 0,
-        autoConsumeFreeze: Bool = true
+        freezeBehavior: FreezeBehavior = .autoConsumeFreezes
     ) -> Self {
         StreakConfiguration(
             streakKey: streakKey,
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: useServerCalculation,
             leewayHours: leewayHours,
-            autoConsumeFreeze: autoConsumeFreeze
+            freezeBehavior: freezeBehavior
         )
     }
 
@@ -96,7 +122,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 0,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
     }
 
@@ -107,7 +133,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
             eventsRequiredPerDay: eventsRequiredPerDay,
             useServerCalculation: false,
             leewayHours: 0,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
     }
 
@@ -118,7 +144,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: leewayHours,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
     }
 
@@ -129,7 +155,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 24,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
     }
 
@@ -140,7 +166,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
             eventsRequiredPerDay: 1,
             useServerCalculation: true,
             leewayHours: 0,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
     }
 }

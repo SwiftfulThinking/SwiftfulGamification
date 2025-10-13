@@ -172,6 +172,91 @@ public class StreakManager {
         }
     }
 
+    @discardableResult
+    public func useStreakFreezes() async throws -> UseFreezesResult {
+        guard let userId = userId else {
+            throw StreakError.notLoggedIn
+        }
+
+        // Only applicable when manually consuming freezes
+        guard configuration.freezeBehavior == .manuallyConsumeFreezes else {
+            return .didNotUseFreezes
+        }
+
+        // Check if we can save the streak with freezes
+        guard case .canSaveStreakWithFreezes = currentStreakData.applyManualStreakFreezeStatus else {
+            return .didNotUseFreezes
+        }
+
+        // Get available freezes from current streak data
+        guard let availableFreezes = currentStreakData.freezesAvailable, !availableFreezes.isEmpty else {
+            return .didNotUseFreezes
+        }
+
+        // Get the last event date
+        guard let lastEventDate = currentStreakData.lastEventDate else {
+            return .didNotUseFreezes
+        }
+
+        logger?.trackEvent(event: Event.useStreakFreezesStart)
+
+        do {
+            var calendar = Calendar.current
+            if let timezone = currentStreakData.lastEventTimezone {
+                calendar.timeZone = TimeZone(identifier: timezone) ?? .current
+            }
+
+            // Use StreakCalculator helper to determine which days need freezes
+            let gapDays = StreakCalculator.calculateGapDays(
+                from: lastEventDate,
+                to: Date(),
+                calendar: calendar
+            )
+
+            guard !gapDays.isEmpty else {
+                return .didNotUseFreezes
+            }
+
+            // Use StreakCalculator helper to select freezes in FIFO order
+            let freezeConsumptions = StreakCalculator.selectFreezesForDays(
+                daysToFill: gapDays,
+                availableFreezes: availableFreezes
+            )
+
+            guard !freezeConsumptions.isEmpty else {
+                return .didNotUseFreezes
+            }
+
+            // Apply each freeze consumption
+            for consumption in freezeConsumptions {
+                // Create freeze event for this day
+                let freezeEvent = StreakEvent(
+                    id: UUID().uuidString,
+                    timestamp: consumption.date,
+                    timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
+                    isFreeze: true,
+                    freezeId: consumption.freezeId
+                )
+                try await remote.addEvent(userId: userId, streakKey: configuration.streakKey, event: freezeEvent)
+
+                // Mark freeze as used
+                try await remote.useStreakFreeze(userId: userId, streakKey: configuration.streakKey, freezeId: consumption.freezeId)
+
+                logger?.trackEvent(event: Event.freezeManuallyConsumed(freezeId: consumption.freezeId, date: consumption.date))
+            }
+
+            // Recalculate streak after applying freezes
+            calculateStreak(userId: userId)
+
+            logger?.trackEvent(event: Event.useStreakFreezesSuccess(count: freezeConsumptions.count))
+
+            return .didUseFreezesAndSavedStreak
+        } catch {
+            logger?.trackEvent(event: Event.useStreakFreezesFail(error: error))
+            throw error
+        }
+    }
+
     public func getAllStreakFreezes() async throws -> [StreakFreeze] {
         guard let userId = userId else {
             throw StreakError.notLoggedIn
@@ -265,12 +350,16 @@ extension StreakManager {
         case calculateStreakSuccess(streak: CurrentStreakData)
         case calculateStreakFail(error: Error)
         case freezeAutoConsumed(freezeId: String, date: Date)
+        case freezeManuallyConsumed(freezeId: String, date: Date)
         case addStreakFreezeStart(freezeId: String)
         case addStreakFreezeSuccess(freezeId: String)
         case addStreakFreezeFail(error: Error)
         case useStreakFreezeStart(freezeId: String)
         case useStreakFreezeSuccess(freezeId: String)
         case useStreakFreezeFail(error: Error)
+        case useStreakFreezesStart
+        case useStreakFreezesSuccess(count: Int)
+        case useStreakFreezesFail(error: Error)
 
         var eventName: String {
             switch self {
@@ -284,12 +373,16 @@ extension StreakManager {
             case .calculateStreakSuccess:   return "StreakMan_CalculateStreak_Success"
             case .calculateStreakFail:      return "StreakMan_CalculateStreak_Fail"
             case .freezeAutoConsumed:       return "StreakMan_Freeze_AutoConsumed"
+            case .freezeManuallyConsumed:   return "StreakMan_Freeze_ManuallyConsumed"
             case .addStreakFreezeStart:     return "StreakMan_AddStreakFreeze_Start"
             case .addStreakFreezeSuccess:   return "StreakMan_AddStreakFreeze_Success"
             case .addStreakFreezeFail:      return "StreakMan_AddStreakFreeze_Fail"
             case .useStreakFreezeStart:     return "StreakMan_UseStreakFreeze_Start"
             case .useStreakFreezeSuccess:   return "StreakMan_UseStreakFreeze_Success"
             case .useStreakFreezeFail:      return "StreakMan_UseStreakFreeze_Fail"
+            case .useStreakFreezesStart:    return "StreakMan_UseStreakFreezes_Start"
+            case .useStreakFreezesSuccess:  return "StreakMan_UseStreakFreezes_Success"
+            case .useStreakFreezesFail:     return "StreakMan_UseStreakFreezes_Fail"
             }
         }
 
@@ -297,14 +390,16 @@ extension StreakManager {
             switch self {
             case .remoteListenerSuccess(streak: let streak), .saveLocalStart(streak: let streak), .saveLocalSuccess(streak: let streak), .calculateStreakSuccess(streak: let streak):
                 return streak.eventParameters
-            case .freezeAutoConsumed(freezeId: let freezeId, date: let date):
+            case .freezeAutoConsumed(freezeId: let freezeId, date: let date), .freezeManuallyConsumed(freezeId: let freezeId, date: let date):
                 return [
                     "freeze_id": freezeId,
                     "frozen_date": date.timeIntervalSince1970
                 ]
             case .addStreakFreezeStart(freezeId: let freezeId), .addStreakFreezeSuccess(freezeId: let freezeId), .useStreakFreezeStart(freezeId: let freezeId), .useStreakFreezeSuccess(freezeId: let freezeId):
                 return ["freeze_id": freezeId]
-            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error), .addStreakFreezeFail(error: let error), .useStreakFreezeFail(error: let error):
+            case .useStreakFreezesSuccess(count: let count):
+                return ["freezes_used_count": count]
+            case .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .calculateStreakFail(error: let error), .addStreakFreezeFail(error: let error), .useStreakFreezeFail(error: let error), .useStreakFreezesFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
                 return nil
@@ -313,9 +408,9 @@ extension StreakManager {
 
         var type: GamificationLogType {
             switch self {
-            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail, .addStreakFreezeFail, .useStreakFreezeFail:
+            case .remoteListenerFail, .saveLocalFail, .calculateStreakFail, .addStreakFreezeFail, .useStreakFreezeFail, .useStreakFreezesFail:
                 return .severe
-            case .calculateStreakSuccess, .freezeAutoConsumed, .addStreakFreezeSuccess, .useStreakFreezeSuccess:
+            case .calculateStreakSuccess, .freezeAutoConsumed, .freezeManuallyConsumed, .addStreakFreezeSuccess, .useStreakFreezeSuccess, .useStreakFreezesSuccess:
                 return .analytic
             default:
                 return .info

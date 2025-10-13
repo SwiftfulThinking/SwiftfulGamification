@@ -154,7 +154,7 @@ struct RecentEventsTests {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 3,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
 
         let (streak, _) = StreakCalculator.calculateStreak(
@@ -198,7 +198,7 @@ struct RecentEventsTests {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 0,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
 
         let (streak, _) = StreakCalculator.calculateStreak(
@@ -336,7 +336,7 @@ struct RecentEventsTests {
             eventsRequiredPerDay: 1,
             useServerCalculation: false,
             leewayHours: 3,
-            autoConsumeFreeze: true
+            freezeBehavior: .autoConsumeFreezes
         )
 
         let (streak, _) = StreakCalculator.calculateStreak(

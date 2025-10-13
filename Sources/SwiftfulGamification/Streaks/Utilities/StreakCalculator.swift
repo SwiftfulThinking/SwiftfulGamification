@@ -39,7 +39,8 @@ public struct StreakCalculator {
                 lastEventTimezone: blankStreak.lastEventTimezone,
                 streakStartDate: blankStreak.streakStartDate,
                 totalEvents: blankStreak.totalEvents,
-                freezesRemaining: freezes.filter { $0.isAvailable }.count,
+                freezesAvailable: freezes.filter { $0.isAvailable },
+                freezesAvailableCount: freezes.filter { $0.isAvailable }.count,
                 createdAt: blankStreak.createdAt,
                 updatedAt: currentDate,
                 eventsRequiredPerDay: configuration.eventsRequiredPerDay,
@@ -110,11 +111,11 @@ public struct StreakCalculator {
                     continue
                 }
 
-                // Try to fill the gap with freezes if autoConsumeFreeze is enabled
-                if configuration.autoConsumeFreeze {
+                // Try to fill the gap with freezes if freezeBehavior is autoConsumeFreezes
+                if configuration.freezeBehavior == .autoConsumeFreezes {
                     var gapFilled = false
 
-                    // Check if we can fill the gap with a freeze
+                    // Walk backward filling gap one day at a time with available freezes (FIFO)
                     while eventDay < expectedDate && !availableFreezes.isEmpty {
                         let freeze = availableFreezes.removeFirst()
                         freezeConsumptions.append((freezeId: freeze.id, date: expectedDate))
@@ -220,7 +221,8 @@ public struct StreakCalculator {
             lastEventTimezone: lastEvent?.timezone,
             streakStartDate: streakStartDate,
             totalEvents: events.count,
-            freezesRemaining: freezesRemaining,
+            freezesAvailable: availableFreezes,
+            freezesAvailableCount: freezesRemaining,
             createdAt: events.first?.timestamp,
             updatedAt: currentDate,
             eventsRequiredPerDay: configuration.eventsRequiredPerDay,
@@ -329,5 +331,71 @@ public struct StreakCalculator {
                 return lastDays.contains(adjustedDay)
             }
             .sorted { $0.timestamp < $1.timestamp }
+    }
+
+    // MARK: - Freeze Consumption Helpers
+
+    /// Calculates which days need to be filled between last event and today
+    /// - Parameters:
+    ///   - lastEventDate: The date of the last streak event
+    ///   - currentDate: The current date (usually today)
+    ///   - calendar: Calendar to use for date calculations
+    /// - Returns: Array of dates that need freeze events, in chronological order
+    public static func calculateGapDays(
+        from lastEventDate: Date,
+        to currentDate: Date,
+        calendar: Calendar
+    ) -> [Date] {
+        let lastEventDay = calendar.startOfDay(for: lastEventDate)
+        let today = calendar.startOfDay(for: currentDate)
+
+        // Calculate how many days need to be filled (excluding today)
+        let daysSinceLastEvent = calendar.dateComponents([.day], from: lastEventDay, to: today).day ?? 0
+        let daysToFill = max(0, daysSinceLastEvent - 1)
+
+        guard daysToFill > 0 else {
+            return []
+        }
+
+        // Generate array of dates that need freezes
+        var gapDays: [Date] = []
+        var currentDay = calendar.date(byAdding: .day, value: 1, to: lastEventDay) ?? lastEventDay
+
+        for _ in 0..<daysToFill {
+            gapDays.append(currentDay)
+            currentDay = calendar.date(byAdding: .day, value: 1, to: currentDay) ?? currentDay
+        }
+
+        return gapDays
+    }
+
+    /// Selects freezes to consume for specific days using FIFO (First In First Out) ordering
+    /// - Parameters:
+    ///   - daysToFill: Array of dates that need freeze events
+    ///   - availableFreezes: Array of available freezes to choose from
+    /// - Returns: Array of FreezeConsumption tuples mapping freeze IDs to dates
+    public static func selectFreezesForDays(
+        daysToFill: [Date],
+        availableFreezes: [StreakFreeze]
+    ) -> [FreezeConsumption] {
+        guard !daysToFill.isEmpty, !availableFreezes.isEmpty else {
+            return []
+        }
+
+        // Sort freezes FIFO - oldest first (by earnedDate)
+        let sortedFreezes = availableFreezes.sorted {
+            ($0.earnedDate ?? Date.distantPast) < ($1.earnedDate ?? Date.distantPast)
+        }
+
+        // Take as many freezes as we have days (or all available freezes if fewer)
+        let freezesToUse = sortedFreezes.prefix(daysToFill.count)
+
+        // Map each freeze to its corresponding day
+        var consumptions: [FreezeConsumption] = []
+        for (index, freeze) in freezesToUse.enumerated() {
+            consumptions.append((freezeId: freeze.id, date: daysToFill[index]))
+        }
+
+        return consumptions
     }
 }
