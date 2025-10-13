@@ -44,6 +44,67 @@ public struct ExperiencePointsCalculator {
             currentDate: currentDate
         )
 
+        // CALCULATE POINTS THIS WEEK (since Sunday)
+        calendar.firstWeekday = 1 // Sunday
+        let pointsThisWeek: Int
+        if let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentDate) {
+            pointsThisWeek = events
+                .filter { $0.timestamp >= weekInterval.start && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsThisWeek = 0
+        }
+
+        // CALCULATE POINTS LAST 7 DAYS (rolling)
+        let pointsLast7Days: Int
+        if let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: currentDate) {
+            pointsLast7Days = events
+                .filter { $0.timestamp >= sevenDaysAgo && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsLast7Days = 0
+        }
+
+        // CALCULATE POINTS THIS MONTH (since 1st)
+        let pointsThisMonth: Int
+        if let monthInterval = calendar.dateInterval(of: .month, for: currentDate) {
+            pointsThisMonth = events
+                .filter { $0.timestamp >= monthInterval.start && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsThisMonth = 0
+        }
+
+        // CALCULATE POINTS LAST 30 DAYS (rolling)
+        let pointsLast30Days: Int
+        if let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: currentDate) {
+            pointsLast30Days = events
+                .filter { $0.timestamp >= thirtyDaysAgo && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsLast30Days = 0
+        }
+
+        // CALCULATE POINTS THIS YEAR (since January 1st)
+        let pointsThisYear: Int
+        if let yearInterval = calendar.dateInterval(of: .year, for: currentDate) {
+            pointsThisYear = events
+                .filter { $0.timestamp >= yearInterval.start && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsThisYear = 0
+        }
+
+        // CALCULATE POINTS LAST 12 MONTHS (rolling)
+        let pointsLast12Months: Int
+        if let twelveMonthsAgo = calendar.date(byAdding: .month, value: -12, to: currentDate) {
+            pointsLast12Months = events
+                .filter { $0.timestamp >= twelveMonthsAgo && $0.timestamp <= currentDate }
+                .reduce(0) { $0 + $1.points }
+        } else {
+            pointsLast12Months = 0
+        }
+
         // LAST EVENT INFO
         let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
 
@@ -60,6 +121,12 @@ public struct ExperiencePointsCalculator {
             userId: userId,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
+            pointsThisWeek: pointsThisWeek,
+            pointsLast7Days: pointsLast7Days,
+            pointsThisMonth: pointsThisMonth,
+            pointsLast30Days: pointsLast30Days,
+            pointsThisYear: pointsThisYear,
+            pointsLast12Months: pointsLast12Months,
             lastEventDate: lastEvent?.timestamp,
             createdAt: events.first?.timestamp,
             updatedAt: currentDate,

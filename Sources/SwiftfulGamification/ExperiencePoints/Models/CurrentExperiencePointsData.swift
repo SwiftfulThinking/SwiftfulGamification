@@ -26,6 +26,24 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Number of XP events logged today
     public let eventsTodayCount: Int?
 
+    /// Points earned this week (since Sunday)
+    public let pointsThisWeek: Int?
+
+    /// Points earned in last 7 days (rolling)
+    public let pointsLast7Days: Int?
+
+    /// Points earned this month (since 1st)
+    public let pointsThisMonth: Int?
+
+    /// Points earned in last 30 days (rolling)
+    public let pointsLast30Days: Int?
+
+    /// Points earned this year (since January 1st)
+    public let pointsThisYear: Int?
+
+    /// Points earned in last 12 months (rolling)
+    public let pointsLast12Months: Int?
+
     /// UTC timestamp of last event
     public let lastEventDate: Date?
 
@@ -45,6 +63,12 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         userId: String? = nil,
         pointsToday: Int? = nil,
         eventsTodayCount: Int? = nil,
+        pointsThisWeek: Int? = nil,
+        pointsLast7Days: Int? = nil,
+        pointsThisMonth: Int? = nil,
+        pointsLast30Days: Int? = nil,
+        pointsThisYear: Int? = nil,
+        pointsLast12Months: Int? = nil,
         lastEventDate: Date? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
@@ -54,6 +78,12 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         self.userId = userId
         self.pointsToday = pointsToday
         self.eventsTodayCount = eventsTodayCount
+        self.pointsThisWeek = pointsThisWeek
+        self.pointsLast7Days = pointsLast7Days
+        self.pointsThisMonth = pointsThisMonth
+        self.pointsLast30Days = pointsLast30Days
+        self.pointsThisYear = pointsThisYear
+        self.pointsLast12Months = pointsLast12Months
         self.lastEventDate = lastEventDate
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -67,6 +97,12 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         case userId = "user_id"
         case pointsToday = "points_today"
         case eventsTodayCount = "events_today_count"
+        case pointsThisWeek = "points_this_week"
+        case pointsLast7Days = "points_last_7_days"
+        case pointsThisMonth = "points_this_month"
+        case pointsLast30Days = "points_last_30_days"
+        case pointsThisYear = "points_this_year"
+        case pointsLast12Months = "points_last_12_months"
         case lastEventDate = "last_event_date"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -121,124 +157,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         }
     }
 
-    // MARK: - Computed Properties - Time Windows
-
-    /// Points earned this week (since Sunday)
-    /// - Parameter timezone: Timezone for week calculation (default: current)
-    /// - Returns: Total points earned this week
-    public func pointsThisWeek(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-        calendar.firstWeekday = 1 // Sunday
-
-        let now = Date()
-        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= weekInterval.start && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    /// Points earned in the last 7 days (rolling window)
-    /// - Parameter timezone: Timezone for day calculation (default: current)
-    /// - Returns: Total points earned in last 7 days
-    public func pointsLast7Days(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-
-        let now = Date()
-        guard let cutoffDate = calendar.date(byAdding: .day, value: -7, to: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= cutoffDate && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    /// Points earned this month (since 1st of month)
-    /// - Parameter timezone: Timezone for month calculation (default: current)
-    /// - Returns: Total points earned this month
-    public func pointsThisMonth(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-
-        let now = Date()
-        guard let monthInterval = calendar.dateInterval(of: .month, for: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= monthInterval.start && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    /// Points earned in the last 30 days (rolling window)
-    /// - Parameter timezone: Timezone for day calculation (default: current)
-    /// - Returns: Total points earned in last 30 days
-    public func pointsLast30Days(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-
-        let now = Date()
-        guard let cutoffDate = calendar.date(byAdding: .day, value: -30, to: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= cutoffDate && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    /// Points earned this year (since January 1st)
-    /// - Parameter timezone: Timezone for year calculation (default: current)
-    /// - Returns: Total points earned this year
-    public func pointsThisYear(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-
-        let now = Date()
-        guard let yearInterval = calendar.dateInterval(of: .year, for: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= yearInterval.start && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    /// Points earned in the last 12 months (rolling window)
-    /// - Parameter timezone: Timezone for month calculation (default: current)
-    /// - Returns: Total points earned in last 12 months
-    public func pointsLast12Months(timezone: TimeZone = .current) -> Int {
-        guard let recentEvents = recentEvents else { return 0 }
-
-        var calendar = Calendar.current
-        calendar.timeZone = timezone
-
-        let now = Date()
-        guard let cutoffDate = calendar.date(byAdding: .month, value: -12, to: now) else {
-            return 0
-        }
-
-        return recentEvents
-            .filter { $0.timestamp >= cutoffDate && $0.timestamp <= now }
-            .reduce(0) { $0 + $1.points }
-    }
-
-    // MARK: - Computed Properties - Other
+    // MARK: - Computed Properties
 
     /// Indicates if the data is stale and may not reflect the current server state
     /// Data is considered stale if it hasn't been updated in 1 hour or more
@@ -283,6 +202,12 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             userId: userId,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
+            pointsThisWeek: pointsThisWeek,
+            pointsLast7Days: pointsLast7Days,
+            pointsThisMonth: pointsThisMonth,
+            pointsLast30Days: pointsLast30Days,
+            pointsThisYear: pointsThisYear,
+            pointsLast12Months: pointsLast12Months,
             lastEventDate: lastEventDate,
             createdAt: createdAt,
             updatedAt: updatedAt,
