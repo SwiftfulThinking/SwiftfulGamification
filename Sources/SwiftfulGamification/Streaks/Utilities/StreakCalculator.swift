@@ -85,6 +85,30 @@ public struct StreakCalculator {
             }
         }
 
+        // AUTO-CONSUME FREEZES: Fill gap between last event and today (if applicable)
+        if configuration.freezeBehavior == .autoConsumeFreezes, let lastEvent = qualifyingDays.last {
+            let lastEventDay = calendar.startOfDay(for: lastEvent)
+            let today = calendar.startOfDay(for: currentDate)
+
+            // Calculate gap between last event and today
+            let daysSinceLastEvent = calendar.dateComponents([.day], from: lastEventDay, to: today).day ?? 0
+            let daysToFill = max(0, daysSinceLastEvent - 1)
+
+            // Only auto-consume if there's a gap and we have freezes
+            if daysToFill > 0 && !availableFreezes.isEmpty {
+                // Calculate which days need to be filled
+                let gapDays = calculateGapDays(from: lastEvent, to: currentDate, calendar: calendar)
+
+                // Take as many freezes as needed (up to available count)
+                let freezesToConsume = min(gapDays.count, availableFreezes.count)
+
+                for i in 0..<freezesToConsume {
+                    let freeze = availableFreezes.removeFirst()
+                    freezeConsumptions.append((freezeId: freeze.id, date: gapDays[i]))
+                }
+            }
+        }
+
         // Track if we've started counting (to handle "today has no event" edge case)
         var hasStartedStreak = false
 
@@ -111,34 +135,8 @@ public struct StreakCalculator {
                     continue
                 }
 
-                // Try to fill the gap with freezes if freezeBehavior is autoConsumeFreezes
-                if configuration.freezeBehavior == .autoConsumeFreezes {
-                    var gapFilled = false
-
-                    // Walk backward filling gap one day at a time with available freezes (FIFO)
-                    while eventDay < expectedDate && !availableFreezes.isEmpty {
-                        let freeze = availableFreezes.removeFirst()
-                        freezeConsumptions.append((freezeId: freeze.id, date: expectedDate))
-                        currentStreak += 1
-                        expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
-                        gapFilled = true
-                        hasStartedStreak = true
-
-                        // Check if we've now reached the event day
-                        if calendar.isDate(eventDay, inSameDayAs: expectedDate) {
-                            currentStreak += 1
-                            expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
-                            break
-                        }
-                    }
-
-                    // If we couldn't fill the entire gap, streak is broken
-                    if !calendar.isDate(eventDay, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: expectedDate) ?? expectedDate) && !gapFilled {
-                        break
-                    }
-                } else {
-                    break  // Gap found, no freeze auto-consume
-                }
+                // Gap found with no freeze to fill - streak is broken
+                break
             }
         }
 
