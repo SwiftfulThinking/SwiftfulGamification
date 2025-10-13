@@ -94,15 +94,13 @@ public struct StreakCalculator {
             let daysSinceLastEvent = calendar.dateComponents([.day], from: lastEventDay, to: today).day ?? 0
             let daysToFill = max(0, daysSinceLastEvent - 1)
 
-            // Only auto-consume if there's a gap and we have freezes
-            if daysToFill > 0 && !availableFreezes.isEmpty {
+            // Only auto-consume if there's a gap AND we have enough freezes to fill the entire gap
+            if daysToFill > 0 && availableFreezes.count >= daysToFill {
                 // Calculate which days need to be filled
                 let gapDays = calculateGapDays(from: lastEvent, to: currentDate, calendar: calendar)
 
-                // Take as many freezes as needed (up to available count)
-                let freezesToConsume = min(gapDays.count, availableFreezes.count)
-
-                for i in 0..<freezesToConsume {
+                // Use exactly as many freezes as needed to fill the gap
+                for i in 0..<gapDays.count {
                     let freeze = availableFreezes.removeFirst()
                     freezeConsumptions.append((freezeId: freeze.id, date: gapDays[i]))
                 }
