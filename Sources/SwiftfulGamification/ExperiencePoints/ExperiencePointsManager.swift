@@ -108,7 +108,7 @@ public class ExperiencePointsManager {
         do {
             try await remote.addEvent(userId: userId, experienceKey: configuration.experienceKey, event: event)
             logger?.trackEvent(event: Event.addExperiencePointsSuccess(event: event))
-            calculateExperiencePoints(userId: userId)
+            await calculateExperiencePointsAsync(userId: userId)
             return event
         } catch {
             logger?.trackEvent(event: Event.addExperiencePointsFail(error: error))
@@ -150,36 +150,38 @@ public class ExperiencePointsManager {
     // MARK: - Private Helpers
 
     private func calculateExperiencePoints(userId: String) {
+        Task {
+            await calculateExperiencePointsAsync(userId: userId)
+        }
+    }
+
+    private func calculateExperiencePointsAsync(userId: String) async {
         if configuration.useServerCalculation {
             // Server-side calculation
-            Task {
-                do {
-                    try await remote.calculateExperiencePoints(userId: userId, experienceKey: configuration.experienceKey)
-                } catch {
-                    logger?.trackEvent(event: Event.calculateXPFail(error: error))
-                }
+            do {
+                try await remote.calculateExperiencePoints(userId: userId, experienceKey: configuration.experienceKey)
+            } catch {
+                logger?.trackEvent(event: Event.calculateXPFail(error: error))
             }
         } else {
             // Client-side calculation
             logger?.trackEvent(event: Event.calculateXPStart)
 
-            Task {
-                do {
-                    let events = try await remote.getAllEvents(userId: userId, experienceKey: configuration.experienceKey)
+            do {
+                let events = try await remote.getAllEvents(userId: userId, experienceKey: configuration.experienceKey)
 
-                    let calculatedData = ExperiencePointsCalculator.calculateExperiencePoints(
-                        events: events,
-                        configuration: configuration,
-                        userId: userId
-                    )
+                let calculatedData = ExperiencePointsCalculator.calculateExperiencePoints(
+                    events: events,
+                    configuration: configuration,
+                    userId: userId
+                )
 
-                    currentExperiencePointsData = calculatedData
-                    try await remote.updateCurrentExperiencePoints(userId: userId, experienceKey: configuration.experienceKey, data: calculatedData)
+                currentExperiencePointsData = calculatedData
+                try await remote.updateCurrentExperiencePoints(userId: userId, experienceKey: configuration.experienceKey, data: calculatedData)
 
-                    logger?.trackEvent(event: Event.calculateXPSuccess(data: calculatedData))
-                } catch {
-                    logger?.trackEvent(event: Event.calculateXPFail(error: error))
-                }
+                logger?.trackEvent(event: Event.calculateXPSuccess(data: calculatedData))
+            } catch {
+                logger?.trackEvent(event: Event.calculateXPFail(error: error))
             }
         }
     }
