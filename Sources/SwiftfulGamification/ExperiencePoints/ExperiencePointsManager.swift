@@ -87,7 +87,6 @@ public class ExperiencePointsManager {
 
     @discardableResult
     public func addExperiencePoints(
-        id: String,
         points: Int,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) async throws -> ExperiencePointsEvent {
@@ -96,7 +95,7 @@ public class ExperiencePointsManager {
         }
 
         let event = ExperiencePointsEvent(
-            id: id,
+            id: UUID().uuidString,
             experienceKey: configuration.experienceKey,
             timestamp: Date(),
             points: points,

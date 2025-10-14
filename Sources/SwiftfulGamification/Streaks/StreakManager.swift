@@ -87,7 +87,6 @@ public class StreakManager {
 
     @discardableResult
     public func addStreakEvent(
-        id: String,
         timestamp: Date = Date(),
         metadata: [String: GamificationDictionaryValue] = [:]
     ) async throws -> StreakEvent {
@@ -96,7 +95,7 @@ public class StreakManager {
         }
 
         let event = StreakEvent(
-            id: id,
+            id: UUID().uuidString,
             timestamp: timestamp,
             timezone: TimeZone.current.identifier,
             isFreeze: false,

@@ -24,13 +24,13 @@ Pre-built dependencies*:
 ```swift
 // Streaks
 Task {
-    try await streakManager.addStreakEvent(id: UUID().uuidString)
+    try await streakManager.addStreakEvent()
     print(streakManager.currentStreakData.currentStreak) // 7 days
 }
 
 // Experience Points
 Task {
-    try await xpManager.addExperiencePoints(id: UUID().uuidString, points: 100)
+    try await xpManager.addExperiencePoints(points: 100)
     print(xpManager.currentExperiencePointsData.pointsAllTime) // 5000 XP
 }
 
@@ -174,7 +174,6 @@ streakManager.logOut()
 ```swift
 // Add event for today
 try await streakManager.addStreakEvent(
-    id: UUID().uuidString,
     timestamp: Date(),
     metadata: ["action": "completed_workout"]
 )
@@ -284,7 +283,6 @@ xpManager.logOut()
 ```swift
 // Add XP with metadata
 try await xpManager.addExperiencePoints(
-    id: UUID().uuidString,
     points: 100,
     metadata: ["action": "completed_level", "level": 5]
 )
@@ -457,13 +455,11 @@ metadata["date_key"] = Date()
 ```swift
 // Streak events - track what action triggered the event
 try await streakManager.addStreakEvent(
-    id: UUID().uuidString,
     metadata: ["action": "workout", "duration_minutes": 30]
 )
 
 // XP events - track source of XP
 try await xpManager.addExperiencePoints(
-    id: UUID().uuidString,
     points: 100,
     metadata: ["source": "quest", "quest_id": "forest_1", "difficulty": "hard"]
 )
