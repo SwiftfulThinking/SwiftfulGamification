@@ -29,25 +29,16 @@ public struct StreakCalculator {
         timezone: TimeZone = .current
     ) -> (streak: CurrentStreakData, freezeConsumptions: [FreezeConsumption]) {
         guard !events.isEmpty else {
-            let blankStreak = CurrentStreakData.blank(streakKey: configuration.streakKey)
-            let streakWithUser = CurrentStreakData(
-                streakKey: blankStreak.streakKey,
+            let availableFreezes = freezes.filter { $0.isAvailable }
+            let blankStreak = CurrentStreakData.blank(
+                streakKey: configuration.streakKey,
                 userId: userId,
-                currentStreak: blankStreak.currentStreak,
-                longestStreak: blankStreak.longestStreak,
-                lastEventDate: blankStreak.lastEventDate,
-                lastEventTimezone: blankStreak.lastEventTimezone,
-                streakStartDate: blankStreak.streakStartDate,
-                totalEvents: blankStreak.totalEvents,
-                freezesAvailable: freezes.filter { $0.isAvailable },
-                freezesAvailableCount: freezes.filter { $0.isAvailable }.count,
-                createdAt: blankStreak.createdAt,
+                freezesAvailable: availableFreezes,
+                freezesAvailableCount: availableFreezes.count,
                 updatedAt: currentDate,
-                eventsRequiredPerDay: configuration.eventsRequiredPerDay,
-                todayEventCount: blankStreak.todayEventCount,
-                recentEvents: blankStreak.recentEvents
+                eventsRequiredPerDay: configuration.eventsRequiredPerDay
             )
-            return (streakWithUser, [])
+            return (blankStreak, [])
         }
 
         var calendar = Calendar.current

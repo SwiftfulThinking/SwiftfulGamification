@@ -265,9 +265,10 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     }
 
     /// Blank XP data (no events, zero points)
-    public static func blank(experienceKey: String) -> Self {
+    public static func blank(experienceKey: String, userId: String? = nil) -> Self {
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
+            userId: userId,
             pointsAllTime: 0,
             pointsToday: 0,
             eventsTodayCount: 0,

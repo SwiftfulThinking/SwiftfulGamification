@@ -440,14 +440,24 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     }
 
     /// Blank streak data (no events, zero streak)
-    public static func blank(streakKey: String) -> Self {
+    public static func blank(
+        streakKey: String,
+        userId: String? = nil,
+        freezesAvailable: [StreakFreeze]? = nil,
+        freezesAvailableCount: Int? = nil,
+        updatedAt: Date? = nil,
+        eventsRequiredPerDay: Int? = nil
+    ) -> Self {
         CurrentStreakData(
             streakKey: streakKey,
+            userId: userId,
             currentStreak: 0,
             longestStreak: 0,
             totalEvents: 0,
-            freezesAvailableCount: 0,
-            eventsRequiredPerDay: 1,
+            freezesAvailable: freezesAvailable,
+            freezesAvailableCount: freezesAvailableCount ?? 0,
+            updatedAt: updatedAt,
+            eventsRequiredPerDay: eventsRequiredPerDay ?? 1,
             todayEventCount: 0
         )
     }

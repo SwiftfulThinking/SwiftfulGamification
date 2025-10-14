@@ -25,7 +25,7 @@ public struct ExperiencePointsCalculator {
         timezone: TimeZone = .current
     ) -> CurrentExperiencePointsData {
         guard !events.isEmpty else {
-            return CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
+            return CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey, userId: userId)
         }
 
         var calendar = Calendar.current
