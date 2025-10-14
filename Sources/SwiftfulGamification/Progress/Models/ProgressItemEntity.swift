@@ -50,7 +50,9 @@ final class ProgressItemEntity {
     ) {
         self.id = id
         self.progressKey = progressKey
-        self.compositeId = "\(progressKey)_\(id)"
+        // Use sanitized ID for compositeId (for database key safety)
+        let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
+        self.compositeId = "\(progressKey)_\(sanitizedId)"
         self.value = value
         self.dateCreated = dateCreated
         self.dateModified = dateModified

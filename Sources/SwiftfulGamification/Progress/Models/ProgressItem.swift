@@ -15,12 +15,13 @@ import IdentifiableByString
 /// For SwiftData persistence, this converts to/from ProgressItemEntity in the persistence layer.
 ///
 /// **Storage Architecture:**
-/// - `id`: User-provided identifier (e.g., "world1", "level5")
-/// - `compositeId`: Computed composite key ("{progressKey}_{id}") for uniqueness
-/// - Firestore document path: `swiftful_progress/{userId}/{progressKey}/items/{id}`
+/// - `id`: User-provided identifier (e.g., "World 1", "Level 5")
+/// - `sanitizedId`: Database-safe identifier (e.g., "world_1", "level_5") - used for storage
+/// - `compositeId`: Computed composite key ("{progressKey}_{sanitizedId}") for uniqueness
+/// - Firestore document path: `swiftful_progress/{userId}/{progressKey}/items/{sanitizedId}`
 public struct ProgressItem: Sendable, Codable, StringIdentifiable {
-    /// User-provided identifier (e.g., "world1", "level5")
-    /// Used as Firestore document ID
+    /// User-provided identifier (e.g., "World 1", "Level 5")
+    /// This is the original ID as provided by the user
     public let id: String
 
     /// Progress key for grouping items (e.g., "level", "achievements")
@@ -38,10 +39,16 @@ public struct ProgressItem: Sendable, Codable, StringIdentifiable {
     /// Custom metadata associated with this item (for developer-defined data and filtering)
     public let metadata: [String: GamificationDictionaryValue]
 
-    /// Composite unique identifier: "{progressKey}_{id}"
+    /// Sanitized identifier safe for database storage (e.g., "world_1", "level_5")
+    /// This is what gets used as the Firestore document ID
+    public var sanitizedId: String {
+        id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
+    }
+
+    /// Composite unique identifier: "{progressKey}_{sanitizedId}"
     /// Prevents conflicts when same ID exists in different progressKeys
     public var compositeId: String {
-        "\(progressKey)_\(id)"
+        "\(progressKey)_\(sanitizedId)"
     }
 
     // MARK: - Initialization

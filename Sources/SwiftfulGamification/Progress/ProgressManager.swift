@@ -72,23 +72,25 @@ public class ProgressManager {
     // MARK: - Public API
 
     /// Get progress value synchronously from in-memory cache
-    /// - Parameter id: Progress item ID
+    /// - Parameter id: Progress item ID (will be sanitized for lookup)
     /// - Returns: Progress value (0.0 to 1.0), or 0.0 if not found
     public func getProgress(id: String) -> Double {
+        let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
         if progressCache.isEmpty {
-            return local.getProgressItem(progressKey: configuration.progressKey, id: id)?.value ?? 0.0
+            return local.getProgressItem(progressKey: configuration.progressKey, id: sanitizedId)?.value ?? 0.0
         }
-        return progressCache[id]?.value ?? 0.0
+        return progressCache[sanitizedId]?.value ?? 0.0
     }
 
     /// Get full progress item synchronously from in-memory cache
-    /// - Parameter id: Progress item ID
+    /// - Parameter id: Progress item ID (will be sanitized for lookup)
     /// - Returns: Progress item, or nil if not found
     public func getProgressItem(id: String) -> ProgressItem? {
+        let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
         if progressCache.isEmpty {
-            return local.getProgressItem(progressKey: configuration.progressKey, id: id)
+            return local.getProgressItem(progressKey: configuration.progressKey, id: sanitizedId)
         }
-        return progressCache[id]
+        return progressCache[sanitizedId]
     }
 
     /// Get all progress values synchronously from in-memory cache
@@ -158,15 +160,18 @@ public class ProgressManager {
 
         logger?.trackEvent(event: Event.addProgressStart(id: id, value: value))
 
+        // Sanitize the ID for storage
+        let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
+
         // Check if new value is higher than existing local value (progress never decreases)
-        let existingLocal = local.getProgressItem(progressKey: configuration.progressKey, id: id)
+        let existingLocal = local.getProgressItem(progressKey: configuration.progressKey, id: sanitizedId)
         if let existingValue = existingLocal?.value, value < existingValue {
             logger?.trackEvent(event: Event.addProgressSuccess(id: id, value: value))
             return existingLocal! // Ignore updates that would decrease progress, return existing item
         }
 
         // Create updated item, merging metadata (new values overwrite old ones)
-        let existingItem = progressCache[id] ?? existingLocal
+        let existingItem = progressCache[sanitizedId] ?? existingLocal
         var mergedMetadata = existingItem?.metadata ?? [:]
         if let metadata = metadata {
             mergedMetadata.merge(metadata) { _, new in new }
@@ -181,8 +186,8 @@ public class ProgressManager {
             metadata: mergedMetadata
         )
 
-        // Optimistic update: Update cache immediately
-        progressCache[id] = item
+        // Optimistic update: Update cache immediately (using sanitized ID as key)
+        progressCache[sanitizedId] = item
 
         // Save locally
         do {
@@ -205,7 +210,7 @@ public class ProgressManager {
     }
 
     /// Delete a single progress item
-    /// - Parameter id: Progress item ID
+    /// - Parameter id: Progress item ID (will be sanitized for lookup)
     public func deleteProgress(id: String) async throws {
         guard let userId = userId else {
             logger?.trackEvent(event: Event.deleteProgressFail(error: ProgressError.notLoggedIn))
@@ -214,12 +219,15 @@ public class ProgressManager {
 
         logger?.trackEvent(event: Event.deleteProgressStart(id: id))
 
+        // Sanitize the ID for storage lookup
+        let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
+
         // Remove from cache
-        progressCache.removeValue(forKey: id)
+        progressCache.removeValue(forKey: sanitizedId)
 
         // Delete locally
         do {
-            try local.deleteProgressItem(progressKey: configuration.progressKey, id: id)
+            try local.deleteProgressItem(progressKey: configuration.progressKey, id: sanitizedId)
             logger?.trackEvent(event: Event.saveLocalSuccess(id: id))
         } catch {
             logger?.trackEvent(event: Event.saveLocalFail(error: error))
@@ -227,7 +235,7 @@ public class ProgressManager {
 
         // Delete from remote
         do {
-            try await remote.deleteProgress(userId: userId, progressKey: configuration.progressKey, id: id)
+            try await remote.deleteProgress(userId: userId, progressKey: configuration.progressKey, id: sanitizedId)
             logger?.trackEvent(event: Event.deleteProgressSuccess(id: id))
         } catch {
             logger?.trackEvent(event: Event.deleteProgressFail(error: error))
@@ -273,9 +281,9 @@ public class ProgressManager {
         do {
             let items = try await remote.getAllProgressItems(userId: userId, progressKey: configuration.progressKey)
 
-            // Update cache
+            // Update cache (using sanitized ID as key)
             for item in items {
-                progressCache[item.id] = item
+                progressCache[item.sanitizedId] = item
             }
 
             // Save all to local storage (runs on background thread)
@@ -307,7 +315,7 @@ public class ProgressManager {
         do {
             for try await item in updates {
                 // Check if local value is higher than remote (progress should never decrease)
-                if let currentItem = progressCache[item.id], currentItem.value > item.value {
+                if let currentItem = progressCache[item.sanitizedId], currentItem.value > item.value {
                     // Local is ahead - update remote with local value
                     let correctedItem = ProgressItem(
                         id: item.id,
@@ -325,8 +333,8 @@ public class ProgressManager {
                         logger?.trackEvent(event: Event.saveLocalFail(error: error))
                     }
                 } else {
-                    // Remote is equal or ahead - update local
-                    progressCache[item.id] = item
+                    // Remote is equal or ahead - update local (using sanitized ID as cache key)
+                    progressCache[item.sanitizedId] = item
 
                     do {
                         try local.saveProgressItem(item)
