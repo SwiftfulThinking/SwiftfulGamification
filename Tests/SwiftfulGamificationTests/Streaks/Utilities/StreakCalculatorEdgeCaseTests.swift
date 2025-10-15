@@ -22,7 +22,7 @@ struct StreakCalculatorEdgeCaseTests {
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: yesterday)
+            StreakEvent.mock(dateCreated: yesterday)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -46,8 +46,8 @@ struct StreakCalculatorEdgeCaseTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockUnused(id: "freeze-1"),
@@ -94,7 +94,7 @@ struct StreakCalculatorEdgeCaseTests {
         ))!
 
         let events = [
-            StreakEvent.mock(timestamp: yesterday)
+            StreakEvent.mock(dateCreated: yesterday)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -126,7 +126,7 @@ struct StreakCalculatorEdgeCaseTests {
         ))!
 
         let events = [
-            StreakEvent.mock(timestamp: yesterday)
+            StreakEvent.mock(dateCreated: yesterday)
         ]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 0)
 
@@ -153,7 +153,7 @@ struct StreakCalculatorEdgeCaseTests {
         let threeDaysAgo = calendar.date(byAdding: .day, value: -3, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: threeDaysAgo)
+            StreakEvent.mock(dateCreated: threeDaysAgo)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -179,7 +179,7 @@ struct StreakCalculatorEdgeCaseTests {
         let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: twoDaysAgo)
+            StreakEvent.mock(dateCreated: twoDaysAgo)
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .noFreezes)
 
@@ -202,8 +202,8 @@ struct StreakCalculatorEdgeCaseTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .noFreezes)
 

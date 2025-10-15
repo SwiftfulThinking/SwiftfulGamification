@@ -35,7 +35,7 @@ public struct StreakCalculator {
                 userId: userId,
                 freezesAvailable: availableFreezes,
                 freezesAvailableCount: availableFreezes.count,
-                updatedAt: currentDate,
+                dateUpdated: currentDate,
                 eventsRequiredPerDay: configuration.eventsRequiredPerDay
             )
             return (blankStreak, [])
@@ -46,7 +46,7 @@ public struct StreakCalculator {
 
         // GROUP EVENTS BY DAY
         let eventsByDay = Dictionary(grouping: events) { event in
-            calendar.startOfDay(for: event.timestamp)
+            calendar.startOfDay(for: event.dateCreated)
         }
 
         // GOAL-BASED MODE: Filter days that met the goal
@@ -64,7 +64,7 @@ public struct StreakCalculator {
         var currentStreak = 0
         var expectedDate = calendar.startOfDay(for: currentDate)
         var freezeConsumptions: [FreezeConsumption] = []
-        var availableFreezes = freezes.filter { $0.isAvailable }.sorted { ($0.earnedDate ?? Date.distantPast) < ($1.earnedDate ?? Date.distantPast) }
+        var availableFreezes = freezes.filter { $0.isAvailable }.sorted { ($0.dateEarned ?? Date.distantPast) < ($1.dateEarned ?? Date.distantPast) }
 
         // Apply leeway: Extend "today" window
         if configuration.leewayHours > 0 {
@@ -174,10 +174,10 @@ public struct StreakCalculator {
         )
 
         // LAST EVENT INFO
-        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
+        let lastEvent = events.max(by: { $0.dateCreated < $1.dateCreated })
 
         // STREAK START DATE
-        let streakStartDate: Date?
+        let dateStreakStart: Date?
         if currentStreak > 0 {
             // Calculate start date by walking back from today, accounting for both events and freezes
             var startDate = calendar.startOfDay(for: currentDate)
@@ -197,9 +197,9 @@ public struct StreakCalculator {
                 startDate = calendar.date(byAdding: .day, value: -(currentStreak - 1), to: startDate) ?? startDate
             }
 
-            streakStartDate = startDate
+            dateStreakStart = startDate
         } else {
-            streakStartDate = nil
+            dateStreakStart = nil
         }
 
         // COUNT REMAINING FREEZES
@@ -219,14 +219,14 @@ public struct StreakCalculator {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
-            lastEventDate: lastEvent?.timestamp,
+            dateLastEvent: lastEvent?.dateCreated,
             lastEventTimezone: lastEvent?.timezone,
-            streakStartDate: streakStartDate,
+            dateStreakStart: dateStreakStart,
             totalEvents: events.count,
             freezesAvailable: availableFreezes,
             freezesAvailableCount: freezesRemaining,
-            createdAt: events.first?.timestamp,
-            updatedAt: currentDate,
+            dateCreated: events.first?.dateCreated,
+            dateUpdated: currentDate,
             eventsRequiredPerDay: configuration.eventsRequiredPerDay,
             todayEventCount: todayEventCount,
             recentEvents: recentEvents
@@ -252,7 +252,7 @@ public struct StreakCalculator {
         let todayStart = calendar.startOfDay(for: currentDate)
 
         return events.filter { event in
-            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+            calendar.isDate(event.dateCreated, inSameDayAs: todayStart)
         }.count
     }
 
@@ -293,15 +293,15 @@ public struct StreakCalculator {
         }
 
         // Filter events that fall within our date range
-        let recentEvents = events.filter { $0.timestamp >= cutoffDate }
+        let recentEvents = events.filter { $0.dateCreated >= cutoffDate }
 
         // Group by calendar day (accounting for leeway) and only include the last {days} unique days
         let eventsByDay = Dictionary(grouping: recentEvents) { event -> Date in
-            let eventDay = calendar.startOfDay(for: event.timestamp)
+            let eventDay = calendar.startOfDay(for: event.dateCreated)
 
             // If event is within leeway hours after midnight, count it as previous day
             if leewayHours > 0 {
-                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.dateCreated).hour ?? 0
                 if hoursSinceMidnight <= leewayHours {
                     return calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
                 }
@@ -316,11 +316,11 @@ public struct StreakCalculator {
         // Return events that fall on those days
         return recentEvents
             .filter { event in
-                let eventDay = calendar.startOfDay(for: event.timestamp)
+                let eventDay = calendar.startOfDay(for: event.dateCreated)
                 let adjustedDay: Date
 
                 if leewayHours > 0 {
-                    let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+                    let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.dateCreated).hour ?? 0
                     if hoursSinceMidnight <= leewayHours {
                         adjustedDay = calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
                     } else {
@@ -332,23 +332,23 @@ public struct StreakCalculator {
 
                 return lastDays.contains(adjustedDay)
             }
-            .sorted { $0.timestamp < $1.timestamp }
+            .sorted { $0.dateCreated < $1.dateCreated }
     }
 
     // MARK: - Freeze Consumption Helpers
 
     /// Calculates which days need to be filled between last event and today
     /// - Parameters:
-    ///   - lastEventDate: The date of the last streak event
+    ///   - dateLastEvent: The date of the last streak event
     ///   - currentDate: The current date (usually today)
     ///   - calendar: Calendar to use for date calculations
     /// - Returns: Array of dates that need freeze events, in chronological order
     public static func calculateGapDays(
-        from lastEventDate: Date,
+        from dateLastEvent: Date,
         to currentDate: Date,
         calendar: Calendar
     ) -> [Date] {
-        let lastEventDay = calendar.startOfDay(for: lastEventDate)
+        let lastEventDay = calendar.startOfDay(for: dateLastEvent)
         let today = calendar.startOfDay(for: currentDate)
 
         // Calculate how many days need to be filled (excluding today)
@@ -386,7 +386,7 @@ public struct StreakCalculator {
 
         // Sort freezes FIFO - oldest first (by earnedDate)
         let sortedFreezes = availableFreezes.sorted {
-            ($0.earnedDate ?? Date.distantPast) < ($1.earnedDate ?? Date.distantPast)
+            ($0.dateEarned ?? Date.distantPast) < ($1.dateEarned ?? Date.distantPast)
         }
 
         // Take as many freezes as we have days (or all available freezes if fewer)

@@ -57,7 +57,7 @@ struct CurrentStreakDataTests {
         #expect(data.totalEvents == totalEvents)
         #expect(data.freezesAvailableCount == freezesAvailableCount)
         #expect(data.createdAt == createdAt)
-        #expect(data.updatedAt == updatedAt)
+        #expect(data.dateUpdated == updatedAt)
         #expect(data.eventsRequiredPerDay == eventsRequiredPerDay)
         #expect(data.todayEventCount == todayEventCount)
     }

@@ -109,7 +109,7 @@ public class ExperiencePointsManager {
         let event = ExperiencePointsEvent(
             id: UUID().uuidString,
             experienceKey: configuration.experienceKey,
-            timestamp: Date(),
+            dateCreated: Date(),
             points: points,
             metadata: metadata
         )

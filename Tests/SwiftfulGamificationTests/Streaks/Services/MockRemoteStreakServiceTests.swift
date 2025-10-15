@@ -362,7 +362,7 @@ struct MockRemoteStreakServiceTests {
         let usedFreeze = freezes.first { $0.id == "freeze-1" }
 
         #expect(usedFreeze?.isUsed == true)
-        #expect(usedFreeze?.usedDate != nil)
+        #expect(usedFreeze?.dateUsed != nil)
     }
 
     @Test("useStreakFreeze throws when freeze not found")

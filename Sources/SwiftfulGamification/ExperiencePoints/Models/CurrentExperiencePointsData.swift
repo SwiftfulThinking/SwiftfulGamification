@@ -48,13 +48,13 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     public let pointsLast12Months: Int?
 
     /// UTC timestamp of last event
-    public let lastEventDate: Date?
+    public let dateLastEvent: Date?
 
     /// UTC timestamp of first event ever
-    public let createdAt: Date?
+    public let dateCreated: Date?
 
     /// UTC timestamp of last update
-    public let updatedAt: Date?
+    public let dateUpdated: Date?
 
     /// Recent events for display (last 60 days)
     public let recentEvents: [ExperiencePointsEvent]?
@@ -73,9 +73,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         pointsLast30Days: Int? = nil,
         pointsThisYear: Int? = nil,
         pointsLast12Months: Int? = nil,
-        lastEventDate: Date? = nil,
-        createdAt: Date? = nil,
-        updatedAt: Date? = nil,
+        dateLastEvent: Date? = nil,
+        dateCreated: Date? = nil,
+        dateUpdated: Date? = nil,
         recentEvents: [ExperiencePointsEvent]? = nil
     ) {
         self.experienceKey = experienceKey
@@ -89,9 +89,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         self.pointsLast30Days = pointsLast30Days
         self.pointsThisYear = pointsThisYear
         self.pointsLast12Months = pointsLast12Months
-        self.lastEventDate = lastEventDate
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
+        self.dateLastEvent = dateLastEvent
+        self.dateCreated = dateCreated
+        self.dateUpdated = dateUpdated
         self.recentEvents = recentEvents
     }
 
@@ -109,9 +109,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         case pointsLast30Days = "points_last_30_days"
         case pointsThisYear = "points_this_year"
         case pointsLast12Months = "points_last_12_months"
-        case lastEventDate = "last_event_date"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case dateLastEvent = "date_last_event"
+        case dateCreated = "date_created"
+        case dateUpdated = "date_updated"
         case recentEvents = "recent_events"
     }
 
@@ -132,7 +132,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
 
         // Group events by calendar day
         let eventDays = Dictionary(grouping: recentEvents) { event -> Date in
-            calendar.startOfDay(for: event.timestamp)
+            calendar.startOfDay(for: event.dateCreated)
         }.keys.sorted()
 
         return Array(eventDays)
@@ -169,19 +169,19 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
     /// Data is considered stale if it hasn't been updated in 1 hour or more
     /// This typically happens when the user is offline or has connectivity issues
     public var isDataStale: Bool {
-        guard let updatedAt = updatedAt else { return true }
-        let hoursSinceUpdate = Date().timeIntervalSince(updatedAt) / 3600
+        guard let dateUpdated = dateUpdated else { return true }
+        let hoursSinceUpdate = Date().timeIntervalSince(dateUpdated) / 3600
         return hoursSinceUpdate >= 1
     }
 
     /// Days since last XP event
     public var daysSinceLastEvent: Int? {
-        guard let lastEventDate = lastEventDate else { return nil }
+        guard let dateLastEvent = dateLastEvent else { return nil }
 
         let calendar = Calendar.current
         let now = Date()
 
-        let lastDay = calendar.startOfDay(for: lastEventDate)
+        let lastDay = calendar.startOfDay(for: dateLastEvent)
         let today = calendar.startOfDay(for: now)
 
         let components = calendar.dateComponents([.day], from: lastDay, to: today)
@@ -216,9 +216,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             pointsLast30Days: pointsLast30Days,
             pointsThisYear: pointsThisYear,
             pointsLast12Months: pointsLast12Months,
-            lastEventDate: lastEventDate,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
+            dateLastEvent: dateLastEvent,
+            dateCreated: dateCreated,
+            dateUpdated: dateUpdated,
             recentEvents: recentEvents
         )
     }
@@ -249,18 +249,18 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         userId: String? = "mock_user_123",
         pointsToday: Int = 150,
         eventsTodayCount: Int = 3,
-        lastEventDate: Date = Date(),
-        createdAt: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
-        updatedAt: Date = Date()
+        dateLastEvent: Date = Date(),
+        dateCreated: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
+        dateUpdated: Date = Date()
     ) -> Self {
         CurrentExperiencePointsData(
             experienceKey: experienceKey,
             userId: userId,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
-            lastEventDate: lastEventDate,
-            createdAt: createdAt,
-            updatedAt: updatedAt
+            dateLastEvent: dateLastEvent,
+            dateCreated: dateCreated,
+            dateUpdated: dateUpdated
         )
     }
 
@@ -313,17 +313,17 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         let todayStart = calendar.startOfDay(for: today)
 
         let eventsTodayCount = events.filter { event in
-            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+            calendar.isDate(event.dateCreated, inSameDayAs: todayStart)
         }.count
 
         let todayPoints = events
-            .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
+            .filter { calendar.isDate($0.dateCreated, inSameDayAs: todayStart) }
             .reduce(0) { $0 + $1.points }
 
         let allTimePoints = events.reduce(0) { $0 + $1.points }
 
-        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
-        let firstEvent = events.min(by: { $0.timestamp < $1.timestamp })
+        let lastEvent = events.max(by: { $0.dateCreated < $1.dateCreated })
+        let firstEvent = events.min(by: { $0.dateCreated < $1.dateCreated })
 
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
@@ -331,9 +331,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             pointsAllTime: allTimePoints,
             pointsToday: todayPoints,
             eventsTodayCount: eventsTodayCount,
-            lastEventDate: lastEvent?.timestamp,
-            createdAt: firstEvent?.timestamp,
-            updatedAt: today,
+            dateLastEvent: lastEvent?.dateCreated,
+            dateCreated: firstEvent?.dateCreated,
+            dateUpdated: today,
             recentEvents: events
         )
     }
@@ -354,17 +354,17 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         let todayStart = calendar.startOfDay(for: today)
 
         let pointsToday = events
-            .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
+            .filter { calendar.isDate($0.dateCreated, inSameDayAs: todayStart) }
             .reduce(0) { $0 + $1.points }
 
         let allTimePoints = events.reduce(0) { $0 + $1.points }
 
         let eventsTodayCount = events.filter { event in
-            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+            calendar.isDate(event.dateCreated, inSameDayAs: todayStart)
         }.count
 
-        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
-        let firstEvent = events.min(by: { $0.timestamp < $1.timestamp })
+        let lastEvent = events.max(by: { $0.dateCreated < $1.dateCreated })
+        let firstEvent = events.min(by: { $0.dateCreated < $1.dateCreated })
 
         return CurrentExperiencePointsData(
             experienceKey: experienceKey,
@@ -372,9 +372,9 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
             pointsAllTime: allTimePoints,
             pointsToday: pointsToday,
             eventsTodayCount: eventsTodayCount,
-            lastEventDate: lastEvent?.timestamp,
-            createdAt: firstEvent?.timestamp,
-            updatedAt: today,
+            dateLastEvent: lastEvent?.dateCreated,
+            dateCreated: firstEvent?.dateCreated,
+            dateUpdated: today,
             recentEvents: events
         )
     }

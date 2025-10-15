@@ -14,7 +14,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     public let id: String
 
     /// UTC timestamp when the event occurred
-    public let timestamp: Date
+    public let dateCreated: Date
 
     /// Timezone identifier where the event was logged (e.g., "America/New_York")
     public let timezone: String
@@ -32,14 +32,14 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
 
     public init(
         id: String = UUID().uuidString,
-        timestamp: Date = Date(),
+        dateCreated: Date = Date(),
         timezone: String = TimeZone.current.identifier,
         isFreeze: Bool = false,
         freezeId: String? = nil,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) {
         self.id = id
-        self.timestamp = timestamp
+        self.dateCreated = dateCreated
         self.timezone = timezone
         self.isFreeze = isFreeze
         self.freezeId = freezeId
@@ -50,7 +50,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
 
     public enum CodingKeys: String, CodingKey {
         case id
-        case timestamp
+        case dateCreated = "date_created"
         case timezone
         case isFreeze = "is_freeze"
         case freezeId = "freeze_id"
@@ -73,7 +73,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     public var isTimestampValid: Bool {
         let now = Date()
         let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: now) ?? now
-        return timestamp <= now && timestamp >= oneYearAgo
+        return dateCreated <= now && dateCreated >= oneYearAgo
     }
 
     /// Checks if timezone is a valid TimeZone identifier
@@ -101,7 +101,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     public var eventParameters: [String: Any] {
         var params: [String: Any] = [
             "streak_event_id": id,
-            "streak_event_timestamp": timestamp.timeIntervalSince1970,
+            "streak_event_timestamp": dateCreated.timeIntervalSince1970,
             "streak_event_timezone": timezone,
             "streak_event_is_freeze": isFreeze,
             "streak_event_metadata_count": metadata.count
@@ -124,7 +124,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
 
     public static func mock(
         id: String = UUID().uuidString,
-        timestamp: Date = Date(),
+        dateCreated: Date = Date(),
         timezone: String = TimeZone.current.identifier,
         isFreeze: Bool = false,
         freezeId: String? = nil,
@@ -132,7 +132,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     ) -> Self {
         StreakEvent(
             id: id,
-            timestamp: timestamp,
+            dateCreated: dateCreated,
             timezone: timezone,
             isFreeze: isFreeze,
             freezeId: freezeId,
@@ -150,7 +150,7 @@ public struct StreakEvent: StringIdentifiable, Codable, Sendable, Equatable {
     ) -> Self {
         StreakEvent(
             id: UUID().uuidString,
-            timestamp: date,
+            dateCreated: date,
             timezone: timezone,
             isFreeze: isFreeze,
             freezeId: freezeId,

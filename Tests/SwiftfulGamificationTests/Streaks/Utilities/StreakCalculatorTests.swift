@@ -30,8 +30,8 @@ struct StreakCalculatorTests {
         #expect(result.streak.currentStreak == 0)
         #expect(result.streak.longestStreak == 0)
         #expect(result.streak.totalEvents == 0)
-        #expect(result.streak.lastEventDate == nil)
-        #expect(result.streak.streakStartDate == nil)
+        #expect(result.streak.dateLastEvent == nil)
+        #expect(result.streak.dateStreakStart == nil)
         #expect(result.freezeConsumptions.isEmpty)
     }
 
@@ -40,7 +40,7 @@ struct StreakCalculatorTests {
         // Given: One event today
         let now = Date()
         let events = [
-            StreakEvent.mock(timestamp: now)
+            StreakEvent.mock(dateCreated: now)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -55,7 +55,7 @@ struct StreakCalculatorTests {
         #expect(result.streak.currentStreak == 1)
         #expect(result.streak.longestStreak == 1)
         #expect(result.streak.totalEvents == 1)
-        #expect(result.streak.lastEventDate != nil)
+        #expect(result.streak.dateLastEvent != nil)
         #expect(result.streak.todayEventCount == 1)
     }
 
@@ -68,7 +68,7 @@ struct StreakCalculatorTests {
 
         let events = (0..<5).map { daysAgo in
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: now)!
-            return StreakEvent.mock(timestamp: date)
+            return StreakEvent.mock(dateCreated: date)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -95,7 +95,7 @@ struct StreakCalculatorTests {
         let daysWithEvents = [0, 1, 3, 4] // Missing day 2
         let events = daysWithEvents.map { daysAgo in
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: now)!
-            return StreakEvent.mock(timestamp: date)
+            return StreakEvent.mock(dateCreated: date)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -122,11 +122,11 @@ struct StreakCalculatorTests {
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)), // 1 hour later
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)), // 2 hours later
-            StreakEvent.mock(timestamp: yesterday),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(3600))
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)), // 1 hour later
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)), // 2 hours later
+            StreakEvent.mock(dateCreated: yesterday),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(3600))
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -153,8 +153,8 @@ struct StreakCalculatorTests {
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: tomorrow)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: tomorrow)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -186,7 +186,7 @@ struct StreakCalculatorTests {
         let components = DateComponents(year: 2024, month: 1, day: 1, hour: 23, minute: 30)
         let eventDate = calendarPST.date(from: components)!
 
-        let events = [StreakEvent.mock(timestamp: eventDate)]
+        let events = [StreakEvent.mock(dateCreated: eventDate)]
         let config = StreakConfiguration(streakKey: "workout")
 
         // Current date: Jan 1, 2024, 11:59 PM PST (= Jan 2, 2024, 2:59 AM EST)
@@ -229,18 +229,18 @@ struct StreakCalculatorTests {
 
         let events = [
             // Today: 3 events
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
             // Yesterday: 4 events
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(10800)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(10800)),
             // 2 days ago: 3 events
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(7200))
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(7200))
         ]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
@@ -269,12 +269,12 @@ struct StreakCalculatorTests {
 
         let events = [
             // Today: 3 events (meets goal)
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
             // Yesterday: 2 events (DOES NOT meet goal)
-            StreakEvent.mock(timestamp: yesterday),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(3600))
+            StreakEvent.mock(dateCreated: yesterday),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(3600))
         ]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
@@ -302,16 +302,16 @@ struct StreakCalculatorTests {
 
         let events = [
             // Today: 4 events
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(10800)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(10800)),
             // Yesterday: 5 events
-            StreakEvent.mock(timestamp: yesterday),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(10800)),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(14400))
+            StreakEvent.mock(dateCreated: yesterday),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(10800)),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(14400))
         ]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
@@ -338,14 +338,14 @@ struct StreakCalculatorTests {
         let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(10800)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(14400)),
-            StreakEvent.mock(timestamp: yesterday),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: yesterday.addingTimeInterval(7200))
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(10800)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(14400)),
+            StreakEvent.mock(dateCreated: yesterday),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: yesterday.addingTimeInterval(7200))
         ]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
@@ -378,10 +378,10 @@ struct StreakCalculatorTests {
         let event4 = event2.addingTimeInterval(7200) // 3:00 AM
 
         let events = [
-            StreakEvent.mock(timestamp: event1),
-            StreakEvent.mock(timestamp: event2),
-            StreakEvent.mock(timestamp: event3),
-            StreakEvent.mock(timestamp: event4)
+            StreakEvent.mock(dateCreated: event1),
+            StreakEvent.mock(dateCreated: event2),
+            StreakEvent.mock(dateCreated: event3),
+            StreakEvent.mock(dateCreated: event4)
         ]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
 
@@ -420,7 +420,7 @@ struct StreakCalculatorTests {
         let todayComponents = DateComponents(year: 2024, month: 1, day: 2, hour: 3, minute: 0)
         let today = calendar.date(from: todayComponents)!
 
-        let events = [StreakEvent.mock(timestamp: yesterday)]
+        let events = [StreakEvent.mock(dateCreated: yesterday)]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 6)
 
         // When: Calculating streak
@@ -450,8 +450,8 @@ struct StreakCalculatorTests {
         let day2 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 10, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1),
-            StreakEvent.mock(timestamp: day2)
+            StreakEvent.mock(dateCreated: day1),
+            StreakEvent.mock(dateCreated: day2)
         ]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 6)
 
@@ -484,8 +484,8 @@ struct StreakCalculatorTests {
         let day3 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 8, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1),
-            StreakEvent.mock(timestamp: day3)
+            StreakEvent.mock(dateCreated: day1),
+            StreakEvent.mock(dateCreated: day3)
         ]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 6)
 
@@ -517,7 +517,7 @@ struct StreakCalculatorTests {
         // Today: Jan 2, 2024, 11:00 PM (within 24-hour leeway)
         let today = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 23, minute: 0))!
 
-        let events = [StreakEvent.mock(timestamp: yesterday)]
+        let events = [StreakEvent.mock(dateCreated: yesterday)]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 24)
 
         // When: Calculating streak
@@ -545,7 +545,7 @@ struct StreakCalculatorTests {
         // Today: Jan 2, 2024, 12:01 AM (no leeway - already in new day)
         let today = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 0, minute: 1))!
 
-        let events = [StreakEvent.mock(timestamp: yesterday)]
+        let events = [StreakEvent.mock(dateCreated: yesterday)]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 0)
 
         // When: Calculating streak
@@ -581,9 +581,9 @@ struct StreakCalculatorTests {
         let day3 = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 10, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1, timezone: "America/Los_Angeles"),
-            StreakEvent.mock(timestamp: day2, timezone: "America/Los_Angeles"),
-            StreakEvent.mock(timestamp: day3, timezone: "America/Los_Angeles")
+            StreakEvent.mock(dateCreated: day1, timezone: "America/Los_Angeles"),
+            StreakEvent.mock(dateCreated: day2, timezone: "America/Los_Angeles"),
+            StreakEvent.mock(dateCreated: day3, timezone: "America/Los_Angeles")
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -613,7 +613,7 @@ struct StreakCalculatorTests {
         let events = (0..<5).map { daysAgo in
             let components = DateComponents(year: 2024, month: 1, day: 1 + daysAgo, hour: 10, minute: 0)
             let date = calendarPST.date(from: components)!
-            return StreakEvent.mock(timestamp: date)
+            return StreakEvent.mock(dateCreated: date)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -666,10 +666,10 @@ struct StreakCalculatorTests {
         let eventTime = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 23, minute: 0))!
 
         // Event stored with PST timezone metadata
-        let event1 = StreakEvent.mock(timestamp: eventTime, timezone: "America/Los_Angeles")
+        let event1 = StreakEvent.mock(dateCreated: eventTime, timezone: "America/Los_Angeles")
 
         // Event stored with EST timezone metadata (same absolute time, different timezone)
-        let event2 = StreakEvent.mock(timestamp: eventTime, timezone: "America/New_York")
+        let event2 = StreakEvent.mock(dateCreated: eventTime, timezone: "America/New_York")
 
         let events = [event1, event2]
         let config = StreakConfiguration(streakKey: "workout")
@@ -702,7 +702,7 @@ struct StreakCalculatorTests {
         let events = (0..<3).map { daysAgo in
             let components = DateComponents(year: 2024, month: 1, day: 1 + daysAgo, hour: 12, minute: 0)
             let date = calendarUTC.date(from: components)!
-            return StreakEvent.mock(timestamp: date, timezone: "UTC")
+            return StreakEvent.mock(dateCreated: date, timezone: "UTC")
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -744,7 +744,7 @@ struct StreakCalculatorTests {
         let events = (0..<5).map { daysAgo in
             let components = DateComponents(year: 2024, month: 1, day: 1 + daysAgo, hour: 10, minute: 0)
             let date = calendarPST.date(from: components)!
-            return StreakEvent.mock(timestamp: date, timezone: "America/Los_Angeles")
+            return StreakEvent.mock(dateCreated: date, timezone: "America/Los_Angeles")
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -790,9 +790,9 @@ struct StreakCalculatorTests {
             let afternoon = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: day, hour: 14, minute: 0))!
             let evening = calendarPST.date(from: DateComponents(year: 2024, month: 1, day: day, hour: 20, minute: 0))!
 
-            events.append(StreakEvent.mock(timestamp: morning))
-            events.append(StreakEvent.mock(timestamp: afternoon))
-            events.append(StreakEvent.mock(timestamp: evening))
+            events.append(StreakEvent.mock(dateCreated: morning))
+            events.append(StreakEvent.mock(dateCreated: afternoon))
+            events.append(StreakEvent.mock(dateCreated: evening))
         }
 
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3)
@@ -847,9 +847,9 @@ struct StreakCalculatorTests {
         let afterDST = calendar.date(from: DateComponents(year: 2024, month: 3, day: 11, hour: 10, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: beforeDST),
-            StreakEvent.mock(timestamp: dayOfDST),
-            StreakEvent.mock(timestamp: afterDST)
+            StreakEvent.mock(dateCreated: beforeDST),
+            StreakEvent.mock(dateCreated: dayOfDST),
+            StreakEvent.mock(dateCreated: afterDST)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -886,9 +886,9 @@ struct StreakCalculatorTests {
         let afterDST = calendar.date(from: DateComponents(year: 2024, month: 11, day: 4, hour: 10, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: beforeDST),
-            StreakEvent.mock(timestamp: dayOfDST),
-            StreakEvent.mock(timestamp: afterDST)
+            StreakEvent.mock(dateCreated: beforeDST),
+            StreakEvent.mock(dateCreated: dayOfDST),
+            StreakEvent.mock(dateCreated: afterDST)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -922,8 +922,8 @@ struct StreakCalculatorTests {
         let day2 = calendar.date(from: DateComponents(year: 2024, month: 3, day: 10, hour: 3, minute: 30))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1),
-            StreakEvent.mock(timestamp: day2)
+            StreakEvent.mock(dateCreated: day1),
+            StreakEvent.mock(dateCreated: day2)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -956,8 +956,8 @@ struct StreakCalculatorTests {
         let day2 = calendar.date(from: DateComponents(year: 2024, month: 11, day: 3, hour: 1, minute: 30))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1),
-            StreakEvent.mock(timestamp: day2)
+            StreakEvent.mock(dateCreated: day1),
+            StreakEvent.mock(dateCreated: day2)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -986,8 +986,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
         let freeze = StreakFreeze.mockUnused(id: "freeze-1")
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
@@ -1014,13 +1014,13 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
         let freezes = [
-            StreakFreeze(id: "freeze-1", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 10)),
-            StreakFreeze(id: "freeze-2", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 5))
+            StreakFreeze(id: "freeze-1", streakKey: "workout", dateEarned: Date().addingTimeInterval(-86400 * 10)),
+            StreakFreeze(id: "freeze-2", streakKey: "workout", dateEarned: Date().addingTimeInterval(-86400 * 5))
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
@@ -1045,15 +1045,15 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
 
         // Freezes with different earned dates
         let freezes = [
-            StreakFreeze(id: "freeze-new", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 1)), // Newest
-            StreakFreeze(id: "freeze-old", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 30)), // Oldest
-            StreakFreeze(id: "freeze-mid", streakKey: "workout", earnedDate: Date().addingTimeInterval(-86400 * 10)) // Middle
+            StreakFreeze(id: "freeze-new", streakKey: "workout", dateEarned: Date().addingTimeInterval(-86400 * 1)), // Newest
+            StreakFreeze(id: "freeze-old", streakKey: "workout", dateEarned: Date().addingTimeInterval(-86400 * 30)), // Oldest
+            StreakFreeze(id: "freeze-mid", streakKey: "workout", dateEarned: Date().addingTimeInterval(-86400 * 10)) // Middle
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
@@ -1080,7 +1080,7 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = (0..<5).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
@@ -1107,7 +1107,7 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = (0..<10).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let freezes = (0..<5).map { i in
             StreakFreeze.mockUnused(id: "freeze-\(i)")
@@ -1138,16 +1138,16 @@ struct StreakCalculatorTests {
 
         let events = [
             // Today: 3 events (meets goal)
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
             // Yesterday: 2 events (DOES NOT meet goal - creates gap)
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
             // 2 days ago: 3 events (meets goal)
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(7200))
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!.addingTimeInterval(7200))
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, freezeBehavior: .autoConsumeFreezes)
@@ -1174,14 +1174,14 @@ struct StreakCalculatorTests {
 
         let events = [
             // Today: 3 events
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
             // Yesterday: 4 events
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(10800))
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(10800))
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, freezeBehavior: .autoConsumeFreezes)
@@ -1207,8 +1207,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
 
@@ -1233,8 +1233,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockUnused(id: "freeze-1"),
@@ -1264,8 +1264,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockUnused(id: "freeze-1"),
@@ -1295,8 +1295,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockUnused(id: "freeze-1"),
@@ -1326,8 +1326,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockUsed(id: "freeze-used-1"), // Already used
@@ -1360,8 +1360,8 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!)
         ]
         let freezes = [
             StreakFreeze.mockExpired(id: "freeze-expired-1"), // Expired
@@ -1394,18 +1394,18 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!)
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!)
         ]
 
         // Create freezes with different states and earned dates
         let freezes = [
             StreakFreeze.mockUsed(id: "freeze-used"),
             StreakFreeze(id: "freeze-old-available", streakKey: "workout",
-                        earnedDate: Date().addingTimeInterval(-86400 * 30)), // Oldest available
+                        dateEarned: Date().addingTimeInterval(-86400 * 30)), // Oldest available
             StreakFreeze.mockExpired(id: "freeze-expired"),
             StreakFreeze(id: "freeze-new-available", streakKey: "workout",
-                        earnedDate: Date().addingTimeInterval(-86400 * 5)), // Newer available
+                        dateEarned: Date().addingTimeInterval(-86400 * 5)), // Newer available
             StreakFreeze.mockUsed(id: "freeze-used-2")
         ]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
@@ -1440,8 +1440,8 @@ struct StreakCalculatorTests {
         let day3 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 3, hour: 8, minute: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: day1),
-            StreakEvent.mock(timestamp: day3)
+            StreakEvent.mock(dateCreated: day1),
+            StreakEvent.mock(dateCreated: day3)
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, freezeBehavior: .autoConsumeFreezes)
@@ -1474,7 +1474,7 @@ struct StreakCalculatorTests {
         // Day 1: Jan 1, 2024, 10:00 AM
         let day1 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 10, minute: 0))!
 
-        let events = [StreakEvent.mock(timestamp: day1)]
+        let events = [StreakEvent.mock(dateCreated: day1)]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", leewayHours: 6, freezeBehavior: .autoConsumeFreezes)
 
@@ -1506,11 +1506,11 @@ struct StreakCalculatorTests {
         // Events at 11:00 PM PST each day (which is 2:00 AM EST next day)
         let events = [
             // Jan 1, 11:00 PM PST
-            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 23, minute: 0))!),
+            StreakEvent.mock(dateCreated: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 1, hour: 23, minute: 0))!),
             // Jan 2, 11:00 PM PST
-            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 23, minute: 0))!),
+            StreakEvent.mock(dateCreated: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 23, minute: 0))!),
             // Jan 4, 11:00 PM PST (missing Jan 3)
-            StreakEvent.mock(timestamp: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 4, hour: 23, minute: 0))!)
+            StreakEvent.mock(dateCreated: calendarPST.date(from: DateComponents(year: 2024, month: 1, day: 4, hour: 23, minute: 0))!)
         ]
         let freezes = [StreakFreeze.mockUnused(id: "freeze-1")]
         let config = StreakConfiguration(streakKey: "workout", freezeBehavior: .autoConsumeFreezes)
@@ -1548,14 +1548,14 @@ struct StreakCalculatorTests {
 
         // Current streak: 3 days (days 0, 1, 2)
         let currentStreak = (0..<3).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
 
         // Gap on days 3, 4
 
         // Historical streak: 5 days (days 5, 6, 7, 8, 9)
         let historicalStreak = (5..<10).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
 
         let events = currentStreak + historicalStreak
@@ -1582,12 +1582,12 @@ struct StreakCalculatorTests {
 
         // Current: 2 days
         let current = (0..<2).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
 
         // Historical: 10 days (days 5-14)
         let historical = (5..<15).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
 
         let events = current + historical
@@ -1614,7 +1614,7 @@ struct StreakCalculatorTests {
 
         // Current streak: 15 days
         let events = (0..<15).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1638,7 +1638,7 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = (0..<7).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1679,8 +1679,8 @@ struct StreakCalculatorTests {
         // Given: Events with invalid timezone strings (but valid timestamps)
         let now = Date()
         let events = [
-            StreakEvent.mock(timestamp: now, timezone: "Invalid/Timezone"),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(-86400), timezone: "Not/A/Zone")
+            StreakEvent.mock(dateCreated: now, timezone: "Invalid/Timezone"),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(-86400), timezone: "Not/A/Zone")
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1705,11 +1705,11 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = [
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!),
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -4, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -3, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -4, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1733,7 +1733,7 @@ struct StreakCalculatorTests {
         calendar.timeZone = .current
 
         let events = (0..<400).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1764,8 +1764,8 @@ struct StreakCalculatorTests {
         let midnight2 = calendar.date(from: DateComponents(year: 2024, month: 1, day: 2, hour: 0, minute: 0, second: 0))!
 
         let events = [
-            StreakEvent.mock(timestamp: midnight1),
-            StreakEvent.mock(timestamp: midnight2)
+            StreakEvent.mock(dateCreated: midnight1),
+            StreakEvent.mock(dateCreated: midnight2)
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1789,9 +1789,9 @@ struct StreakCalculatorTests {
         // Given: Events with microsecond differences
         let now = Date()
         let events = [
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(0.001)), // 1ms later
-            StreakEvent.mock(timestamp: now.addingTimeInterval(0.000001)) // 1μs later
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(0.001)), // 1ms later
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(0.000001)) // 1μs later
         ]
         let config = StreakConfiguration(streakKey: "workout")
 
@@ -1819,16 +1819,16 @@ struct StreakCalculatorTests {
         // 3 days with varying event counts
         let events = [
             // Today: 5 events
-            StreakEvent.mock(timestamp: now),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(3600)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(7200)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(10800)),
-            StreakEvent.mock(timestamp: now.addingTimeInterval(14400)),
+            StreakEvent.mock(dateCreated: now),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(7200)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(10800)),
+            StreakEvent.mock(dateCreated: now.addingTimeInterval(14400)),
             // Yesterday: 2 events
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!),
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!),
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(3600)),
             // 2 days ago: 1 event
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -2, to: now)!)
         ]
 
         // Config 1: Basic mode (1 event/day)
@@ -1866,7 +1866,7 @@ struct StreakCalculatorTests {
             for hour in 0..<10 {
                 let date = calendar.date(byAdding: .day, value: -day, to: now)!
                     .addingTimeInterval(TimeInterval(hour * 3600))
-                events.append(StreakEvent.mock(timestamp: date))
+                events.append(StreakEvent.mock(dateCreated: date))
             }
         }
         let config = StreakConfiguration(streakKey: "workout")
@@ -1897,7 +1897,7 @@ struct StreakCalculatorTests {
         for day in 0..<200 {
             if day % 2 == 0 {
                 let date = calendar.date(byAdding: .day, value: -day, to: now)!
-                events.append(StreakEvent.mock(timestamp: date))
+                events.append(StreakEvent.mock(dateCreated: date))
             }
         }
 
@@ -1928,7 +1928,7 @@ struct StreakCalculatorTests {
     func testPreservesUserIdWhenProvided() throws {
         // Given: Events and a userId
         let now = Date()
-        let events = [StreakEvent.mock(timestamp: now)]
+        let events = [StreakEvent.mock(dateCreated: now)]
         let config = StreakConfiguration(streakKey: "workout")
         let userId = "test_user_123"
 
@@ -1948,7 +1948,7 @@ struct StreakCalculatorTests {
     func testUserIdNilWhenNotProvided() throws {
         // Given: Events but no userId
         let now = Date()
-        let events = [StreakEvent.mock(timestamp: now)]
+        let events = [StreakEvent.mock(dateCreated: now)]
         let config = StreakConfiguration(streakKey: "workout")
 
         // When: Calculating streak without userId
@@ -1971,7 +1971,7 @@ struct StreakCalculatorTests {
 
         // Create events for the last 6 days (including today)
         let existingEvents = (0..<6).map { daysAgo in
-            StreakEvent.mock(timestamp: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
+            StreakEvent.mock(dateCreated: calendar.date(byAdding: .day, value: -daysAgo, to: now)!)
         }
         let userId = "test_user_123"
 
@@ -1987,7 +1987,7 @@ struct StreakCalculatorTests {
 
         // When: Simulating next day and adding new event
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: now)!
-        let newEvent = StreakEvent.mock(timestamp: tomorrow)
+        let newEvent = StreakEvent.mock(dateCreated: tomorrow)
         let allEvents = existingEvents + [newEvent]
 
         let updatedResult = StreakCalculator.calculateStreak(

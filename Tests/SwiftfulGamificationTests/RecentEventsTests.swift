@@ -28,7 +28,7 @@ struct RecentEventsTests {
             guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
             events.append(StreakEvent(
                 id: UUID().uuidString,
-                timestamp: date,
+                dateCreated: date,
                 timezone: timezone.identifier
             ))
         }
@@ -43,7 +43,7 @@ struct RecentEventsTests {
         // Should have all 15 days of events (within 60 day window)
         let recentEvents = streak.recentEvents ?? []
         let uniqueDays = Set(recentEvents.map { event in
-            calendar.startOfDay(for: event.timestamp)
+            calendar.startOfDay(for: event.dateCreated)
         })
 
         #expect(uniqueDays.count == 15)
@@ -76,7 +76,7 @@ struct RecentEventsTests {
         // Regular event today
         events.append(StreakEvent(
             id: UUID().uuidString,
-            timestamp: now,
+            dateCreated: now,
             timezone: timezone.identifier
         ))
 
@@ -86,7 +86,7 @@ struct RecentEventsTests {
         }
         events.append(StreakEvent(
             id: UUID().uuidString,
-            timestamp: yesterday,
+            dateCreated: yesterday,
             timezone: timezone.identifier,
             isFreeze: true,
             freezeId: "freeze123"
@@ -124,7 +124,7 @@ struct RecentEventsTests {
         }
         events.append(StreakEvent(
             id: "1am",
-            timestamp: oneAM,
+            dateCreated: oneAM,
             timezone: timezone.identifier
         ))
 
@@ -134,7 +134,7 @@ struct RecentEventsTests {
         }
         events.append(StreakEvent(
             id: "4am",
-            timestamp: fourAM,
+            dateCreated: fourAM,
             timezone: timezone.identifier
         ))
 
@@ -145,7 +145,7 @@ struct RecentEventsTests {
         }
         events.append(StreakEvent(
             id: "yesterday",
-            timestamp: yesterdayAfternoon,
+            dateCreated: yesterdayAfternoon,
             timezone: timezone.identifier
         ))
 
@@ -189,7 +189,7 @@ struct RecentEventsTests {
 
         let events = [StreakEvent(
             id: "1am",
-            timestamp: oneAM,
+            dateCreated: oneAM,
             timezone: timezone.identifier
         )]
 
@@ -230,7 +230,7 @@ struct RecentEventsTests {
             guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
             events.append(StreakEvent(
                 id: UUID().uuidString,
-                timestamp: date,
+                dateCreated: date,
                 timezone: timezone.identifier
             ))
         }
@@ -267,14 +267,14 @@ struct RecentEventsTests {
         // Event this week (today)
         events.append(StreakEvent(
             id: "today",
-            timestamp: now,
+            dateCreated: now,
             timezone: timezone.identifier
         ))
 
         // Event this week (start of week)
         events.append(StreakEvent(
             id: "week_start",
-            timestamp: weekInterval.start,
+            dateCreated: weekInterval.start,
             timezone: timezone.identifier
         ))
 
@@ -284,7 +284,7 @@ struct RecentEventsTests {
         }
         events.append(StreakEvent(
             id: "last_week",
-            timestamp: lastWeek,
+            dateCreated: lastWeek,
             timezone: timezone.identifier
         ))
 
@@ -327,7 +327,7 @@ struct RecentEventsTests {
 
         let events = [StreakEvent(
             id: "monday_1am",
-            timestamp: mondayOneAM,
+            dateCreated: mondayOneAM,
             timezone: timezone.identifier
         )]
 
@@ -380,7 +380,7 @@ struct RecentEventsTests {
             guard let date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now) else { continue }
             events.append(StreakEvent(
                 id: UUID().uuidString,
-                timestamp: date,
+                dateCreated: date,
                 timezone: timezone.identifier
             ))
         }
@@ -414,7 +414,7 @@ struct RecentEventsTests {
             guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: now) else { continue }
             events.append(StreakEvent(
                 id: UUID().uuidString,
-                timestamp: date,
+                dateCreated: date,
                 timezone: timezone.identifier
             ))
         }
@@ -430,7 +430,7 @@ struct RecentEventsTests {
 
         // Verify chronological order (oldest first)
         for i in 0..<(recentEvents.count - 1) {
-            #expect(recentEvents[i].timestamp <= recentEvents[i + 1].timestamp)
+            #expect(recentEvents[i].dateCreated <= recentEvents[i + 1].dateCreated)
         }
     }
 
@@ -451,7 +451,7 @@ struct RecentEventsTests {
                 guard let eventDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: date) else { continue }
                 events.append(StreakEvent(
                     id: UUID().uuidString,
-                    timestamp: eventDate,
+                    dateCreated: eventDate,
                     timezone: timezone.identifier
                 ))
             }
@@ -468,7 +468,7 @@ struct RecentEventsTests {
 
         // Should have events from all 15 unique days (within 60 day window)
         let uniqueDays = Set(recentEvents.map { event in
-            calendar.startOfDay(for: event.timestamp)
+            calendar.startOfDay(for: event.dateCreated)
         })
 
         #expect(uniqueDays.count == 15)

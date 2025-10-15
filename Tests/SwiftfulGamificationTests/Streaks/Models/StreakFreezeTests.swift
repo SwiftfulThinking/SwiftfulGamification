@@ -27,7 +27,7 @@ struct StreakFreezeTests {
         #expect(freeze.id == id)
         #expect(freeze.streakKey == streakId)
         #expect(freeze.earnedDate == nil)
-        #expect(freeze.usedDate == nil)
+        #expect(freeze.dateUsed == nil)
         #expect(freeze.expiresAt == nil)
     }
 
@@ -41,7 +41,7 @@ struct StreakFreezeTests {
         #expect(UUID(uuidString: freeze.id) != nil)
         #expect(freeze.streakKey == "workout")
         #expect(freeze.earnedDate != nil)
-        #expect(freeze.usedDate == nil)
+        #expect(freeze.dateUsed == nil)
         #expect(freeze.expiresAt == nil)
         #expect(freeze.isValid == true)
     }
@@ -55,7 +55,7 @@ struct StreakFreezeTests {
         #expect(freeze.isUsed == false)
         #expect(freeze.isExpired == false)
         #expect(freeze.isAvailable == true)
-        #expect(freeze.usedDate == nil)
+        #expect(freeze.dateUsed == nil)
         #expect(freeze.earnedDate != nil)
     }
 
@@ -67,11 +67,11 @@ struct StreakFreezeTests {
         // Then: Should be used (not available)
         #expect(freeze.isUsed == true)
         #expect(freeze.isAvailable == false)
-        #expect(freeze.usedDate != nil)
+        #expect(freeze.dateUsed != nil)
         #expect(freeze.earnedDate != nil)
 
         // And: usedDate should be after earnedDate
-        #expect(freeze.usedDate! >= freeze.earnedDate!)
+        #expect(freeze.dateUsed! >= freeze.earnedDate!)
     }
 
     @Test("Mock expired creates expired freeze")
@@ -149,7 +149,7 @@ struct StreakFreezeTests {
         #expect(decoded.id == "freeze-789")
         #expect(decoded.streakKey == "reading")
         #expect(decoded.earnedDate == earnedDate)
-        #expect(decoded.usedDate == nil)
+        #expect(decoded.dateUsed == nil)
         #expect(decoded.expiresAt == nil)
     }
 
@@ -175,7 +175,7 @@ struct StreakFreezeTests {
         #expect(decoded.id == original.id)
         #expect(decoded.streakKey == original.streakKey)
         #expect(decoded.earnedDate == original.earnedDate)
-        #expect(decoded.usedDate == original.usedDate)
+        #expect(decoded.dateUsed == original.dateUsed)
         #expect(decoded.expiresAt == original.expiresAt)
     }
 

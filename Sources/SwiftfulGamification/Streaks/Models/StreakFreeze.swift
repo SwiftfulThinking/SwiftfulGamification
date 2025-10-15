@@ -17,28 +17,28 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     public let streakKey: String
 
     /// When the freeze was earned
-    public let earnedDate: Date?
+    public let dateEarned: Date?
 
     /// When the freeze was consumed (nil if unused)
-    public let usedDate: Date?
+    public let dateUsed: Date?
 
     /// When the freeze expires (nil = never expires per Decision #3A)
-    public let expiresAt: Date?
+    public let dateExpires: Date?
 
     // MARK: - Initialization
 
     public init(
         id: String,
         streakKey: String,
-        earnedDate: Date? = nil,
-        usedDate: Date? = nil,
-        expiresAt: Date? = nil
+        dateEarned: Date? = nil,
+        dateUsed: Date? = nil,
+        dateExpires: Date? = nil
     ) {
         self.id = id
         self.streakKey = streakKey
-        self.earnedDate = earnedDate
-        self.usedDate = usedDate
-        self.expiresAt = expiresAt
+        self.dateEarned = dateEarned
+        self.dateUsed = dateUsed
+        self.dateExpires = dateExpires
     }
 
     // MARK: - Codable
@@ -46,24 +46,24 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     public enum CodingKeys: String, CodingKey {
         case id
         case streakKey = "streak_id"
-        case earnedDate = "earned_date"
-        case usedDate = "used_date"
-        case expiresAt = "expires_at"
+        case dateEarned = "date_earned"
+        case dateUsed = "date_used"
+        case dateExpires = "date_expires"
     }
 
     // MARK: - Computed Properties
 
     /// Has this freeze been used?
     public var isUsed: Bool {
-        usedDate != nil
+        dateUsed != nil
     }
 
     /// Has this freeze expired?
     public var isExpired: Bool {
         // Always false per Decision #3A (freezes never expire)
         // But keep logic for future flexibility
-        guard let expiresAt = expiresAt else { return false }
-        return Date() > expiresAt
+        guard let dateExpires = dateExpires else { return false }
+        return Date() > dateExpires
     }
 
     /// Is this freeze available to use?
@@ -79,12 +79,12 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
         if id.isEmpty { return false }
 
         // usedDate must be > earnedDate if both present
-        if let earned = earnedDate, let used = usedDate {
+        if let earned = dateEarned, let used = dateUsed {
             if used < earned { return false }
         }
 
         // expiresAt must be > earnedDate if both present
-        if let earned = earnedDate, let expires = expiresAt {
+        if let earned = dateEarned, let expires = dateExpires {
             if expires < earned { return false }
         }
 
@@ -103,11 +103,11 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
             "streak_freeze_streak_id": streakKey
         ]
 
-        if let earnedDate = earnedDate {
-            params["streak_freeze_earned_date"] = earnedDate.timeIntervalSince1970
+        if let dateEarned = dateEarned {
+            params["streak_freeze_earned_date"] = dateEarned.timeIntervalSince1970
         }
-        if let usedDate = usedDate {
-            params["streak_freeze_used_date"] = usedDate.timeIntervalSince1970
+        if let dateUsed = dateUsed {
+            params["streak_freeze_used_date"] = dateUsed.timeIntervalSince1970
         }
 
         return params
@@ -118,16 +118,16 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     public static func mock(
         id: String = UUID().uuidString,
         streakKey: String = "workout",
-        earnedDate: Date = Date(),
-        usedDate: Date? = nil,
-        expiresAt: Date? = nil
+        dateEarned: Date = Date(),
+        dateUsed: Date? = nil,
+        dateExpires: Date? = nil
     ) -> Self {
         StreakFreeze(
             id: id,
             streakKey: streakKey,
-            earnedDate: earnedDate,
-            usedDate: usedDate,
-            expiresAt: expiresAt
+            dateEarned: dateEarned,
+            dateUsed: dateUsed,
+            dateExpires: dateExpires
         )
     }
 
@@ -139,9 +139,9 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
         StreakFreeze(
             id: id,
             streakKey: streakKey,
-            earnedDate: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
-            usedDate: nil,
-            expiresAt: nil
+            dateEarned: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
+            dateUsed: nil,
+            dateExpires: nil
         )
     }
 
@@ -150,15 +150,15 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
         id: String = UUID().uuidString,
         streakKey: String = "workout"
     ) -> Self {
-        let earnedDate = Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date()
-        let usedDate = Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()
+        let dateEarned = Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date()
+        let dateUsed = Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
             streakKey: streakKey,
-            earnedDate: earnedDate,
-            usedDate: usedDate,
-            expiresAt: nil
+            dateEarned: dateEarned,
+            dateUsed: dateUsed,
+            dateExpires: nil
         )
     }
 
@@ -167,15 +167,15 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
         id: String = UUID().uuidString,
         streakKey: String = "workout"
     ) -> Self {
-        let earnedDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        let expiresAt = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let dateEarned = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let dateExpires = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
             streakKey: streakKey,
-            earnedDate: earnedDate,
-            usedDate: nil,
-            expiresAt: expiresAt
+            dateEarned: dateEarned,
+            dateUsed: nil,
+            dateExpires: dateExpires
         )
     }
 }

@@ -164,10 +164,10 @@ struct ExperiencePointsCalculatorTests {
         // Given: Events today in random order
         let now = Date()
         let events = [
-            ExperiencePointsEvent.mock(id: "3", experienceKey: "main", timestamp: now, points: 75),
-            ExperiencePointsEvent.mock(id: "1", experienceKey: "main", timestamp: now, points: 100),
-            ExperiencePointsEvent.mock(id: "4", experienceKey: "main", timestamp: now, points: 50),
-            ExperiencePointsEvent.mock(id: "2", experienceKey: "main", timestamp: now, points: 200)
+            ExperiencePointsEvent.mock(id: "3", experienceKey: "main", dateCreated: now, points: 75),
+            ExperiencePointsEvent.mock(id: "1", experienceKey: "main", dateCreated: now, points: 100),
+            ExperiencePointsEvent.mock(id: "4", experienceKey: "main", dateCreated: now, points: 50),
+            ExperiencePointsEvent.mock(id: "2", experienceKey: "main", dateCreated: now, points: 200)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -258,8 +258,8 @@ struct ExperiencePointsCalculatorTests {
         let afterCalculation = Date()
 
         // Then: updatedAt should be set to current time
-        #expect(result.updatedAt != nil)
-        if let updatedAt = result.updatedAt {
+        #expect(result.dateUpdated != nil)
+        if let updatedAt = result.dateUpdated {
             #expect(updatedAt >= beforeCalculation)
             #expect(updatedAt <= afterCalculation)
         }
@@ -280,8 +280,8 @@ struct ExperiencePointsCalculatorTests {
 
         // Create events: Sunday (week start) and Today
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: weekInterval.start, points: 100), // Sunday
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 300) // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: weekInterval.start, points: 100), // Sunday
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 300) // Today
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -304,10 +304,10 @@ struct ExperiencePointsCalculatorTests {
         let now = Date()
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100), // Today
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -3, to: now)!, points: 200), // 3 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -6, to: now)!, points: 150), // 6 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -8, to: now)!, points: 300) // 8 days ago (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 100), // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -3, to: now)!, points: 200), // 3 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -6, to: now)!, points: 150), // 6 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -8, to: now)!, points: 300) // 8 days ago (excluded)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -330,9 +330,9 @@ struct ExperiencePointsCalculatorTests {
         let monthInterval = calendar.dateInterval(of: .month, for: now)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: monthInterval.start, points: 100), // 1st of month
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: 10, to: monthInterval.start)!, points: 250), // Mid month
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 150) // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: monthInterval.start, points: 100), // 1st of month
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: 10, to: monthInterval.start)!, points: 250), // Mid month
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 150) // Today
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -354,10 +354,10 @@ struct ExperiencePointsCalculatorTests {
         let now = Date()
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100), // Today
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -15, to: now)!, points: 200), // 15 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -29, to: now)!, points: 300), // 29 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -35, to: now)!, points: 400) // 35 days ago (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 100), // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -15, to: now)!, points: 200), // 15 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -29, to: now)!, points: 300), // 29 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -35, to: now)!, points: 400) // 35 days ago (excluded)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -380,9 +380,9 @@ struct ExperiencePointsCalculatorTests {
         let yearInterval = calendar.dateInterval(of: .year, for: now)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: yearInterval.start, points: 100), // Jan 1
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: 6, to: yearInterval.start)!, points: 500), // Mid year
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 400) // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: yearInterval.start, points: 100), // Jan 1
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: 6, to: yearInterval.start)!, points: 500), // Mid year
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 400) // Today
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -404,10 +404,10 @@ struct ExperiencePointsCalculatorTests {
         let now = Date()
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100), // Today
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -6, to: now)!, points: 300), // 6 months ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -11, to: now)!, points: 600), // 11 months ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -13, to: now)!, points: 1000) // 13 months ago (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 100), // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: -6, to: now)!, points: 300), // 6 months ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: -11, to: now)!, points: 600), // 11 months ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: -13, to: now)!, points: 1000) // 13 months ago (excluded)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -429,10 +429,10 @@ struct ExperiencePointsCalculatorTests {
         let now = Date()
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100),
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -10, to: now)!, points: 200), // 10 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -2, to: now)!, points: 500), // 2 months ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .year, value: -2, to: now)!, points: 10000) // 2 years ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 100),
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -10, to: now)!, points: 200), // 10 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: -2, to: now)!, points: 500), // 2 months ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .year, value: -2, to: now)!, points: 10000) // 2 years ago
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -487,8 +487,8 @@ struct ExperiencePointsCalculatorTests {
         let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: sevenDaysAgo, points: 100),
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: thirtyDaysAgo, points: 200)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: sevenDaysAgo, points: 100),
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: thirtyDaysAgo, points: 200)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -515,9 +515,9 @@ struct ExperiencePointsCalculatorTests {
         let lastWeekSaturday = calendar.date(byAdding: .second, value: -1, to: weekInterval.start)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: lastWeekSaturday, points: 500), // Last week Saturday (excluded)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: weekInterval.start, points: 100), // This week Sunday (included)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 200) // Today (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: lastWeekSaturday, points: 500), // Last week Saturday (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: weekInterval.start, points: 100), // This week Sunday (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 200) // Today (included)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -541,9 +541,9 @@ struct ExperiencePointsCalculatorTests {
         let lastMonthEnd = calendar.date(byAdding: .second, value: -1, to: monthInterval.start)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: lastMonthEnd, points: 1000), // Last month (excluded)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: monthInterval.start, points: 200), // 1st of month (included)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 300) // Today (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: lastMonthEnd, points: 1000), // Last month (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: monthInterval.start, points: 200), // 1st of month (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 300) // Today (included)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -567,9 +567,9 @@ struct ExperiencePointsCalculatorTests {
         let lastYearEnd = calendar.date(byAdding: .second, value: -1, to: yearInterval.start)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: lastYearEnd, points: 5000), // Last year (excluded)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: yearInterval.start, points: 1000), // Jan 1 (included)
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 2000) // Today (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: lastYearEnd, points: 5000), // Last year (excluded)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: yearInterval.start, points: 1000), // Jan 1 (included)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 2000) // Today (included)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -593,11 +593,11 @@ struct ExperiencePointsCalculatorTests {
         let now = Date()
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: now, points: 100), // Today
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .day, value: -15, to: now)!, points: 200), // 15 days ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .month, value: -3, to: now)!, points: 500), // 3 months ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .year, value: -1, to: now)!, points: 1000), // 1 year ago
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: calendar.date(byAdding: .year, value: -3, to: now)!, points: 5000) // 3 years ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: now, points: 100), // Today
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .day, value: -15, to: now)!, points: 200), // 15 days ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .month, value: -3, to: now)!, points: 500), // 3 months ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .year, value: -1, to: now)!, points: 1000), // 1 year ago
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: calendar.date(byAdding: .year, value: -3, to: now)!, points: 5000) // 3 years ago
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 
@@ -646,7 +646,7 @@ struct ExperiencePointsCalculatorTests {
         let veryOldDate = calendar.date(byAdding: .year, value: -10, to: now)!
 
         let events = [
-            ExperiencePointsEvent.mock(experienceKey: "main", timestamp: veryOldDate, points: 100000)
+            ExperiencePointsEvent.mock(experienceKey: "main", dateCreated: veryOldDate, points: 100000)
         ]
         let config = ExperiencePointsConfiguration(experienceKey: "main")
 

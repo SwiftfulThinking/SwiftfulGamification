@@ -28,16 +28,16 @@ struct CurrentExperiencePointsDataTests {
             experienceKey: experienceId,
             pointsToday: totalPoints,
             eventsTodayCount: totalEvents,
-            createdAt: createdAt,
-            updatedAt: updatedAt
+            dateCreated: createdAt,
+            dateUpdated: updatedAt
         )
 
         // Then: All properties should be set correctly
         #expect(data.experienceKey == experienceId)
         #expect(data.pointsToday == totalPoints)
         #expect(data.eventsTodayCount == totalEvents)
-        #expect(data.createdAt == createdAt)
-        #expect(data.updatedAt == updatedAt)
+        #expect(data.dateCreated == createdAt)
+        #expect(data.dateUpdated == updatedAt)
     }
 
     @Test("Blank factory creates zero data")
@@ -256,7 +256,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: nil
+            dateUpdated: nil
         )
 
         // Then: Should be stale
@@ -270,7 +270,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: thirtyMinutesAgo
+            dateUpdated: thirtyMinutesAgo
         )
 
         // Then: Should not be stale
@@ -284,7 +284,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: twoHoursAgo
+            dateUpdated: twoHoursAgo
         )
 
         // Then: Should be stale
@@ -298,7 +298,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: oneHourAgo
+            dateUpdated: oneHourAgo
         )
 
         // Then: Should be stale (> 1 hour threshold)
@@ -311,7 +311,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
 
         // Then: Should not be stale
@@ -325,7 +325,7 @@ struct CurrentExperiencePointsDataTests {
         let data = CurrentExperiencePointsData(
             experienceKey: "test",
             pointsToday: 5000,
-            updatedAt: oneDayAgo
+            dateUpdated: oneDayAgo
         )
 
         // Then: Should be stale

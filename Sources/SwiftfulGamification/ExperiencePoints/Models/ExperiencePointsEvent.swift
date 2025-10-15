@@ -17,7 +17,7 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public let experienceKey: String
 
     /// UTC timestamp when the event occurred
-    public let timestamp: Date
+    public let dateCreated: Date
 
     /// Number of experience points earned in this event
     public let points: Int
@@ -30,13 +30,13 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public init(
         id: String = UUID().uuidString,
         experienceKey: String,
-        timestamp: Date = Date(),
+        dateCreated: Date = Date(),
         points: Int,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) {
         self.id = id
         self.experienceKey = experienceKey
-        self.timestamp = timestamp
+        self.dateCreated = dateCreated
         self.points = points
         self.metadata = metadata
     }
@@ -46,7 +46,7 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public enum CodingKeys: String, CodingKey {
         case id
         case experienceKey = "experience_id"
-        case timestamp
+        case dateCreated = "date_created"
         case points
         case metadata
     }
@@ -72,7 +72,7 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public var isTimestampValid: Bool {
         let now = Date()
         let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: now) ?? now
-        return timestamp <= now && timestamp >= oneYearAgo
+        return dateCreated <= now && dateCreated >= oneYearAgo
     }
 
     /// Checks if metadata keys are safe for Firestore (alphanumeric + underscore only)
@@ -96,7 +96,7 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
         var params: [String: Any] = [
             "xp_event_id": id,
             "xp_event_experience_id": experienceKey,
-            "xp_event_timestamp": timestamp.timeIntervalSince1970,
+            "xp_event_timestamp": dateCreated.timeIntervalSince1970,
             "xp_event_points": points,
             "xp_event_metadata_count": metadata.count
         ]
@@ -114,14 +114,14 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public static func mock(
         id: String = UUID().uuidString,
         experienceKey: String = "main",
-        timestamp: Date = Date(),
+        dateCreated: Date = Date(),
         points: Int = 100,
         metadata: [String: GamificationDictionaryValue] = ["source": "test"]
     ) -> Self {
         ExperiencePointsEvent(
             id: id,
             experienceKey: experienceKey,
-            timestamp: timestamp,
+            dateCreated: dateCreated,
             points: points,
             metadata: metadata
         )
@@ -137,7 +137,7 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
         ExperiencePointsEvent(
             id: UUID().uuidString,
             experienceKey: experienceKey,
-            timestamp: date,
+            dateCreated: date,
             points: points,
             metadata: metadata
         )

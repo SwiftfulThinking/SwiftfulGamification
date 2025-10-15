@@ -24,10 +24,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 5,
             longestStreak: 10,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 2,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
 
         // Save data
@@ -68,10 +68,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 3,
             longestStreak: 5,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 1,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "test", testData)
 
@@ -94,10 +94,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 5,
             longestStreak: 10,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 2,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "test", initialData)
 
@@ -106,10 +106,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 7,
             longestStreak: 12,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 3,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "test", newData)
 
@@ -136,13 +136,13 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 10,
             longestStreak: 15,
-            lastEventDate: now,
+            dateLastEvent: now,
             lastEventTimezone: "America/New_York",
-            streakStartDate: startDate,
+            dateStreakStart: startDate,
             totalEvents: 25,
             freezesAvailableCount: 5,
-            createdAt: startDate,
-            updatedAt: now,
+            dateCreated: startDate,
+            dateUpdated: now,
             eventsRequiredPerDay: 1,
             todayEventCount: 3
         )
@@ -160,26 +160,26 @@ struct FileManagerStreakPersistenceTests {
         #expect(retrieved?.todayEventCount == testData.todayEventCount)
 
         // Date comparison (within 1 second tolerance due to JSON encoding precision)
-        if let retrievedStart = retrieved?.streakStartDate {
-            #expect(abs(retrievedStart.timeIntervalSince(testData.streakStartDate!)) < 1)
+        if let retrievedStart = retrieved?.dateStreakStart {
+            #expect(abs(retrievedStart.timeIntervalSince(testData.dateStreakStart!)) < 1)
         } else {
             Issue.record("streakStartDate should not be nil")
         }
 
-        if let retrievedLast = retrieved?.lastEventDate {
-            #expect(abs(retrievedLast.timeIntervalSince(testData.lastEventDate!)) < 1)
+        if let retrievedLast = retrieved?.dateLastEvent {
+            #expect(abs(retrievedLast.timeIntervalSince(testData.dateLastEvent!)) < 1)
         } else {
             Issue.record("lastEventDate should not be nil")
         }
 
-        if let retrievedCreated = retrieved?.createdAt {
-            #expect(abs(retrievedCreated.timeIntervalSince(testData.createdAt!)) < 1)
+        if let retrievedCreated = retrieved?.dateCreated {
+            #expect(abs(retrievedCreated.timeIntervalSince(testData.dateCreated!)) < 1)
         } else {
             Issue.record("createdAt should not be nil")
         }
 
-        if let retrievedUpdated = retrieved?.updatedAt {
-            #expect(abs(retrievedUpdated.timeIntervalSince(testData.updatedAt!)) < 1)
+        if let retrievedUpdated = retrieved?.dateUpdated {
+            #expect(abs(retrievedUpdated.timeIntervalSince(testData.dateUpdated!)) < 1)
         } else {
             Issue.record("updatedAt should not be nil")
         }
@@ -196,13 +196,13 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: nil,
             longestStreak: nil,
-            lastEventDate: nil,
+            dateLastEvent: nil,
             lastEventTimezone: nil,
-            streakStartDate: nil,
+            dateStreakStart: nil,
             totalEvents: nil,
             freezesAvailableCount: nil,
-            createdAt: nil,
-            updatedAt: nil,
+            dateCreated: nil,
+            dateUpdated: nil,
             eventsRequiredPerDay: nil,
             todayEventCount: nil,
             recentEvents: nil
@@ -214,13 +214,13 @@ struct FileManagerStreakPersistenceTests {
         #expect(retrieved?.streakKey == "test")
         #expect(retrieved?.currentStreak == nil)
         #expect(retrieved?.longestStreak == nil)
-        #expect(retrieved?.lastEventDate == nil)
+        #expect(retrieved?.dateLastEvent == nil)
         #expect(retrieved?.lastEventTimezone == nil)
-        #expect(retrieved?.streakStartDate == nil)
+        #expect(retrieved?.dateStreakStart == nil)
         #expect(retrieved?.totalEvents == nil)
         #expect(retrieved?.freezesAvailableCount == nil)
-        #expect(retrieved?.createdAt == nil)
-        #expect(retrieved?.updatedAt == nil)
+        #expect(retrieved?.dateCreated == nil)
+        #expect(retrieved?.dateUpdated == nil)
         #expect(retrieved?.eventsRequiredPerDay == nil)
         #expect(retrieved?.todayEventCount == nil)
         #expect(retrieved?.recentEvents == nil)
@@ -240,10 +240,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 8,
             longestStreak: 12,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 3,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
 
         // Save with first instance
@@ -274,11 +274,11 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 0,
             longestStreak: 0,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             totalEvents: 0,
             freezesAvailableCount: 0,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
 
         try persistence.saveCurrentStreakData(streakKey: "test", testData)
@@ -302,11 +302,11 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 999,
             longestStreak: 1000,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             totalEvents: 5000,
             freezesAvailableCount: 100,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
 
         try persistence.saveCurrentStreakData(streakKey: "test", testData)
@@ -331,10 +331,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "test",
             currentStreak: 5,
             longestStreak: 10,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 2,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "test", testData)
 
@@ -354,10 +354,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "workout",
             currentStreak: 5,
             longestStreak: 10,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 2,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "workout", workoutData)
 
@@ -366,10 +366,10 @@ struct FileManagerStreakPersistenceTests {
             streakKey: "reading",
             currentStreak: 7,
             longestStreak: 12,
-            lastEventDate: Date(),
-            streakStartDate: Date(),
+            dateLastEvent: Date(),
+            dateStreakStart: Date(),
             freezesAvailableCount: 3,
-            updatedAt: Date()
+            dateUpdated: Date()
         )
         try persistence.saveCurrentStreakData(streakKey: "reading", readingData)
 

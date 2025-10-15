@@ -37,7 +37,7 @@ public struct ExperiencePointsCalculator {
 
         // CALCULATE POINTS TODAY
         let pointsToday = events
-            .filter { calendar.isDate($0.timestamp, inSameDayAs: todayStart) }
+            .filter { calendar.isDate($0.dateCreated, inSameDayAs: todayStart) }
             .reduce(0) { $0 + $1.points }
 
         // GET TODAY'S EVENT COUNT
@@ -52,7 +52,7 @@ public struct ExperiencePointsCalculator {
         let pointsThisWeek: Int
         if let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentDate) {
             pointsThisWeek = events
-                .filter { $0.timestamp >= weekInterval.start && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= weekInterval.start && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsThisWeek = 0
@@ -62,7 +62,7 @@ public struct ExperiencePointsCalculator {
         let pointsLast7Days: Int
         if let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: currentDate) {
             pointsLast7Days = events
-                .filter { $0.timestamp >= sevenDaysAgo && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= sevenDaysAgo && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsLast7Days = 0
@@ -72,7 +72,7 @@ public struct ExperiencePointsCalculator {
         let pointsThisMonth: Int
         if let monthInterval = calendar.dateInterval(of: .month, for: currentDate) {
             pointsThisMonth = events
-                .filter { $0.timestamp >= monthInterval.start && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= monthInterval.start && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsThisMonth = 0
@@ -82,7 +82,7 @@ public struct ExperiencePointsCalculator {
         let pointsLast30Days: Int
         if let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: currentDate) {
             pointsLast30Days = events
-                .filter { $0.timestamp >= thirtyDaysAgo && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= thirtyDaysAgo && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsLast30Days = 0
@@ -92,7 +92,7 @@ public struct ExperiencePointsCalculator {
         let pointsThisYear: Int
         if let yearInterval = calendar.dateInterval(of: .year, for: currentDate) {
             pointsThisYear = events
-                .filter { $0.timestamp >= yearInterval.start && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= yearInterval.start && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsThisYear = 0
@@ -102,14 +102,14 @@ public struct ExperiencePointsCalculator {
         let pointsLast12Months: Int
         if let twelveMonthsAgo = calendar.date(byAdding: .month, value: -12, to: currentDate) {
             pointsLast12Months = events
-                .filter { $0.timestamp >= twelveMonthsAgo && $0.timestamp <= currentDate }
+                .filter { $0.dateCreated >= twelveMonthsAgo && $0.dateCreated <= currentDate }
                 .reduce(0) { $0 + $1.points }
         } else {
             pointsLast12Months = 0
         }
 
         // LAST EVENT INFO
-        let lastEvent = events.max(by: { $0.timestamp < $1.timestamp })
+        let lastEvent = events.max(by: { $0.dateCreated < $1.dateCreated })
 
         // GET RECENT EVENTS (last 60 days)
         let recentEvents = getRecentEvents(
@@ -131,9 +131,9 @@ public struct ExperiencePointsCalculator {
             pointsLast30Days: pointsLast30Days,
             pointsThisYear: pointsThisYear,
             pointsLast12Months: pointsLast12Months,
-            lastEventDate: lastEvent?.timestamp,
-            createdAt: events.first?.timestamp,
-            updatedAt: currentDate,
+            dateLastEvent: lastEvent?.dateCreated,
+            dateCreated: events.first?.dateCreated,
+            dateUpdated: currentDate,
             recentEvents: recentEvents
         )
     }
@@ -155,7 +155,7 @@ public struct ExperiencePointsCalculator {
         let todayStart = calendar.startOfDay(for: currentDate)
 
         return events.filter { event in
-            calendar.isDate(event.timestamp, inSameDayAs: todayStart)
+            calendar.isDate(event.dateCreated, inSameDayAs: todayStart)
         }.count
     }
 
@@ -183,11 +183,11 @@ public struct ExperiencePointsCalculator {
         }
 
         // Filter events that fall within our date range
-        let recentEvents = events.filter { $0.timestamp >= cutoffDate }
+        let recentEvents = events.filter { $0.dateCreated >= cutoffDate }
 
         // Group by calendar day and only include the last {days} unique days
         let eventsByDay = Dictionary(grouping: recentEvents) { event -> Date in
-            calendar.startOfDay(for: event.timestamp)
+            calendar.startOfDay(for: event.dateCreated)
         }
 
         // Get the last {days} unique calendar days
@@ -196,10 +196,10 @@ public struct ExperiencePointsCalculator {
         // Return events that fall on those days
         return recentEvents
             .filter { event in
-                let eventDay = calendar.startOfDay(for: event.timestamp)
+                let eventDay = calendar.startOfDay(for: event.dateCreated)
                 return lastDays.contains(eventDay)
             }
-            .sorted { $0.timestamp < $1.timestamp }
+            .sorted { $0.dateCreated < $1.dateCreated }
     }
 
     /// Gets total points for events matching a specific metadata field value

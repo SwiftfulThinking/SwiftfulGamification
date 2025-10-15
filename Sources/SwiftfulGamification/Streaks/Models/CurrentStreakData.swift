@@ -27,13 +27,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     public let longestStreak: Int?
 
     /// UTC timestamp of last event
-    public let lastEventDate: Date?
+    public let dateLastEvent: Date?
 
     /// Timezone identifier of last event
     public let lastEventTimezone: String?
 
     /// UTC timestamp when current streak started
-    public let streakStartDate: Date?
+    public let dateStreakStart: Date?
 
     /// Total number of events logged
     public let totalEvents: Int?
@@ -45,10 +45,10 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     public let freezesAvailableCount: Int?
 
     /// UTC timestamp of first event ever
-    public let createdAt: Date?
+    public let dateCreated: Date?
 
     /// UTC timestamp of last update
-    public let updatedAt: Date?
+    public let dateUpdated: Date?
 
     /// Goal-based: number of events required per day (1 = basic streak)
     public let eventsRequiredPerDay: Int?
@@ -66,14 +66,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = nil,
         currentStreak: Int? = nil,
         longestStreak: Int? = nil,
-        lastEventDate: Date? = nil,
+        dateLastEvent: Date? = nil,
         lastEventTimezone: String? = nil,
-        streakStartDate: Date? = nil,
+        dateStreakStart: Date? = nil,
         totalEvents: Int? = nil,
         freezesAvailable: [StreakFreeze]? = nil,
         freezesAvailableCount: Int? = nil,
-        createdAt: Date? = nil,
-        updatedAt: Date? = nil,
+        dateCreated: Date? = nil,
+        dateUpdated: Date? = nil,
         eventsRequiredPerDay: Int? = nil,
         todayEventCount: Int? = nil,
         recentEvents: [StreakEvent]? = nil
@@ -82,14 +82,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         self.userId = userId
         self.currentStreak = currentStreak
         self.longestStreak = longestStreak
-        self.lastEventDate = lastEventDate
+        self.dateLastEvent = dateLastEvent
         self.lastEventTimezone = lastEventTimezone
-        self.streakStartDate = streakStartDate
+        self.dateStreakStart = dateStreakStart
         self.totalEvents = totalEvents
         self.freezesAvailable = freezesAvailable
         self.freezesAvailableCount = freezesAvailableCount
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
+        self.dateCreated = dateCreated
+        self.dateUpdated = dateUpdated
         self.eventsRequiredPerDay = eventsRequiredPerDay
         self.todayEventCount = todayEventCount
         self.recentEvents = recentEvents
@@ -102,14 +102,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         case userId = "user_id"
         case currentStreak = "current_streak"
         case longestStreak = "longest_streak"
-        case lastEventDate = "last_event_date"
+        case dateLastEvent = "date_last_event"
         case lastEventTimezone = "last_event_timezone"
-        case streakStartDate = "streak_start_date"
+        case dateStreakStart = "date_streak_start"
         case totalEvents = "total_events"
         case freezesAvailable = "freezes_available"
         case freezesAvailableCount = "freezes_available_count"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case dateCreated = "date_created"
+        case dateUpdated = "date_updated"
         case eventsRequiredPerDay = "events_required_per_day"
         case todayEventCount = "today_event_count"
         case recentEvents = "recent_events"
@@ -135,11 +135,11 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
         // Group events by calendar day, accounting for leeway
         let eventDays = Dictionary(grouping: recentEvents) { event -> Date in
-            let eventDay = calendar.startOfDay(for: event.timestamp)
+            let eventDay = calendar.startOfDay(for: event.dateCreated)
 
             // If leeway, adjust the day boundary
             if leewayHours > 0 {
-                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.timestamp).hour ?? 0
+                let hoursSinceMidnight = calendar.dateComponents([.hour], from: eventDay, to: event.dateCreated).hour ?? 0
 
                 // If event is within leeway hours after midnight, count it as previous day
                 if hoursSinceMidnight <= leewayHours {
@@ -185,7 +185,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     /// Current status of the streak
     public var status: StreakStatus {
-        guard lastEventDate != nil else {
+        guard dateLastEvent != nil else {
             return .noEvents
         }
 
@@ -208,7 +208,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
     /// Is the streak currently active (last event was today or yesterday)?
     public var isStreakActive: Bool {
-        guard lastEventDate != nil else { return false }
+        guard dateLastEvent != nil else { return false }
         guard let daysSince = daysSinceLastEvent else { return false }
         return daysSince <= 1
     }
@@ -223,19 +223,19 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
     /// Data is considered stale if it hasn't been updated in 1 hour or more
     /// This typically happens when the user is offline or has connectivity issues
     public var isDataStale: Bool {
-        guard let updatedAt = updatedAt else { return true }
-        let hoursSinceUpdate = Date().timeIntervalSince(updatedAt) / 3600
+        guard let dateUpdated = dateUpdated else { return true }
+        let hoursSinceUpdate = Date().timeIntervalSince(dateUpdated) / 3600
         return hoursSinceUpdate >= 1
     }
 
     /// Number of days since last event (in user's current timezone)
     public var daysSinceLastEvent: Int? {
-        guard let lastEventDate = lastEventDate else { return nil }
+        guard let dateLastEvent = dateLastEvent else { return nil }
 
         let calendar = Calendar.current
         let now = Date()
 
-        let lastDay = calendar.startOfDay(for: lastEventDate)
+        let lastDay = calendar.startOfDay(for: dateLastEvent)
         let today = calendar.startOfDay(for: now)
 
         let components = calendar.dateComponents([.day], from: lastDay, to: today)
@@ -339,14 +339,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
-            lastEventDate: lastEventDate,
+            dateLastEvent: dateLastEvent,
             lastEventTimezone: lastEventTimezone,
-            streakStartDate: streakStartDate,
+            dateStreakStart: dateStreakStart,
             totalEvents: totalEvents,
             freezesAvailable: freezesAvailable,
             freezesAvailableCount: freezesAvailableCount,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
+            dateCreated: dateCreated,
+            dateUpdated: dateUpdated,
             eventsRequiredPerDay: eventsRequiredPerDay,
             todayEventCount: todayEventCount,
             recentEvents: recentEvents
@@ -408,14 +408,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = "mock_user_123",
         currentStreak: Int = 5,
         longestStreak: Int = 10,
-        lastEventDate: Date = Date(),
+        dateLastEvent: Date = Date(),
         lastEventTimezone: String = TimeZone.current.identifier,
-        streakStartDate: Date? = Calendar.current.date(byAdding: .day, value: -5, to: Date()),
+        dateStreakStart: Date? = Calendar.current.date(byAdding: .day, value: -5, to: Date()),
         totalEvents: Int = 25,
         freezesAvailable: [StreakFreeze]? = nil,
         freezesAvailableCount: Int = 2,
-        createdAt: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
-        updatedAt: Date = Date(),
+        dateCreated: Date? = Calendar.current.date(byAdding: .month, value: -1, to: Date()),
+        dateUpdated: Date = Date(),
         eventsRequiredPerDay: Int = 1,
         todayEventCount: Int = 1,
         recentEvents: [StreakEvent]? = nil
@@ -425,14 +425,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: longestStreak,
-            lastEventDate: lastEventDate,
+            dateLastEvent: dateLastEvent,
             lastEventTimezone: lastEventTimezone,
-            streakStartDate: streakStartDate,
+            dateStreakStart: dateStreakStart,
             totalEvents: totalEvents,
             freezesAvailable: freezesAvailable,
             freezesAvailableCount: freezesAvailableCount,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
+            dateCreated: dateCreated,
+            dateUpdated: dateUpdated,
             eventsRequiredPerDay: eventsRequiredPerDay,
             todayEventCount: todayEventCount,
             recentEvents: recentEvents
@@ -445,7 +445,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
         userId: String? = nil,
         freezesAvailable: [StreakFreeze]? = nil,
         freezesAvailableCount: Int? = nil,
-        updatedAt: Date? = nil,
+        dateUpdated: Date? = nil,
         eventsRequiredPerDay: Int? = nil
     ) -> Self {
         CurrentStreakData(
@@ -456,7 +456,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             totalEvents: 0,
             freezesAvailable: freezesAvailable,
             freezesAvailableCount: freezesAvailableCount ?? 0,
-            updatedAt: updatedAt,
+            dateUpdated: dateUpdated,
             eventsRequiredPerDay: eventsRequiredPerDay ?? 1,
             todayEventCount: 0
         )
@@ -489,7 +489,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
         let recentEvents = (1...currentStreak).map { daysAgo in
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
-            return StreakEvent.mock(timestamp: date)
+            return StreakEvent.mock(dateCreated: date)
         }
 
         let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) ?? Date()
@@ -499,13 +499,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: currentStreak,
-            lastEventDate: yesterday,
+            dateLastEvent: yesterday,
             lastEventTimezone: TimeZone.current.identifier,
-            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
+            dateStreakStart: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 5,
             freezesAvailableCount: freezesAvailableCount,
-            createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
-            updatedAt: yesterday,
+            dateCreated: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
+            dateUpdated: yesterday,
             eventsRequiredPerDay: 1,
             todayEventCount: 0,
             recentEvents: recentEvents
@@ -526,7 +526,7 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
 
         let recentEvents = (1...currentStreak).map { daysAgo in
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
-            return StreakEvent.mock(timestamp: date)
+            return StreakEvent.mock(dateCreated: date)
         }
 
         return CurrentStreakData(
@@ -534,13 +534,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: currentStreak,
-            lastEventDate: yesterday,
+            dateLastEvent: yesterday,
             lastEventTimezone: TimeZone.current.identifier,
-            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
+            dateStreakStart: Calendar.current.date(byAdding: .day, value: -currentStreak, to: yesterday),
             totalEvents: currentStreak + 3,
             freezesAvailableCount: 1,
-            createdAt: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
-            updatedAt: yesterday,
+            dateCreated: Calendar.current.date(byAdding: .month, value: -1, to: Date()),
+            dateUpdated: yesterday,
             eventsRequiredPerDay: 1,
             todayEventCount: 0,
             recentEvents: recentEvents
@@ -576,13 +576,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: calculatedStreak.currentStreak,
             longestStreak: calculatedStreak.longestStreak,
-            lastEventDate: calculatedStreak.lastEventDate,
+            dateLastEvent: calculatedStreak.dateLastEvent,
             lastEventTimezone: calculatedStreak.lastEventTimezone,
-            streakStartDate: calculatedStreak.streakStartDate,
+            dateStreakStart: calculatedStreak.dateStreakStart,
             totalEvents: calculatedStreak.totalEvents,
             freezesAvailableCount: freezesAvailableCount,
-            createdAt: calculatedStreak.createdAt,
-            updatedAt: calculatedStreak.updatedAt,
+            dateCreated: calculatedStreak.dateCreated,
+            dateUpdated: calculatedStreak.dateUpdated,
             eventsRequiredPerDay: eventsRequiredPerDay,
             todayEventCount: calculatedStreak.todayEventCount,
             recentEvents: recentEvents
@@ -607,14 +607,14 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
             for hour in 0..<eventsRequiredPerDay {
                 let eventDate = date.addingTimeInterval(TimeInterval(hour * 3600))
-                recentEvents.append(StreakEvent.mock(timestamp: eventDate))
+                recentEvents.append(StreakEvent.mock(dateCreated: eventDate))
             }
         }
 
         // Today: todayEventCount events
         for hour in 0..<todayEventCount {
             let eventDate = Date().addingTimeInterval(TimeInterval(hour * 3600))
-            recentEvents.append(StreakEvent.mock(timestamp: eventDate))
+            recentEvents.append(StreakEvent.mock(dateCreated: eventDate))
         }
 
         let currentStreak = 4
@@ -624,13 +624,13 @@ public struct CurrentStreakData: Identifiable, Codable, Sendable, Equatable {
             userId: userId,
             currentStreak: currentStreak,
             longestStreak: currentStreak,
-            lastEventDate: Date(),
+            dateLastEvent: Date(),
             lastEventTimezone: TimeZone.current.identifier,
-            streakStartDate: Calendar.current.date(byAdding: .day, value: -currentStreak, to: Date()),
+            dateStreakStart: Calendar.current.date(byAdding: .day, value: -currentStreak, to: Date()),
             totalEvents: 15,
             freezesAvailableCount: 2,
-            createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date()),
-            updatedAt: Date(),
+            dateCreated: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date()),
+            dateUpdated: Date(),
             eventsRequiredPerDay: eventsRequiredPerDay,
             todayEventCount: todayEventCount,
             recentEvents: recentEvents

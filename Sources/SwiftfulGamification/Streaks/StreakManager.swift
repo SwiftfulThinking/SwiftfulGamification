@@ -92,7 +92,6 @@ public class StreakManager {
 
     @discardableResult
     public func addStreakEvent(
-        timestamp: Date = Date(),
         metadata: [String: GamificationDictionaryValue] = [:]
     ) async throws -> StreakEvent {
         guard let userId = userId else {
@@ -108,7 +107,7 @@ public class StreakManager {
 
         let event = StreakEvent(
             id: UUID().uuidString,
-            timestamp: timestamp,
+            dateCreated: Date(),
             timezone: TimeZone.current.identifier,
             isFreeze: false,
             freezeId: nil,
@@ -138,7 +137,7 @@ public class StreakManager {
     @discardableResult
     public func addStreakFreeze(
         id: String,
-        expiresAt: Date? = nil
+        dateExpires: Date? = nil
     ) async throws -> StreakFreeze {
         guard let userId = userId else {
             throw StreakError.notLoggedIn
@@ -147,9 +146,9 @@ public class StreakManager {
         let freeze = StreakFreeze(
             id: id,
             streakKey: configuration.streakKey,
-            earnedDate: Date(),
-            usedDate: nil,
-            expiresAt: expiresAt
+            dateEarned: Date(),
+            dateUsed: nil,
+            dateExpires: dateExpires
         )
 
         logger?.trackEvent(event: Event.addStreakFreezeStart(freezeId: freeze.id))
@@ -188,7 +187,7 @@ public class StreakManager {
         }
 
         // Get the last event date
-        guard let lastEventDate = currentStreakData.lastEventDate else {
+        guard let lastEventDate = currentStreakData.dateLastEvent else {
             return .didNotUseFreezes
         }
 
@@ -226,7 +225,7 @@ public class StreakManager {
                 // Create freeze event for this day
                 let freezeEvent = StreakEvent(
                     id: UUID().uuidString,
-                    timestamp: consumption.date,
+                    dateCreated: consumption.date,
                     timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
                     isFreeze: true,
                     freezeId: consumption.freezeId
@@ -302,7 +301,7 @@ public class StreakManager {
                         // Create freeze event
                         let freezeEvent = StreakEvent(
                             id: UUID().uuidString,
-                            timestamp: consumption.date,
+                            dateCreated: consumption.date,
                             timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
                             isFreeze: true,
                             freezeId: consumption.freezeId

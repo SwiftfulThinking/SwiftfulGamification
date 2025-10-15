@@ -144,8 +144,8 @@ struct FileManagerExperiencePointsPersistenceTests {
             Issue.record("createdAt should not be nil")
         }
 
-        if let retrievedUpdated = retrieved?.updatedAt {
-            #expect(abs(retrievedUpdated.timeIntervalSince(testData.updatedAt!)) < 1)
+        if let retrievedUpdated = retrieved?.dateUpdated {
+            #expect(abs(retrievedUpdated.timeIntervalSince(testData.dateUpdated!)) < 1)
         } else {
             Issue.record("updatedAt should not be nil")
         }
@@ -173,7 +173,7 @@ struct FileManagerExperiencePointsPersistenceTests {
         #expect(retrieved?.pointsToday == nil)
         #expect(retrieved?.eventsTodayCount == nil)
         #expect(retrieved?.createdAt == nil)
-        #expect(retrieved?.updatedAt == nil)
+        #expect(retrieved?.dateUpdated == nil)
 
         // Clean up
         try persistence.saveCurrentExperiencePointsData(experienceKey: "test", nil)

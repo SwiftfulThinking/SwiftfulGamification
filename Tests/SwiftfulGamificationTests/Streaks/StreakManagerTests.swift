@@ -234,7 +234,7 @@ struct StreakManagerTests {
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // When: Adding event
-        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent()
 
         // Give calculation time to complete
         try await Task.sleep(nanoseconds: 100_000_000) // 100ms
@@ -257,7 +257,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent()
 
         // Give calculation time
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -280,7 +280,7 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding event
-        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent()
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -302,9 +302,9 @@ struct StreakManagerTests {
         logger.reset()
 
         // When: Adding 3 events rapidly
-        try await manager.addStreakEvent(id: "event1")
-        try await manager.addStreakEvent(id: "event1")
-        try await manager.addStreakEvent(id: "event1")
+        try await manager.addStreakEvent()
+        try await manager.addStreakEvent()
+        try await manager.addStreakEvent()
 
         try await Task.sleep(nanoseconds: 150_000_000) // Wait for all calculations
 
@@ -456,8 +456,8 @@ struct StreakManagerTests {
         // Add events: today and 3 days ago (2-day gap)
         let today = Date()
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: threeDaysAgo))
 
         // Add 2 freezes (enough to fill 2-day gap)
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
@@ -581,8 +581,8 @@ struct StreakManagerTests {
 
         let today = Date()
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: threeDaysAgo))
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-2"))
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, freezeBehavior: .autoConsumeFreezes)
@@ -799,7 +799,7 @@ struct StreakManagerTests {
         let today = Date()
         for daysAgo in 0..<5 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: date))
         }
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
@@ -822,13 +822,13 @@ struct StreakManagerTests {
 
         let today = Date()
         // Today and yesterday
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: today))
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: yesterday))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: yesterday))
 
         // 4 days ago (creates 2-day gap)
         let fourDaysAgo = Calendar.current.date(byAdding: .day, value: -4, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: fourDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: fourDaysAgo))
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
@@ -849,11 +849,11 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let today = Date()
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: today))
 
         // 2 days ago (creates 1-day gap)
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: twoDaysAgo))
 
         // Add freeze
         try await remote.addStreakFreeze(userId: "user123", streakKey: "workout", freeze: StreakFreeze.mockUnused(id: "freeze-1"))
@@ -881,9 +881,9 @@ struct StreakManagerTests {
         let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: today)!
 
         // Add events for today, yesterday and 2 days ago (current streak = 3)
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: today))
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: yesterday))
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: twoDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: today))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: yesterday))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: twoDaysAgo))
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
@@ -897,7 +897,7 @@ struct StreakManagerTests {
 
         // When: Adding another event later today
         let laterToday = Calendar.current.date(byAdding: .hour, value: 2, to: today)!
-        try await manager.addStreakEvent(id: "event1", timestamp: laterToday)
+        try await manager.addStreakEvent()
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should stay at 3 (same day), but totalEvents increases
@@ -912,7 +912,7 @@ struct StreakManagerTests {
         let remote = services.remote as! MockRemoteStreakService
 
         let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: threeDaysAgo))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: threeDaysAgo))
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
         let manager = StreakManager(services: services, configuration: config)
@@ -922,7 +922,7 @@ struct StreakManagerTests {
 
         // When: Adding event today (after 2-day gap)
         let today = Date()
-        try await manager.addStreakEvent(id: "event1", timestamp: today)
+        try await manager.addStreakEvent()
         try await Task.sleep(nanoseconds: 150_000_000)
 
         // Then: Streak should reset to 1
@@ -942,13 +942,13 @@ struct StreakManagerTests {
         // Today: 3 events (meets goal)
         for hour in [8, 12, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         // Yesterday: 3 events (meets goal)
         for hour in [9, 14, 19] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: yesterday)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
@@ -977,19 +977,19 @@ struct StreakManagerTests {
         // Today: 3 events (meets goal)
         for hour in [8, 12, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         // Yesterday: Only 2 events (fails goal of 3)
         for hour in [9, 14] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: yesterday)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         // Two days ago: 3 events (meets goal)
         for hour in [10, 15, 20] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: twoDaysAgo)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         let config = StreakConfiguration(streakKey: "workout", eventsRequiredPerDay: 3, useServerCalculation: false)
@@ -1020,7 +1020,7 @@ struct StreakManagerTests {
         let today = Date()
         for daysAgo in 0...6 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: date))
         }
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
@@ -1045,13 +1045,13 @@ struct StreakManagerTests {
         // Create a 3-day current streak
         for daysAgo in 0...2 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: date))
         }
 
         // Create a longer streak in the past (10 days, starting 5 days ago)
         for daysAgo in 5...14 {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: date))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: date))
         }
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
@@ -1076,7 +1076,7 @@ struct StreakManagerTests {
         // Add 5 events today at different times
         for hour in [6, 9, 12, 15, 18] {
             let eventDate = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: today)!
-            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: eventDate))
+            try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: eventDate))
         }
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false)
@@ -1105,7 +1105,7 @@ struct StreakManagerTests {
         let today = Date()
         let pstDate = pstCalendar.date(bySettingHour: 22, minute: 0, second: 0, of: today)! // 10 PM PST
         try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent(
-            timestamp: pstDate,
+            dateCreated: pstDate,
             timezone: pstTimezone.identifier
         ))
 
@@ -1116,7 +1116,7 @@ struct StreakManagerTests {
 
         let jstDate = jstCalendar.date(byAdding: .hour, value: 4, to: pstDate)! // 4 hours later = 2 AM JST next day
         try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent(
-            timestamp: jstDate,
+            dateCreated: jstDate,
             timezone: jstTimezone.identifier
         ))
 
@@ -1143,11 +1143,11 @@ struct StreakManagerTests {
 
         // Event yesterday at 11 PM
         let lastNight = Calendar.current.date(bySettingHour: 23, minute: 0, second: 0, of: yesterday)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: lastNight))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: lastNight))
 
         // Event today at 4 AM (within 6-hour leeway window)
         let todayEarly = Calendar.current.date(bySettingHour: 4, minute: 0, second: 0, of: now)!
-        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(timestamp: todayEarly))
+        try await remote.addEvent(userId: "user123", streakKey: "workout", event: StreakEvent.mock(dateCreated: todayEarly))
 
         let config = StreakConfiguration(streakKey: "workout", useServerCalculation: false, leewayHours: 6)
         let manager = StreakManager(services: services, configuration: config)

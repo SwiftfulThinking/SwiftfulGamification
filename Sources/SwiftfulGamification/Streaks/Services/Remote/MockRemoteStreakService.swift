@@ -28,9 +28,9 @@ public class MockRemoteStreakService: RemoteStreakService {
                     StreakFreeze(
                         id: "mock_freeze_\(index)",
                         streakKey: streak.streakKey,
-                        earnedDate: Date().addingTimeInterval(-Double(index + 1) * 86400), // Earned 1, 2, 3... days ago
-                        usedDate: nil,
-                        expiresAt: nil
+                        dateEarned: Date().addingTimeInterval(-Double(index + 1) * 86400), // Earned 1, 2, 3... days ago
+                        dateUsed: nil,
+                        dateExpires: nil
                     )
                 }
                 self.freezes[streak.streakKey] = mockFreezes
@@ -97,9 +97,9 @@ public class MockRemoteStreakService: RemoteStreakService {
         let usedFreeze = StreakFreeze(
             id: freeze.id,
             streakKey: freeze.streakKey,
-            earnedDate: freeze.earnedDate,
-            usedDate: Date(),
-            expiresAt: freeze.expiresAt
+            dateEarned: freeze.dateEarned,
+            dateUsed: Date(),
+            dateExpires: freeze.dateExpires
         )
 
         streakFreezes[index] = usedFreeze

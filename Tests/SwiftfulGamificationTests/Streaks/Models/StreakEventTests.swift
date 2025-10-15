@@ -26,8 +26,8 @@ struct StreakEventTests {
         #expect(UUID(uuidString: event.id) != nil) // Valid UUID format
 
         // And: Should use current timestamp
-        #expect(event.timestamp >= before)
-        #expect(event.timestamp <= after)
+        #expect(event.dateCreated >= before)
+        #expect(event.dateCreated <= after)
 
         // And: Should use current timezone
         #expect(event.timezone == TimeZone.current.identifier)
@@ -52,14 +52,14 @@ struct StreakEventTests {
         // When: Creating event with custom parameters
         let event = StreakEvent(
             id: id,
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: timezone,
             metadata: metadata
         )
 
         // Then: All properties should match provided values
         #expect(event.id == id)
-        #expect(event.timestamp == timestamp)
+        #expect(event.dateCreated == timestamp)
         #expect(event.timezone == timezone)
         #expect(event.metadata.count == 4)
         #expect(event.metadata["workout_type"] == .string("running"))
@@ -91,7 +91,7 @@ struct StreakEventTests {
         let event = StreakEvent.mock(date: specificDate, timezone: timezone)
 
         // Then: Should use provided date and timezone
-        #expect(event.timestamp == specificDate)
+        #expect(event.dateCreated == specificDate)
         #expect(event.timezone == timezone)
         #expect(!event.id.isEmpty)
         #expect(event.metadata["action"] == .string("test"))
@@ -107,7 +107,7 @@ struct StreakEventTests {
 
         // Then: Should create event 5 days in the past
         let expectedDate = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
-        let timeDifference = abs(event.timestamp.timeIntervalSince(expectedDate))
+        let timeDifference = abs(event.dateCreated.timeIntervalSince(expectedDate))
 
         // Allow small time difference (< 1 second) due to execution time
         #expect(timeDifference < 1.0)
@@ -123,7 +123,7 @@ struct StreakEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = StreakEvent(
             id: "event-123",
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: "America/Los_Angeles",
             metadata: ["type": "workout", "reps": 50]
         )
@@ -146,7 +146,7 @@ struct StreakEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = StreakEvent(
             id: "event-456",
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: "Asia/Tokyo",
             metadata: ["action": "complete", "score": 95]
         )
@@ -159,7 +159,7 @@ struct StreakEventTests {
 
         // Then: Should decode all fields correctly
         #expect(decoded.id == "event-456")
-        #expect(decoded.timestamp == timestamp)
+        #expect(decoded.dateCreated == timestamp)
         #expect(decoded.timezone == "Asia/Tokyo")
         #expect(decoded.metadata.count == 2)
         #expect(decoded.metadata["action"] == .string("complete"))
@@ -171,7 +171,7 @@ struct StreakEventTests {
         // Given: Original event with complex metadata
         let original = StreakEvent(
             id: "roundtrip-test",
-            timestamp: Date(timeIntervalSince1970: 1609459200),
+            dateCreated: Date(timeIntervalSince1970: 1609459200),
             timezone: "Europe/Paris",
             metadata: [
                 "type": "cardio",
@@ -190,7 +190,7 @@ struct StreakEventTests {
         // Then: Should preserve all data
         #expect(decoded == original)
         #expect(decoded.id == original.id)
-        #expect(decoded.timestamp == original.timestamp)
+        #expect(decoded.dateCreated == original.dateCreated)
         #expect(decoded.timezone == original.timezone)
         #expect(decoded.metadata == original.metadata)
     }
@@ -200,7 +200,7 @@ struct StreakEventTests {
         // Given: Event with various metadata types
         let original = StreakEvent(
             id: "metadata-test",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "UTC",
             metadata: [
                 "string_val": "hello",
@@ -230,7 +230,7 @@ struct StreakEventTests {
         // Given: A valid event (recent timestamp, valid timezone, valid metadata keys)
         let event = StreakEvent(
             id: "valid-id",
-            timestamp: Date().addingTimeInterval(-3600), // 1 hour ago
+            dateCreated: Date().addingTimeInterval(-3600), // 1 hour ago
             timezone: "America/New_York",
             metadata: ["valid_key": "value", "another_key_123": 42]
         )
@@ -248,7 +248,7 @@ struct StreakEventTests {
         // Given: Event with empty ID
         let event = StreakEvent(
             id: "",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "UTC",
             metadata: [:]
         )
@@ -264,7 +264,7 @@ struct StreakEventTests {
         let futureDate = Date().addingTimeInterval(3600) // 1 hour in future
         let event = StreakEvent(
             id: "future-event",
-            timestamp: futureDate,
+            dateCreated: futureDate,
             timezone: "UTC",
             metadata: [:]
         )
@@ -280,7 +280,7 @@ struct StreakEventTests {
         let oldDate = Calendar.current.date(byAdding: .year, value: -2, to: Date())!
         let event = StreakEvent(
             id: "old-event",
-            timestamp: oldDate,
+            dateCreated: oldDate,
             timezone: "UTC",
             metadata: [:]
         )
@@ -295,7 +295,7 @@ struct StreakEventTests {
         // Given: Event with invalid timezone identifier
         let event = StreakEvent(
             id: "invalid-tz",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "Invalid/Timezone",
             metadata: [:]
         )
@@ -310,7 +310,7 @@ struct StreakEventTests {
         // Given: Event with metadata keys containing special characters (not allowed in Firestore)
         let event = StreakEvent(
             id: "invalid-metadata",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "UTC",
             metadata: ["invalid-key": "value"] // Hyphen not allowed
         )
@@ -335,7 +335,7 @@ struct StreakEventTests {
 
         // When/Then: All should be valid
         for tz in timezones {
-            let event = StreakEvent(id: "test", timestamp: Date(), timezone: tz, metadata: [:])
+            let event = StreakEvent(id: "test", dateCreated: Date(), timezone: tz, metadata: [:])
             #expect(event.isTimezoneValid == true, "Expected \(tz) to be valid")
         }
     }
@@ -348,7 +348,7 @@ struct StreakEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event = StreakEvent(
             id: "analytics-test",
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: "America/Chicago",
             metadata: ["type": "workout"]
         )
@@ -368,7 +368,7 @@ struct StreakEventTests {
         // Given: Event with various metadata types
         let event = StreakEvent(
             id: "metadata-analytics",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "UTC",
             metadata: [
                 "workout_type": "cardio",
@@ -391,10 +391,10 @@ struct StreakEventTests {
     @Test("eventParameters includes metadata count")
     func testEventParametersMetadataCount() throws {
         // Given: Events with different metadata counts
-        let emptyEvent = StreakEvent(id: "empty", timestamp: Date(), timezone: "UTC", metadata: [:])
+        let emptyEvent = StreakEvent(id: "empty", dateCreated: Date(), timezone: "UTC", metadata: [:])
         let multiEvent = StreakEvent(
             id: "multi",
-            timestamp: Date(),
+            dateCreated: Date(),
             timezone: "UTC",
             metadata: ["a": 1, "b": 2, "c": 3]
         )
@@ -416,13 +416,13 @@ struct StreakEventTests {
         let timestamp = Date(timeIntervalSince1970: 1609459200)
         let event1 = StreakEvent(
             id: "same-id",
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: "America/Denver",
             metadata: ["key": "value"]
         )
         let event2 = StreakEvent(
             id: "same-id",
-            timestamp: timestamp,
+            dateCreated: timestamp,
             timezone: "America/Denver",
             metadata: ["key": "value"]
         )
@@ -435,8 +435,8 @@ struct StreakEventTests {
     func testEquatableUnequalId() throws {
         // Given: Two events differing only in ID
         let timestamp = Date()
-        let event1 = StreakEvent(id: "id-1", timestamp: timestamp, timezone: "UTC", metadata: [:])
-        let event2 = StreakEvent(id: "id-2", timestamp: timestamp, timezone: "UTC", metadata: [:])
+        let event1 = StreakEvent(id: "id-1", dateCreated: timestamp, timezone: "UTC", metadata: [:])
+        let event2 = StreakEvent(id: "id-2", dateCreated: timestamp, timezone: "UTC", metadata: [:])
 
         // Then: Should not be equal
         #expect(event1 != event2)
@@ -447,8 +447,8 @@ struct StreakEventTests {
         // Given: Two events differing only in timestamp
         let timestamp1 = Date(timeIntervalSince1970: 1609459200)
         let timestamp2 = Date(timeIntervalSince1970: 1609462800)
-        let event1 = StreakEvent(id: "same-id", timestamp: timestamp1, timezone: "UTC", metadata: [:])
-        let event2 = StreakEvent(id: "same-id", timestamp: timestamp2, timezone: "UTC", metadata: [:])
+        let event1 = StreakEvent(id: "same-id", dateCreated: timestamp1, timezone: "UTC", metadata: [:])
+        let event2 = StreakEvent(id: "same-id", dateCreated: timestamp2, timezone: "UTC", metadata: [:])
 
         // Then: Should not be equal
         #expect(event1 != event2)
