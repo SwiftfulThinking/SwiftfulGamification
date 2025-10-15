@@ -11,6 +11,7 @@ public class ExperiencePointsManager {
 
     public private(set) var currentExperiencePointsData: CurrentExperiencePointsData
     private var currentDataListenerTask: Task<Void, Error>?
+    private var listenerFailedToAttach: Bool = false
 
     private var userId: String? {
         currentExperiencePointsData.userId
@@ -55,6 +56,9 @@ public class ExperiencePointsManager {
     private func addCurrentDataListener(userId: String) {
         logger?.trackEvent(event: Event.remoteListenerStart)
 
+        // Clear the failure flag when attempting to attach listener
+        listenerFailedToAttach = false
+
         currentDataListenerTask?.cancel()
         currentDataListenerTask = Task {
             do {
@@ -68,6 +72,7 @@ public class ExperiencePointsManager {
                 }
             } catch {
                 logger?.trackEvent(event: Event.remoteListenerFail(error: error))
+                self.listenerFailedToAttach = true
             }
         }
     }
@@ -92,6 +97,13 @@ public class ExperiencePointsManager {
     ) async throws -> ExperiencePointsEvent {
         guard let userId = userId else {
             throw ExperiencePointsError.notLoggedIn
+        }
+
+        defer {
+            // Retry listener if it previously failed
+            if listenerFailedToAttach {
+                addCurrentDataListener(userId: userId)
+            }
         }
 
         let event = ExperiencePointsEvent(

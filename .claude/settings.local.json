@@ -17,7 +17,9 @@
       "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulGamificationFirebase/**)",
       "Bash(find:*)",
       "Bash(swift package:*)",
-      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulFirestore/**)"
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulFirestore/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulRouting/**)",
+      "Read(//Users/nicksarno/Documents/documents/GITHUB/SwiftfulSoundEffects/**)"
     ],
     "deny": [],
     "ask": []
