@@ -13,9 +13,6 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     /// Unique identifier for the event
     public let id: String
 
-    /// The experience ID this event belongs to (e.g., "main", "battle", "quest")
-    public let experienceKey: String
-
     /// UTC timestamp when the event occurred
     public let dateCreated: Date
 
@@ -29,13 +26,11 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
 
     public init(
         id: String = UUID().uuidString,
-        experienceKey: String,
         dateCreated: Date = Date(),
         points: Int,
         metadata: [String: GamificationDictionaryValue] = [:]
     ) {
         self.id = id
-        self.experienceKey = experienceKey
         self.dateCreated = dateCreated
         self.points = points
         self.metadata = metadata
@@ -45,7 +40,6 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
 
     public enum CodingKeys: String, CodingKey {
         case id
-        case experienceKey = "experience_id"
         case dateCreated = "date_created"
         case points
         case metadata
@@ -95,7 +89,6 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     public var eventParameters: [String: Any] {
         var params: [String: Any] = [
             "xp_event_id": id,
-            "xp_event_experience_id": experienceKey,
             "xp_event_timestamp": dateCreated.timeIntervalSince1970,
             "xp_event_points": points,
             "xp_event_metadata_count": metadata.count
@@ -113,14 +106,12 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
 
     public static func mock(
         id: String = UUID().uuidString,
-        experienceKey: String = "main",
         dateCreated: Date = Date(),
         points: Int = 100,
         metadata: [String: GamificationDictionaryValue] = ["source": "test"]
     ) -> Self {
         ExperiencePointsEvent(
             id: id,
-            experienceKey: experienceKey,
             dateCreated: dateCreated,
             points: points,
             metadata: metadata
@@ -130,13 +121,11 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     /// Creates a mock event for a specific date
     public static func mock(
         date: Date,
-        experienceKey: String = "main",
         points: Int = 100,
         metadata: [String: GamificationDictionaryValue] = ["source": "test"]
     ) -> Self {
         ExperiencePointsEvent(
             id: UUID().uuidString,
-            experienceKey: experienceKey,
             dateCreated: date,
             points: points,
             metadata: metadata
@@ -146,11 +135,10 @@ public struct ExperiencePointsEvent: StringIdentifiable, Codable, Sendable, Equa
     /// Creates a mock event X days ago
     public static func mock(
         daysAgo: Int,
-        experienceKey: String = "main",
         points: Int = 100,
         metadata: [String: GamificationDictionaryValue] = ["source": "test"]
     ) -> Self {
         let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
-        return mock(date: date, experienceKey: experienceKey, points: points, metadata: metadata)
+        return mock(date: date, points: points, metadata: metadata)
     }
 }

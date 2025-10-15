@@ -13,9 +13,6 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
     /// Unique identifier for the freeze
     public let id: String
 
-    /// Which streak this freeze applies to
-    public let streakKey: String
-
     /// When the freeze was earned
     public let dateEarned: Date?
 
@@ -29,13 +26,11 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public init(
         id: String,
-        streakKey: String,
         dateEarned: Date? = nil,
         dateUsed: Date? = nil,
         dateExpires: Date? = nil
     ) {
         self.id = id
-        self.streakKey = streakKey
         self.dateEarned = dateEarned
         self.dateUsed = dateUsed
         self.dateExpires = dateExpires
@@ -45,7 +40,6 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public enum CodingKeys: String, CodingKey {
         case id
-        case streakKey = "streak_id"
         case dateEarned = "date_earned"
         case dateUsed = "date_used"
         case dateExpires = "date_expires"
@@ -99,8 +93,7 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
             "streak_freeze_id": id,
             "streak_freeze_is_used": isUsed,
             "streak_freeze_is_expired": isExpired,
-            "streak_freeze_is_available": isAvailable,
-            "streak_freeze_streak_id": streakKey
+            "streak_freeze_is_available": isAvailable
         ]
 
         if let dateEarned = dateEarned {
@@ -117,14 +110,12 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     public static func mock(
         id: String = UUID().uuidString,
-        streakKey: String = "workout",
         dateEarned: Date = Date(),
         dateUsed: Date? = nil,
         dateExpires: Date? = nil
     ) -> Self {
         StreakFreeze(
             id: id,
-            streakKey: streakKey,
             dateEarned: dateEarned,
             dateUsed: dateUsed,
             dateExpires: dateExpires
@@ -133,12 +124,10 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     /// Mock unused freeze
     public static func mockUnused(
-        id: String = UUID().uuidString,
-        streakKey: String = "workout"
+        id: String = UUID().uuidString
     ) -> Self {
         StreakFreeze(
             id: id,
-            streakKey: streakKey,
             dateEarned: Calendar.current.date(byAdding: .day, value: -7, to: Date()),
             dateUsed: nil,
             dateExpires: nil
@@ -147,15 +136,13 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     /// Mock used freeze
     public static func mockUsed(
-        id: String = UUID().uuidString,
-        streakKey: String = "workout"
+        id: String = UUID().uuidString
     ) -> Self {
         let dateEarned = Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date()
         let dateUsed = Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
-            streakKey: streakKey,
             dateEarned: dateEarned,
             dateUsed: dateUsed,
             dateExpires: nil
@@ -164,15 +151,13 @@ public struct StreakFreeze: StringIdentifiable, Codable, Sendable, Equatable {
 
     /// Mock expired freeze (for future flexibility)
     public static func mockExpired(
-        id: String = UUID().uuidString,
-        streakKey: String = "workout"
+        id: String = UUID().uuidString
     ) -> Self {
         let dateEarned = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let dateExpires = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
         return StreakFreeze(
             id: id,
-            streakKey: streakKey,
             dateEarned: dateEarned,
             dateUsed: nil,
             dateExpires: dateExpires

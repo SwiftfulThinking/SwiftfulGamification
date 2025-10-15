@@ -145,7 +145,6 @@ public class StreakManager {
 
         let freeze = StreakFreeze(
             id: id,
-            streakKey: configuration.streakKey,
             dateEarned: Date(),
             dateUsed: nil,
             dateExpires: dateExpires

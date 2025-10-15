@@ -27,7 +27,6 @@ public class MockRemoteStreakService: RemoteStreakService {
                 let mockFreezes = (0..<freezesCount).map { index in
                     StreakFreeze(
                         id: "mock_freeze_\(index)",
-                        streakKey: streak.streakKey,
                         dateEarned: Date().addingTimeInterval(-Double(index + 1) * 86400), // Earned 1, 2, 3... days ago
                         dateUsed: nil,
                         dateExpires: nil
@@ -96,7 +95,6 @@ public class MockRemoteStreakService: RemoteStreakService {
         let freeze = streakFreezes[index]
         let usedFreeze = StreakFreeze(
             id: freeze.id,
-            streakKey: freeze.streakKey,
             dateEarned: freeze.dateEarned,
             dateUsed: Date(),
             dateExpires: freeze.dateExpires

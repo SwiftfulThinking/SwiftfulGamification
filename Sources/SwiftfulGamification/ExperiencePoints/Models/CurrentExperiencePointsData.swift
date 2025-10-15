@@ -302,7 +302,6 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         let events = (0..<eventCount).map { daysAgo in
             ExperiencePointsEvent.mock(
                 daysAgo: daysAgo % 30, // Spread over last 30 days
-                experienceKey: experienceKey,
                 points: pointsPerEvent
             )
         }
@@ -345,7 +344,7 @@ public struct CurrentExperiencePointsData: Identifiable, Codable, Sendable, Equa
         eventCount: Int = 10
     ) -> Self {
         let events = (0..<eventCount).map { daysAgo in
-            ExperiencePointsEvent.mock(daysAgo: daysAgo, experienceKey: experienceKey, points: 100 + daysAgo * 10)
+            ExperiencePointsEvent.mock(daysAgo: daysAgo, points: 100 + daysAgo * 10)
         }
 
         // Calculate fields from events (matching ExperiencePointsCalculator logic)
