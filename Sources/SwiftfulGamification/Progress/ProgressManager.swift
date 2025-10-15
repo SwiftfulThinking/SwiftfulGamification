@@ -230,24 +230,23 @@ public class ProgressManager {
         // Sanitize the ID for storage lookup
         let sanitizedId = id.sanitizeForDatabaseKeysByConvertingToLowercaseAndRemovingWhitespaceAndSpecialCharacters()
 
-        // Remove from cache
-        progressCache.removeValue(forKey: sanitizedId)
-
-        // Delete locally
-        do {
-            try local.deleteProgressItem(progressKey: configuration.progressKey, id: sanitizedId)
-            logger?.trackEvent(event: Event.saveLocalSuccess(id: id))
-        } catch {
-            logger?.trackEvent(event: Event.saveLocalFail(error: error))
-        }
-
-        // Delete from remote
+        // Delete from remote first
         do {
             try await remote.deleteProgress(userId: userId, progressKey: configuration.progressKey, id: sanitizedId)
             logger?.trackEvent(event: Event.deleteProgressSuccess(id: id))
         } catch {
             logger?.trackEvent(event: Event.deleteProgressFail(error: error))
             throw error
+        }
+
+        // Only delete locally if remote succeeds
+        progressCache.removeValue(forKey: sanitizedId)
+
+        do {
+            try local.deleteProgressItem(progressKey: configuration.progressKey, id: sanitizedId)
+            logger?.trackEvent(event: Event.saveLocalSuccess(id: id))
+        } catch {
+            logger?.trackEvent(event: Event.saveLocalFail(error: error))
         }
     }
 
@@ -260,24 +259,23 @@ public class ProgressManager {
 
         logger?.trackEvent(event: Event.deleteAllProgressStart)
 
-        // Clear cache
-        progressCache.removeAll()
-
-        // Delete all locally (runs on background thread)
-        do {
-            try await local.deleteAllProgressItems(progressKey: configuration.progressKey)
-            logger?.trackEvent(event: Event.saveLocalSuccess(id: "all"))
-        } catch {
-            logger?.trackEvent(event: Event.saveLocalFail(error: error))
-        }
-
-        // Delete all from remote
+        // Delete all from remote first
         do {
             try await remote.deleteAllProgress(userId: userId, progressKey: configuration.progressKey)
             logger?.trackEvent(event: Event.deleteAllProgressSuccess)
         } catch {
             logger?.trackEvent(event: Event.deleteAllProgressFail(error: error))
             throw error
+        }
+
+        // Only delete locally if remote succeeds
+        progressCache.removeAll()
+
+        do {
+            try await local.deleteAllProgressItems(progressKey: configuration.progressKey)
+            logger?.trackEvent(event: Event.saveLocalSuccess(id: "all"))
+        } catch {
+            logger?.trackEvent(event: Event.saveLocalFail(error: error))
         }
     }
 
