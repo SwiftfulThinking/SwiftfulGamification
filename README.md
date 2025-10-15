@@ -379,6 +379,18 @@ try await progressManager.addProgress(
 // Attempting to set a lower value will be ignored
 ```
 
+**⚠️ Important: ID Sanitization**
+
+Progress IDs are automatically sanitized before saving to ensure database compatibility:
+- Non-alphanumeric characters are replaced with underscores
+- IDs are converted to lowercase
+- Examples:
+  - `"Alpha 123!"` → `"alpha_123"`
+  - `"Alpha 123$"` → `"alpha_123"`
+  - `"Alpha 123"` → `"alpha_123"`
+
+All three example IDs above would save to the same key `"alpha_123"`, so the last write would overwrite previous values. Choose unique IDs accordingly.
+
 ### Get Progress
 
 ```swift

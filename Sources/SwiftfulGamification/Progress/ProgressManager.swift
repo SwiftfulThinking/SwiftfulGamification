@@ -37,7 +37,7 @@ public class ProgressManager {
         Task { @MainActor in
             let localItems = local.getAllProgressItems(progressKey: configuration.progressKey)
             for item in localItems {
-                progressCache[item.id] = item
+                progressCache[item.sanitizedId] = item
             }
         }
     }
@@ -94,13 +94,13 @@ public class ProgressManager {
     }
 
     /// Get all progress values synchronously from in-memory cache
-    /// - Returns: Dictionary of all progress values [id: value]
+    /// - Returns: Dictionary of all progress values [id: value] (using original IDs, not sanitized)
     public func getAllProgress() -> [String: Double] {
         if progressCache.isEmpty {
             let items = local.getAllProgressItems(progressKey: configuration.progressKey)
             return Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.value) })
         }
-        return progressCache.mapValues { $0.value }
+        return Dictionary(uniqueKeysWithValues: progressCache.values.map { ($0.id, $0.value) })
     }
 
     /// Get all progress items synchronously from in-memory cache

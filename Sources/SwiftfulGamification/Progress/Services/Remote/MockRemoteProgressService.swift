@@ -77,10 +77,10 @@ public class MockRemoteProgressService: RemoteProgressService {
         let itemsToDelete = progressItems.values.filter { $0.progressKey == progressKey }
         progressItems = progressItems.filter { $0.value.progressKey != progressKey }
 
-        // Emit all deletions to active streams
+        // Emit all deletions to active streams (using sanitized IDs to match cache keys)
         for item in itemsToDelete {
             for continuation in deletionContinuations.values {
-                continuation.yield(item.id)
+                continuation.yield(item.sanitizedId)
             }
         }
     }
