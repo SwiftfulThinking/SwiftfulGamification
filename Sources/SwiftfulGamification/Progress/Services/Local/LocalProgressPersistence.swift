@@ -34,4 +34,13 @@ public protocol LocalProgressPersistence: Sendable {
 
     /// Get saved userId for a specific progressKey
     func getUserId(progressKey: String) -> String?
+
+    /// Save a pending write that failed to sync to remote
+    func addPendingWrite(_ item: ProgressItem) throws
+
+    /// Get all pending writes that need to be synced
+    func getPendingWrites(progressKey: String) -> [ProgressItem]
+
+    /// Clear all pending writes for a specific progressKey
+    func clearPendingWrites(progressKey: String) throws
 }

@@ -210,6 +210,13 @@ public class ProgressManager {
             try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: item)
             logger?.trackEvent(event: Event.addProgressSuccess(id: id, value: value))
         } catch {
+            // Save to pending writes for later retry
+            do {
+                try local.addPendingWrite(item)
+                logger?.trackEvent(event: Event.addProgressPendingRetry(id: id, value: value))
+            } catch {
+                logger?.trackEvent(event: Event.saveLocalFail(error: error))
+            }
             logger?.trackEvent(event: Event.addProgressFail(error: error))
             throw error
         }
@@ -301,6 +308,39 @@ public class ProgressManager {
         }
     }
 
+    private func uploadPendingWritesIfNeeded(userId: String) async {
+        let pendingWrites = local.getPendingWrites(progressKey: configuration.progressKey)
+
+        guard !pendingWrites.isEmpty else { return }
+
+        logger?.trackEvent(event: Event.uploadPendingWritesStart(count: pendingWrites.count))
+
+        var successCount = 0
+        var failCount = 0
+
+        for item in pendingWrites {
+            do {
+                try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: item)
+                successCount += 1
+            } catch {
+                failCount += 1
+                logger?.trackEvent(event: Event.uploadPendingWriteItemFail(id: item.id, error: error))
+            }
+        }
+
+        // Clear pending writes if at least some succeeded
+        if successCount > 0 {
+            do {
+                try local.clearPendingWrites(progressKey: configuration.progressKey)
+                logger?.trackEvent(event: Event.uploadPendingWritesSuccess(successCount: successCount, failCount: failCount))
+            } catch {
+                logger?.trackEvent(event: Event.saveLocalFail(error: error))
+            }
+        } else {
+            logger?.trackEvent(event: Event.uploadPendingWritesFail(count: pendingWrites.count))
+        }
+    }
+
     private func addRemoteListener(userId: String) {
         logger?.trackEvent(event: Event.remoteListenerStart)
 
@@ -317,6 +357,11 @@ public class ProgressManager {
 
         Task { @MainActor in
             await handleProgressDeletions(deletions)
+        }
+
+        // Upload any pending writes after listener is attached
+        Task { @MainActor in
+            await uploadPendingWritesIfNeeded(userId: userId)
         }
     }
 
@@ -402,6 +447,7 @@ extension ProgressManager {
         case saveLocalFail(error: Error)
         case addProgressStart(id: String, value: Double)
         case addProgressSuccess(id: String, value: Double)
+        case addProgressPendingRetry(id: String, value: Double)
         case addProgressFail(error: Error)
         case deleteProgressStart(id: String)
         case deleteProgressSuccess(id: String)
@@ -409,6 +455,10 @@ extension ProgressManager {
         case deleteAllProgressStart
         case deleteAllProgressSuccess
         case deleteAllProgressFail(error: Error)
+        case uploadPendingWritesStart(count: Int)
+        case uploadPendingWritesSuccess(successCount: Int, failCount: Int)
+        case uploadPendingWritesFail(count: Int)
+        case uploadPendingWriteItemFail(id: String, error: Error)
 
         var eventName: String {
             switch self {
@@ -422,6 +472,7 @@ extension ProgressManager {
             case .saveLocalFail:            return "ProgressMan_SaveLocal_Fail"
             case .addProgressStart:         return "ProgressMan_AddProgress_Start"
             case .addProgressSuccess:       return "ProgressMan_AddProgress_Success"
+            case .addProgressPendingRetry:  return "ProgressMan_AddProgress_PendingRetry"
             case .addProgressFail:          return "ProgressMan_AddProgress_Fail"
             case .deleteProgressStart:      return "ProgressMan_DeleteProgress_Start"
             case .deleteProgressSuccess:    return "ProgressMan_DeleteProgress_Success"
@@ -429,6 +480,10 @@ extension ProgressManager {
             case .deleteAllProgressStart:   return "ProgressMan_DeleteAllProgress_Start"
             case .deleteAllProgressSuccess: return "ProgressMan_DeleteAllProgress_Success"
             case .deleteAllProgressFail:    return "ProgressMan_DeleteAllProgress_Fail"
+            case .uploadPendingWritesStart: return "ProgressMan_UploadPendingWrites_Start"
+            case .uploadPendingWritesSuccess: return "ProgressMan_UploadPendingWrites_Success"
+            case .uploadPendingWritesFail:  return "ProgressMan_UploadPendingWrites_Fail"
+            case .uploadPendingWriteItemFail: return "ProgressMan_UploadPendingWriteItem_Fail"
             }
         }
 
@@ -438,8 +493,16 @@ extension ProgressManager {
                 return ["progress_count": count]
             case .remoteListenerSuccess(id: let id), .saveLocalSuccess(id: let id), .deleteProgressStart(id: let id), .deleteProgressSuccess(id: let id):
                 return ["progress_id": id]
-            case .addProgressStart(id: let id, value: let value), .addProgressSuccess(id: let id, value: let value):
+            case .addProgressStart(id: let id, value: let value), .addProgressSuccess(id: let id, value: let value), .addProgressPendingRetry(id: let id, value: let value):
                 return ["progress_id": id, "progress_value": value]
+            case .uploadPendingWritesStart(count: let count):
+                return ["pending_writes_count": count]
+            case .uploadPendingWritesSuccess(successCount: let successCount, failCount: let failCount):
+                return ["success_count": successCount, "fail_count": failCount]
+            case .uploadPendingWritesFail(count: let count):
+                return ["pending_writes_count": count]
+            case .uploadPendingWriteItemFail(id: let id, error: let error):
+                return ["progress_id": id, "error": error.localizedDescription]
             case .bulkLoadFail(error: let error), .remoteListenerFail(error: let error), .saveLocalFail(error: let error), .addProgressFail(error: let error), .deleteProgressFail(error: let error), .deleteAllProgressFail(error: let error):
                 return ["error": error.localizedDescription]
             default:
@@ -449,8 +512,10 @@ extension ProgressManager {
 
         var type: GamificationLogType {
             switch self {
-            case .bulkLoadFail, .remoteListenerFail, .saveLocalFail, .addProgressFail, .deleteProgressFail, .deleteAllProgressFail:
+            case .bulkLoadFail, .remoteListenerFail, .saveLocalFail, .addProgressFail, .deleteProgressFail, .deleteAllProgressFail, .uploadPendingWritesFail, .uploadPendingWriteItemFail:
                 return .severe
+            case .uploadPendingWritesSuccess:
+                return .analytic
             default:
                 return .info
             }

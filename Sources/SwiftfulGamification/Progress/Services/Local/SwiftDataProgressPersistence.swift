@@ -136,4 +136,42 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
         let userId = UserDefaults.standard.string(forKey: key)
         return userId?.isEmpty == true ? nil : userId
     }
+
+    // MARK: - Pending Writes Persistence
+
+    private func pendingWritesFileURL(progressKey: String) -> URL {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documentsDirectory.appendingPathComponent("ProgressManager_PendingWrites_\(progressKey).json")
+    }
+
+    public func addPendingWrite(_ item: ProgressItem) throws {
+        var writes = getPendingWrites(progressKey: item.progressKey)
+        // Replace if same item already pending and new progress is greater, otherwise append
+        if let index = writes.firstIndex(where: { $0.sanitizedId == item.sanitizedId }) {
+            if item.value > writes[index].value {
+                writes[index] = item
+            }
+        } else {
+            writes.append(item)
+        }
+
+        let fileURL = pendingWritesFileURL(progressKey: item.progressKey)
+        let data = try JSONEncoder().encode(writes)
+        try data.write(to: fileURL)
+    }
+
+    public func getPendingWrites(progressKey: String) -> [ProgressItem] {
+        let fileURL = pendingWritesFileURL(progressKey: progressKey)
+        guard let data = try? Data(contentsOf: fileURL) else {
+            return []
+        }
+        return (try? JSONDecoder().decode([ProgressItem].self, from: data)) ?? []
+    }
+
+    public func clearPendingWrites(progressKey: String) throws {
+        let fileURL = pendingWritesFileURL(progressKey: progressKey)
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            try FileManager.default.removeItem(at: fileURL)
+        }
+    }
 }

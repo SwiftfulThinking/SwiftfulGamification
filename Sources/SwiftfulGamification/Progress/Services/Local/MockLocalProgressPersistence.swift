@@ -12,6 +12,7 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
 
     private var items: [String: ProgressItem] = [:]
     private var userIds: [String: String] = [:]
+    private var pendingWrites: [String: [ProgressItem]] = [:]
 
     public init(items: [ProgressItem] = []) {
         items.forEach { self.items[$0.compositeId] = $0 }
@@ -58,5 +59,26 @@ public final class MockLocalProgressPersistence: LocalProgressPersistence {
     public func getUserId(progressKey: String) -> String? {
         let userId = userIds[progressKey]
         return userId?.isEmpty == true ? nil : userId
+    }
+
+    public func addPendingWrite(_ item: ProgressItem) throws {
+        var writes = pendingWrites[item.progressKey] ?? []
+        // Replace if same item already pending and new progress is greater, otherwise append
+        if let index = writes.firstIndex(where: { $0.sanitizedId == item.sanitizedId }) {
+            if item.value > writes[index].value {
+                writes[index] = item
+            }
+        } else {
+            writes.append(item)
+        }
+        pendingWrites[item.progressKey] = writes
+    }
+
+    public func getPendingWrites(progressKey: String) -> [ProgressItem] {
+        return pendingWrites[progressKey] ?? []
+    }
+
+    public func clearPendingWrites(progressKey: String) throws {
+        pendingWrites.removeValue(forKey: progressKey)
     }
 }
