@@ -14,6 +14,7 @@ public class ProgressManager {
 
     private var userId: String?
     private var remoteListenerTask: Task<Void, Error>?
+    private var listenerFailedToAttach: Bool = false
 
     public init(
         services: ProgressServices,
@@ -151,6 +152,13 @@ public class ProgressManager {
         guard let userId = userId else {
             logger?.trackEvent(event: Event.addProgressFail(error: ProgressError.notLoggedIn))
             throw ProgressError.notLoggedIn
+        }
+
+        defer {
+            // Retry listener if it previously failed
+            if listenerFailedToAttach {
+                addRemoteListener(userId: userId)
+            }
         }
 
         guard value >= 0.0 && value <= 1.0 else {
@@ -298,6 +306,9 @@ public class ProgressManager {
     private func addRemoteListener(userId: String) {
         logger?.trackEvent(event: Event.remoteListenerStart)
 
+        // Clear the failure flag when attempting to attach listener
+        listenerFailedToAttach = false
+
         remoteListenerTask?.cancel()
 
         let (updates, deletions) = remote.streamProgressUpdates(userId: userId, progressKey: configuration.progressKey)
@@ -346,6 +357,7 @@ public class ProgressManager {
             }
         } catch {
             logger?.trackEvent(event: Event.remoteListenerFail(error: error))
+            self.listenerFailedToAttach = true
         }
     }
 
@@ -365,6 +377,7 @@ public class ProgressManager {
             }
         } catch {
             logger?.trackEvent(event: Event.remoteListenerFail(error: error))
+            self.listenerFailedToAttach = true
         }
     }
 }
