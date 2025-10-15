@@ -21,6 +21,11 @@ public struct ExperiencePointsConfiguration: Codable, Sendable, Equatable {
         experienceKey: String,
         useServerCalculation: Bool = false
     ) {
+        precondition(
+            experienceKey == experienceKey.sanitizeForDatabaseKeysByRemovingWhitespaceAndSpecialCharacters(),
+            "experienceKey must be sanitized (no whitespace, no special characters)"
+        )
+
         self.experienceKey = experienceKey
         self.useServerCalculation = useServerCalculation
     }

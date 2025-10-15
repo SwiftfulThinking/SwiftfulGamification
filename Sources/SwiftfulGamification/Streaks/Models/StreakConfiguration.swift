@@ -59,6 +59,10 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
         leewayHours: Int = 0,
         freezeBehavior: FreezeBehavior = .manuallyConsumeFreezes
     ) {
+        precondition(
+            streakKey == streakKey.sanitizeForDatabaseKeysByRemovingWhitespaceAndSpecialCharacters(),
+            "streakKey must be sanitized (no whitespace, no special characters)"
+        )
         precondition(eventsRequiredPerDay >= 1, "eventsRequiredPerDay must be >= 1")
         precondition(leewayHours >= 0, "leewayHours must be >= 0")
         precondition(leewayHours <= 24, "leewayHours must be <= 24")

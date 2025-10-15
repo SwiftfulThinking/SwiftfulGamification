@@ -17,6 +17,11 @@ public struct ProgressConfiguration: Codable, Sendable, Equatable {
     public init(
         progressKey: String
     ) {
+        precondition(
+            progressKey == progressKey.sanitizeForDatabaseKeysByRemovingWhitespaceAndSpecialCharacters(),
+            "progressKey must be sanitized (no whitespace, no special characters)"
+        )
+
         self.progressKey = progressKey
     }
 
