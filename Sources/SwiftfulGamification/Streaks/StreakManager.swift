@@ -11,6 +11,7 @@ public class StreakManager {
 
     public private(set) var currentStreakData: CurrentStreakData
     private var currentStreakListenerTask: Task<Void, Error>?
+    private var listenerFailedToAttach: Bool = false
 
     private var userId: String? {
         currentStreakData.userId
@@ -55,6 +56,9 @@ public class StreakManager {
     private func addCurrentStreakListener(userId: String) {
         logger?.trackEvent(event: Event.remoteListenerStart)
 
+        // Clear the failure flag when attempting to attach listener
+        listenerFailedToAttach = false
+
         currentStreakListenerTask?.cancel()
         currentStreakListenerTask = Task {
             do {
@@ -68,6 +72,7 @@ public class StreakManager {
                 }
             } catch {
                 logger?.trackEvent(event: Event.remoteListenerFail(error: error))
+                self.listenerFailedToAttach = true
             }
         }
     }
@@ -92,6 +97,13 @@ public class StreakManager {
     ) async throws -> StreakEvent {
         guard let userId = userId else {
             throw StreakError.notLoggedIn
+        }
+
+        defer {
+            // Retry listener if it previously failed
+            if listenerFailedToAttach {
+                addCurrentStreakListener(userId: userId)
+            }
         }
 
         let event = StreakEvent(
