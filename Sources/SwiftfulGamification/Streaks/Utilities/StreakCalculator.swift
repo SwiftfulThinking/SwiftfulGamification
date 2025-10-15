@@ -103,7 +103,11 @@ public struct StreakCalculator {
 
         for eventDay in qualifyingDays.reversed() {
             if calendar.isDate(eventDay, inSameDayAs: expectedDate) {
-                currentStreak += 1
+                // Only increment if this day has at least one non-freeze event
+                let dayEvents = eventsByDay[eventDay] ?? []
+                if dayEvents.contains(where: { !$0.isFreeze }) {
+                    currentStreak += 1
+                }
                 expectedDate = calendar.date(byAdding: .day, value: -1, to: expectedDate) ?? expectedDate
                 hasStartedStreak = true
             } else if eventDay < expectedDate {
@@ -118,7 +122,11 @@ public struct StreakCalculator {
                 let leewayApplied = configuration.leewayHours > 0
 
                 if !hasStartedStreak && daysBetween == 1 && (checkingOnExpectedDay || leewayApplied) {
-                    currentStreak += 1
+                    // Only increment if this day has at least one non-freeze event
+                    let dayEvents = eventsByDay[eventDay] ?? []
+                    if dayEvents.contains(where: { !$0.isFreeze }) {
+                        currentStreak += 1
+                    }
                     // Move expectedDate to the event we just counted, then back one more day for the next check
                     expectedDate = calendar.date(byAdding: .day, value: -1, to: eventDay) ?? eventDay
                     hasStartedStreak = true
@@ -136,16 +144,22 @@ public struct StreakCalculator {
         var previousDay: Date?
 
         for eventDay in qualifyingDays {
+            // Only count days with non-freeze events
+            let dayEvents = eventsByDay[eventDay] ?? []
+            let hasRealEvents = dayEvents.contains(where: { !$0.isFreeze })
+
             if let prev = previousDay {
                 let dayDiff = calendar.dateComponents([.day], from: prev, to: eventDay).day ?? 0
                 if dayDiff == 1 {
-                    tempStreak += 1
+                    if hasRealEvents {
+                        tempStreak += 1
+                    }
                 } else {
                     longestStreak = max(longestStreak, tempStreak)
-                    tempStreak = 1
+                    tempStreak = hasRealEvents ? 1 : 0
                 }
             } else {
-                tempStreak = 1
+                tempStreak = hasRealEvents ? 1 : 0
             }
             previousDay = eventDay
         }
