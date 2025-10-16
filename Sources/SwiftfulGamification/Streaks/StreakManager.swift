@@ -272,6 +272,10 @@ public class StreakManager {
     }
 
     private func calculateStreakAsync(userId: String) async {
+        // Use current timezone, fallback to last event's timezone
+        let timezoneIdentifier = currentStreakData.lastEventTimezone ?? TimeZone.current.identifier
+        let timezone = TimeZone(identifier: timezoneIdentifier) ?? .current
+
         if configuration.useServerCalculation {
             // Server-side calculation
             do {
@@ -281,7 +285,7 @@ public class StreakManager {
                     eventsRequiredPerDay: configuration.eventsRequiredPerDay,
                     leewayHours: configuration.leewayHours,
                     freezeBehavior: configuration.freezeBehavior,
-                    timezone: currentStreakData.lastEventTimezone
+                    timezone: timezoneIdentifier
                 )
             } catch {
                 logger?.trackEvent(event: Event.calculateStreakFail(error: error))
@@ -298,7 +302,8 @@ public class StreakManager {
                     events: events,
                     freezes: freezes,
                     configuration: configuration,
-                    userId: userId
+                    userId: userId,
+                    timezone: timezone
                 )
 
                 // Auto-consume freezes if needed
@@ -328,7 +333,8 @@ public class StreakManager {
                         events: updatedEvents,
                         freezes: updatedFreezes,
                         configuration: configuration,
-                        userId: userId
+                        userId: userId,
+                        timezone: timezone
                     )
 
                     currentStreakData = finalStreak
