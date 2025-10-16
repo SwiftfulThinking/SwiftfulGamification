@@ -172,7 +172,7 @@ public class ExperiencePointsManager {
                 try await remote.calculateExperiencePoints(
                     userId: userId,
                     experienceKey: configuration.experienceKey,
-                    timezone: nil
+                    timezone: TimeZone.current.identifier
                 )
             } catch {
                 logger?.trackEvent(event: Event.calculateXPFail(error: error))
