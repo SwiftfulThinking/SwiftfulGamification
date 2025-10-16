@@ -275,7 +275,14 @@ public class StreakManager {
         if configuration.useServerCalculation {
             // Server-side calculation
             do {
-                try await remote.calculateStreak(userId: userId, streakKey: configuration.streakKey)
+                try await remote.calculateStreak(
+                    userId: userId,
+                    streakKey: configuration.streakKey,
+                    eventsRequiredPerDay: configuration.eventsRequiredPerDay,
+                    leewayHours: configuration.leewayHours,
+                    freezeBehavior: configuration.freezeBehavior,
+                    timezone: currentStreakData.lastEventTimezone
+                )
             } catch {
                 logger?.trackEvent(event: Event.calculateStreakFail(error: error))
             }

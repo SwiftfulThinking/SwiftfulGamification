@@ -12,7 +12,7 @@ public struct ExperiencePointsConfiguration: Codable, Sendable, Equatable {
     /// Experience identifier (e.g., "main", "battle", "quest")
     public let experienceKey: String
 
-    /// Enable server-side calculation via Cloud Function (requires Firebase deployment)
+    /// Use server-side calculation instead of client-side
     public let useServerCalculation: Bool
 
     // MARK: - Initialization

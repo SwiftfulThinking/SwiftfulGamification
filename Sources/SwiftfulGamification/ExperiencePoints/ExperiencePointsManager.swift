@@ -169,7 +169,11 @@ public class ExperiencePointsManager {
         if configuration.useServerCalculation {
             // Server-side calculation
             do {
-                try await remote.calculateExperiencePoints(userId: userId, experienceKey: configuration.experienceKey)
+                try await remote.calculateExperiencePoints(
+                    userId: userId,
+                    experienceKey: configuration.experienceKey,
+                    timezone: nil
+                )
             } catch {
                 logger?.trackEvent(event: Event.calculateXPFail(error: error))
             }

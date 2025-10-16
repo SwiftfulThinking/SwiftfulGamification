@@ -46,7 +46,7 @@ public class MockRemoteExperiencePointsService: RemoteExperiencePointsService {
         currentData[experienceKey] = data
     }
 
-    public func calculateExperiencePoints(userId: String, experienceKey: String) async throws {
+    public func calculateExperiencePoints(userId: String, experienceKey: String, timezone: String?) async throws {
         // Mock implementation does nothing - server would trigger Cloud Function
         // The actual calculation happens via the listener when server updates the data
     }

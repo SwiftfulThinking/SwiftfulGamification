@@ -11,7 +11,7 @@ import Foundation
 public protocol RemoteStreakService: Sendable {
     func streamCurrentStreak(userId: String, streakKey: String) -> AsyncThrowingStream<CurrentStreakData, Error>
     func updateCurrentStreak(userId: String, streakKey: String, streak: CurrentStreakData) async throws
-    func calculateStreak(userId: String, streakKey: String) async throws
+    func calculateStreak(userId: String, streakKey: String, eventsRequiredPerDay: Int, leewayHours: Int, freezeBehavior: FreezeBehavior, timezone: String?) async throws
     func addEvent(userId: String, streakKey: String, event: StreakEvent) async throws
     func getAllEvents(userId: String, streakKey: String) async throws -> [StreakEvent]
     func deleteAllEvents(userId: String, streakKey: String) async throws

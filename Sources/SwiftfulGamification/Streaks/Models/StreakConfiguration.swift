@@ -41,7 +41,7 @@ public struct StreakConfiguration: Codable, Sendable, Equatable {
     /// Number of events required per day to maintain streak (1 = basic streak, >1 = goal-based)
     public let eventsRequiredPerDay: Int
 
-    /// Enable server-side calculation via Cloud Function (requires Firebase deployment)
+    /// Use server-side calculation instead of client-side
     public let useServerCalculation: Bool
 
     /// Grace period in hours around midnight (0 = strict, ±X hours = lenient)
