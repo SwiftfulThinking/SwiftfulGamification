@@ -273,8 +273,8 @@ public class StreakManager {
 
     private func calculateStreakAsync(userId: String) async {
         // Use current timezone, fallback to last event's timezone
-        let timezoneIdentifier = currentStreakData.lastEventTimezone ?? TimeZone.current.identifier
-        let timezone = TimeZone(identifier: timezoneIdentifier) ?? .current
+        let timezoneIdentifier = TimeZone.current.identifier
+        let timezone = TimeZone.current
 
         if configuration.useServerCalculation {
             // Server-side calculation
