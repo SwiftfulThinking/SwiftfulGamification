@@ -657,18 +657,9 @@ Both Streaks and Experience Points support server-side calculation via Firebase 
 
 ### Why Server Calculation?
 
-**Client-side** (default):
-- ✅ Works offline
-- ✅ Instant updates
-- ✅ No backend required
-- ❌ Can be manipulated by savvy users
-
-**Server-side**:
-- ✅ Tamper-proof calculations
-- ✅ Authoritative data source
-- ✅ Audit trail via Cloud Function logs
-- ❌ Requires network connection
-- ❌ Requires Firebase deployment
+Server-side calculation is optional and purely a developer preference:
+- **Client-side** (default): Fast, works offline, no backend setup required
+- **Server-side**: Calculations run in Cloud Functions instead of on device
 
 ### Setup
 
