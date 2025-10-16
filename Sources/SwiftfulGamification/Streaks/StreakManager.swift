@@ -225,7 +225,7 @@ public class StreakManager {
                 let freezeEvent = StreakEvent(
                     id: UUID().uuidString,
                     dateCreated: consumption.date,
-                    timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
+                    timezone: TimeZone.current.identifier,
                     isFreeze: true,
                     freezeId: consumption.freezeId
                 )
@@ -313,7 +313,7 @@ public class StreakManager {
                         let freezeEvent = StreakEvent(
                             id: UUID().uuidString,
                             dateCreated: consumption.date,
-                            timezone: currentStreakData.lastEventTimezone ?? TimeZone.current.identifier,
+                            timezone: TimeZone.current.identifier,
                             isFreeze: true,
                             freezeId: consumption.freezeId
                         )
