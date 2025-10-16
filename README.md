@@ -151,13 +151,22 @@ public protocol ProgressServices: Sendable {
 
 ```swift
 let config = StreakConfiguration(
-    streakId: "main",
+    streakKey: "main",
     eventsRequiredPerDay: 1,          // Number of events needed per day
     useServerCalculation: false,      // Client or server-side calculation
     leewayHours: 4,                   // Grace period around midnight
-    autoConsumeFreeze: true           // Auto-use freezes to save streaks
+    freezeBehavior: .autoConsumeFreezes  // .noFreezes, .autoConsumeFreezes, or .manuallyConsumeFreezes
 )
 ```
+
+**⚠️ Important: Key Sanitization**
+
+All configuration keys (`streakKey`, `experienceKey`, `progressKey`) are validated and must:
+- Contain only alphanumeric characters, underscores, and hyphens
+- Not contain periods (`.`), slashes (`/`), or special characters
+- Be 1-512 characters long
+- Examples: `"main"`, `"daily_streak"`, `"user-progress"` ✅
+- Invalid: `"user.streak"`, `"streak/daily"` ❌
 
 ### Log In / Log Out
 
@@ -438,10 +447,12 @@ try await progressManager.deleteAllProgress()
 
 - **Synchronous reads**: All get methods are synchronous (read from in-memory cache)
 - **Optimistic updates**: UI updates immediately, remote sync happens in background
+- **Offline support**: Pending writes queue syncs when back online
 - **Never decreases**: Progress values only increase, never decrease
 - **Conflict resolution**: If local is ahead of remote, local value is pushed to remote
 - **Metadata filtering**: Filter and query progress by custom metadata fields
 - **Real-time sync**: Automatic streaming of updates from remote
+- **Listener recovery**: Automatically retries failed listeners
 
 </details>
 
@@ -633,6 +644,77 @@ ProgressItem.mock(
     metadata: ["world": "forest"]
 )
 ```
+
+</details>
+
+## Server Calculations
+
+<details>
+<summary> Details (Click to expand) </summary>
+<br>
+
+Both Streaks and Experience Points support server-side calculation via Firebase Cloud Functions.
+
+### Why Server Calculation?
+
+**Client-side** (default):
+- ✅ Works offline
+- ✅ Instant updates
+- ✅ No backend required
+- ❌ Can be manipulated by savvy users
+
+**Server-side**:
+- ✅ Tamper-proof calculations
+- ✅ Authoritative data source
+- ✅ Audit trail via Cloud Function logs
+- ❌ Requires network connection
+- ❌ Requires Firebase deployment
+
+### Setup
+
+1. **Copy cloud functions from SwiftfulGamificationFirebase**:
+   ```
+   SwiftfulGamificationFirebase/
+   └── ServerCalculations/
+       ├── calculateStreak.ts
+       └── calculateExperiencePoints.ts
+   ```
+
+2. **Deploy to Firebase**:
+   ```bash
+   firebase deploy --only functions
+   ```
+
+3. **Enable in configuration**:
+   ```swift
+   let config = StreakConfiguration(
+       streakKey: "main",
+       eventsRequiredPerDay: 1,
+       useServerCalculation: true,  // Enable server calculation
+       leewayHours: 4,
+       freezeBehavior: .autoConsumeFreezes
+   )
+   ```
+
+4. **Initialize service with function name**:
+   ```swift
+   let service = FirebaseRemoteStreakService(
+       rootCollectionName: "swiftful_streaks",
+       calculateStreakCloudFunctionName: "calculateStreak"
+   )
+   ```
+
+### How It Works
+
+When `useServerCalculation = true`:
+1. Client adds event to Firestore
+2. Client calls `calculateStreak()` or `calculateExperiencePoints()`
+3. Cloud Function reads all events
+4. Cloud Function performs calculation
+5. Cloud Function writes result to Firestore
+6. Client listener receives update automatically
+
+**Note**: The cloud functions implement the EXACT same logic as the client-side calculators for consistency.
 
 </details>
 
