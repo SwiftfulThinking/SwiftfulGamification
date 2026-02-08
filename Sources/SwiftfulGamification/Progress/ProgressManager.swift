@@ -13,7 +13,7 @@ public class ProgressManager {
     private var progressCache: [String: ProgressItem] = [:]
 
     private var userId: String?
-    private var remoteListenerTask: Task<Void, Error>?
+    private var remoteListenerTask: Task<Void, Never>?
     private var listenerFailedToAttach: Bool = false
 
     public init(
@@ -316,23 +316,29 @@ public class ProgressManager {
         logger?.trackEvent(event: Event.uploadPendingWritesStart(count: pendingWrites.count))
 
         var successCount = 0
-        var failCount = 0
+        var failedItems: [ProgressItem] = []
 
         for item in pendingWrites {
             do {
                 try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: item)
                 successCount += 1
             } catch {
-                failCount += 1
+                failedItems.append(item)
                 logger?.trackEvent(event: Event.uploadPendingWriteItemFail(id: item.id, error: error))
             }
         }
 
-        // Clear pending writes if at least some succeeded
+        // Clear all pending writes, then re-save any that failed
         if successCount > 0 {
             do {
                 try local.clearPendingWrites(progressKey: configuration.progressKey)
-                logger?.trackEvent(event: Event.uploadPendingWritesSuccess(successCount: successCount, failCount: failCount))
+
+                // Re-save failed items so they retry next time
+                for item in failedItems {
+                    try local.addPendingWrite(item)
+                }
+
+                logger?.trackEvent(event: Event.uploadPendingWritesSuccess(successCount: successCount, failCount: failedItems.count))
             } catch {
                 logger?.trackEvent(event: Event.saveLocalFail(error: error))
             }
@@ -351,17 +357,17 @@ public class ProgressManager {
 
         let (updates, deletions) = remote.streamProgressUpdates(userId: userId, progressKey: configuration.progressKey)
 
-        Task { @MainActor in
-            await handleProgressUpdates(updates)
-        }
-
-        Task { @MainActor in
-            await handleProgressDeletions(deletions)
-        }
-
-        // Upload any pending writes after listener is attached
-        Task { @MainActor in
+        remoteListenerTask = Task { @MainActor in
             await uploadPendingWritesIfNeeded(userId: userId)
+
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { @MainActor in
+                    await self.handleProgressUpdates(updates)
+                }
+                group.addTask { @MainActor in
+                    await self.handleProgressDeletions(deletions)
+                }
+            }
         }
     }
 
@@ -380,11 +386,13 @@ public class ProgressManager {
                         metadata: currentItem.metadata
                     )
 
-                    do {
-                        try await remote.addProgress(userId: userId ?? "", progressKey: configuration.progressKey, item: correctedItem)
-                        logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
-                    } catch {
-                        logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                    if let userId = self.userId {
+                        do {
+                            try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: correctedItem)
+                            logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
+                        } catch {
+                            logger?.trackEvent(event: Event.saveLocalFail(error: error))
+                        }
                     }
                 } else {
                     // Remote is equal or ahead - update local (using sanitized ID as cache key)
