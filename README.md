@@ -4,7 +4,7 @@
 
 A reusable gamification system for Swift applications, built for Swift 6. Includes `@Observable` support.
 
-![Platform: iOS/macOS](https://img.shields.io/badge/platform-iOS%20%7C%20macOS-blue)
+![Platform: iOS](https://img.shields.io/badge/platform-iOS-blue)
 
 Pre-built dependencies*:
 
@@ -82,8 +82,8 @@ let streakManager = StreakManager(
 )
 #else
 let streakManager = StreakManager(
-    services: FirebaseStreakServices(),
-    configuration: StreakConfiguration.myConfig()
+    services: YourProdStreakServices(),  // Your StreakServices conformance
+    configuration: StreakConfiguration(streakKey: "daily")
 )
 #endif
 ```
@@ -115,7 +115,7 @@ let services = MockStreakServices()
 
 // Mock with custom data
 let data = CurrentStreakData.mockActive(currentStreak: 10)
-let services = MockStreakServices(data: data)
+let services = MockStreakServices(streak: data)
 ```
 
 Other services are not directly included, so that the developer can pick-and-choose which dependencies to add to the project.
@@ -123,17 +123,20 @@ Other services are not directly included, so that the developer can pick-and-cho
 You can create your own services by conforming to the protocols:
 
 ```swift
-public protocol StreakServices: Sendable {
+@MainActor
+public protocol StreakServices {
     var remote: RemoteStreakService { get }
     var local: LocalStreakPersistence { get }
 }
 
-public protocol ExperiencePointsServices: Sendable {
+@MainActor
+public protocol ExperiencePointsServices {
     var remote: RemoteExperiencePointsService { get }
     var local: LocalExperiencePointsPersistence { get }
 }
 
-public protocol ProgressServices: Sendable {
+@MainActor
+public protocol ProgressServices {
     var remote: RemoteProgressService { get }
     var local: LocalProgressPersistence { get }
 }
@@ -162,11 +165,10 @@ let config = StreakConfiguration(
 **⚠️ Important: Key Sanitization**
 
 All configuration keys (`streakKey`, `experienceKey`, `progressKey`) are validated and must:
-- Contain only alphanumeric characters, underscores, and hyphens
-- Not contain periods (`.`), slashes (`/`), or special characters
-- Be 1-512 characters long
-- Examples: `"main"`, `"daily_streak"`, `"user-progress"` ✅
-- Invalid: `"user.streak"`, `"streak/daily"` ❌
+- Contain only alphanumeric characters and underscores
+- Not contain spaces, hyphens, periods, slashes, or special characters
+- Examples: `"main"`, `"daily_streak"`, `"workout"` ✅
+- Invalid: `"user.streak"`, `"user-progress"`, `"streak/daily"` ❌
 
 ### Log In / Log Out
 
@@ -183,7 +185,6 @@ streakManager.logOut()
 ```swift
 // Add event for today
 try await streakManager.addStreakEvent(
-    timestamp: Date(),
     metadata: ["action": "completed_workout"]
 )
 
@@ -200,7 +201,7 @@ try await streakManager.deleteAllStreakEvents()
 // Add a freeze (protects streak for 1 day)
 try await streakManager.addStreakFreeze(
     id: UUID().uuidString,
-    expiresAt: Date().addingTimeInterval(86400 * 30) // 30 days from now
+    dateExpires: Date().addingTimeInterval(86400 * 30) // 30 days from now
 )
 
 // Manually use freezes to save current streak
@@ -218,9 +219,9 @@ let data = streakManager.currentStreakData
 // Streak info
 data.currentStreak              // Current streak count
 data.longestStreak              // All-time longest streak
-data.streakStartDate            // When current streak started
-data.lastEventDate              // Last event timestamp
-data.status                     // active, atRisk, broken, or noEvents
+data.dateStreakStart             // When current streak started
+data.dateLastEvent              // Last event timestamp
+data.status                     // active, atRisk, broken, canExtendWithLeeway, or noEvents
 
 // Goal-based tracking
 data.eventsRequiredPerDay       // Events needed per day
@@ -229,7 +230,7 @@ data.isGoalMet                  // Has today's goal been met?
 data.goalProgress               // Progress toward today's goal (0.0-1.0)
 
 // Freeze management
-data.freezesRemaining           // Available freezes
+data.freezesAvailableCount      // Available freezes
 data.freezesNeededToSaveStreak  // Freezes needed to save streak
 data.canStreakBeSaved           // Can freezes save the streak?
 
@@ -251,12 +252,14 @@ streakManager.recalculateStreak()
 switch streakManager.currentStreakData.status {
 case .noEvents:
     print("No streak started yet")
-case .active(let daysSince):
-    print("Active streak! Last event: \(daysSince) days ago")
+case .active(let daysSinceLastEvent):
+    print("Active streak! Last event: \(daysSinceLastEvent) days ago")
 case .atRisk:
     print("Streak at risk! Log an event today!")
-case .broken(let daysSince):
-    print("Streak broken. Last event: \(daysSince) days ago")
+case .broken(let daysSinceLastEvent):
+    print("Streak broken. Last event: \(daysSinceLastEvent) days ago")
+case .canExtendWithLeeway:
+    print("Within grace period! Log an event to extend your streak")
 }
 ```
 
@@ -326,11 +329,11 @@ data.pointsLast12Months     // Points earned last 12 months (rolling)
 
 // Event tracking
 data.eventsTodayCount       // Number of XP events today
-data.lastEventDate          // Last event timestamp
+data.dateLastEvent          // Last event timestamp
 
 // Timestamps
-data.createdAt              // First event ever
-data.updatedAt              // Last update timestamp
+data.dateCreated            // First event ever
+data.dateUpdated            // Last update timestamp
 
 // Status
 data.isDataStale            // Data hasn't updated in 1+ hour
@@ -470,7 +473,6 @@ metadata["string_key"] = "value"
 metadata["int_key"] = 42
 metadata["double_key"] = 3.14
 metadata["bool_key"] = true
-metadata["date_key"] = Date()
 ```
 
 ### Use Cases
@@ -528,13 +530,14 @@ let streakManager = StreakManager(
 
 ### Tracked Events
 
-**StreakManager** (15 events):
+**StreakManager** (17 events):
 - `StreakMan_RemoteListener_Start/Success/Fail`
 - `StreakMan_SaveLocal_Start/Success/Fail`
 - `StreakMan_CalculateStreak_Start/Success/Fail`
 - `StreakMan_Freeze_AutoConsumed`
+- `StreakMan_Freeze_ManuallyConsumed`
 - `StreakMan_AddStreakFreeze_Start/Success/Fail`
-- `StreakMan_UseStreakFreeze_Start/Success/Fail`
+- `StreakMan_UseStreakFreezes_Start/Success/Fail`
 
 **ExperiencePointsManager** (12 events):
 - `XPMan_RemoteListener_Start/Success/Fail`
@@ -542,13 +545,15 @@ let streakManager = StreakManager(
 - `XPMan_CalculateXP_Start/Success/Fail`
 - `XPMan_AddExperiencePoints_Start/Success/Fail`
 
-**ProgressManager** (13 events):
+**ProgressManager** (22 events):
 - `ProgressMan_BulkLoad_Start/Success/Fail`
 - `ProgressMan_RemoteListener_Start/Success/Fail`
 - `ProgressMan_SaveLocal_Success/Fail`
-- `ProgressMan_AddProgress_Start/Success/Fail`
+- `ProgressMan_AddProgress_Start/Success/PendingRetry/Fail`
 - `ProgressMan_DeleteProgress_Start/Success/Fail`
 - `ProgressMan_DeleteAllProgress_Start/Success/Fail`
+- `ProgressMan_UploadPendingWrites_Start/Success/Fail`
+- `ProgressMan_UploadPendingWriteItem_Fail`
 
 ### Event Parameters
 
@@ -584,7 +589,7 @@ All models include mock factory methods for testing:
 
 ```swift
 // Blank streak (no events)
-CurrentStreakData.blank(streakId: "main")
+CurrentStreakData.blank(streakKey: "main")
 
 // Default mock
 CurrentStreakData.mock()
@@ -597,7 +602,6 @@ CurrentStreakData.mockAtRisk()
 
 // Goal-based streak
 CurrentStreakData.mockGoalBased(
-    currentStreak: 5,
     eventsRequiredPerDay: 3,
     todayEventCount: 1
 )
@@ -640,8 +644,7 @@ ExperiencePointsEvent.mock(daysAgo: 0, points: 100)
 // Mock progress item
 ProgressItem.mock(
     id: "level_1",
-    value: 0.75,
-    metadata: ["world": "forest"]
+    value: 0.75
 )
 ```
 
@@ -781,7 +784,7 @@ SwiftfulGamification/
 
 ## Requirements
 
-- iOS 17.0+ / macOS 14.0+
+- iOS 17.0+
 - Swift 6.1+
 - Xcode 16.0+
 
