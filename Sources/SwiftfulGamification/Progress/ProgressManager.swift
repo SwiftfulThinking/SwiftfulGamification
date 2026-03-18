@@ -359,15 +359,9 @@ public class ProgressManager {
 
         remoteListenerTask = Task { @MainActor in
             await uploadPendingWritesIfNeeded(userId: userId)
-
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { @MainActor in
-                    await self.handleProgressUpdates(updates)
-                }
-                group.addTask { @MainActor in
-                    await self.handleProgressDeletions(deletions)
-                }
-            }
+            async let u: Void = handleProgressUpdates(updates)
+            async let d: Void = handleProgressDeletions(deletions)
+            _ = await (u, d)
         }
     }
 
