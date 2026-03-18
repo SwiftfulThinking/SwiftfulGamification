@@ -14,7 +14,6 @@ public class ProgressManager {
 
     private var userId: String?
     private var remoteListenerTask: Task<Void, Never>?
-    private var remoteDeletionsTask: Task<Void, Never>?
     private var listenerFailedToAttach: Bool = false
 
     public init(
@@ -65,8 +64,6 @@ public class ProgressManager {
     public func logOut() async {
         remoteListenerTask?.cancel()
         remoteListenerTask = nil
-        remoteDeletionsTask?.cancel()
-        remoteDeletionsTask = nil
         userId = nil
         try? await local.deleteAllProgressItems(progressKey: configuration.progressKey)
         local.saveUserId("", progressKey: configuration.progressKey) // Clear by saving empty string
@@ -357,17 +354,14 @@ public class ProgressManager {
         listenerFailedToAttach = false
 
         remoteListenerTask?.cancel()
-        remoteDeletionsTask?.cancel()
 
         let (updates, deletions) = remote.streamProgressUpdates(userId: userId, progressKey: configuration.progressKey)
 
         remoteListenerTask = Task { @MainActor in
             await uploadPendingWritesIfNeeded(userId: userId)
-            await handleProgressUpdates(updates)
-        }
-
-        remoteDeletionsTask = Task { @MainActor in
-            await handleProgressDeletions(deletions)
+            async let u: Void = handleProgressUpdates(updates)
+            async let d: Void = handleProgressDeletions(deletions)
+            _ = await (u, d)
         }
     }
 
