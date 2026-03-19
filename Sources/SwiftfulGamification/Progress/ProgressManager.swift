@@ -366,8 +366,14 @@ public class ProgressManager {
     }
 
     private func handleProgressUpdates(_ updates: AsyncThrowingStream<ProgressItem, Error>) async {
+        var hasLoggedSuccess = false
         do {
             for try await item in updates {
+                if !hasLoggedSuccess {
+                    logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
+                    hasLoggedSuccess = true
+                }
+
                 // Check if local value is higher than remote (progress should never decrease)
                 if let currentItem = progressCache[item.sanitizedId], currentItem.value > item.value {
                     // Local is ahead - update remote with local value
@@ -383,7 +389,6 @@ public class ProgressManager {
                     if let userId = self.userId {
                         do {
                             try await remote.addProgress(userId: userId, progressKey: configuration.progressKey, item: correctedItem)
-                            logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
                         } catch {
                             logger?.trackEvent(event: Event.saveLocalFail(error: error))
                         }
@@ -394,7 +399,6 @@ public class ProgressManager {
 
                     do {
                         try local.saveProgressItem(item)
-                        logger?.trackEvent(event: Event.remoteListenerSuccess(id: item.id))
                     } catch {
                         logger?.trackEvent(event: Event.saveLocalFail(error: error))
                     }
@@ -415,7 +419,6 @@ public class ProgressManager {
                 // Delete locally
                 do {
                     try local.deleteProgressItem(progressKey: configuration.progressKey, id: id)
-                    logger?.trackEvent(event: Event.remoteListenerSuccess(id: id))
                 } catch {
                     logger?.trackEvent(event: Event.saveLocalFail(error: error))
                 }
