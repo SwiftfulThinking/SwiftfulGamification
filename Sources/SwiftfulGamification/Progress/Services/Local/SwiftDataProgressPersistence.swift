@@ -18,8 +18,11 @@ public final class SwiftDataProgressPersistence: LocalProgressPersistence {
     }
 
     public init() {
+        let storeURL = URL.applicationSupportDirectory
+            .appendingPathComponent("SwiftfulGamification_Progress.store")
+        let config = ModelConfiguration(url: storeURL)
         // swiftlint:disable:next force_try
-        self.container = try! ModelContainer(for: ProgressItemEntity.self)
+        self.container = try! ModelContainer(for: ProgressItemEntity.self, configurations: config)
     }
 
     public func getProgressItem(progressKey: String, id: String) -> ProgressItem? {
