@@ -12,6 +12,7 @@ public class ExperiencePointsManager {
     public private(set) var currentExperiencePointsData: CurrentExperiencePointsData
     private var currentDataListenerTask: Task<Void, Error>?
     private var listenerFailedToAttach: Bool = false
+    public private(set) var didLoad: Bool = false
 
     private var userId: String? {
         currentExperiencePointsData.userId
@@ -43,6 +44,7 @@ public class ExperiencePointsManager {
 
         addCurrentDataListener(userId: userId)
         calculateExperiencePoints(userId: userId)
+        didLoad = true
     }
 
     public func logOut() {
@@ -51,6 +53,7 @@ public class ExperiencePointsManager {
         let blank = CurrentExperiencePointsData.blank(experienceKey: configuration.experienceKey)
         try? local.saveCurrentExperiencePointsData(experienceKey: configuration.experienceKey, blank)
         currentExperiencePointsData = blank
+        didLoad = false
     }
 
     private func addCurrentDataListener(userId: String) {

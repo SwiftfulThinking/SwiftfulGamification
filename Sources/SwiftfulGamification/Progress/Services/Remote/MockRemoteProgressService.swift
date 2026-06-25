@@ -14,11 +14,18 @@ public class MockRemoteProgressService: RemoteProgressService {
     @Published private var progressItems: [String: ProgressItem] = [:]
     private var deletionContinuations: [UUID: AsyncThrowingStream<String, Error>.Continuation] = [:]
 
-    public init(items: [ProgressItem] = []) {
+    /// Artificial delay (seconds) on the bulk fetch, for testing a slow load.
+    private let loadDelay: TimeInterval
+
+    public init(items: [ProgressItem] = [], loadDelay: TimeInterval = 0) {
+        self.loadDelay = loadDelay
         items.forEach { progressItems[$0.compositeId] = $0 }
     }
 
     public func getAllProgressItems(userId: String, progressKey: String) async throws -> [ProgressItem] {
+        if loadDelay > 0 {
+            try? await Task.sleep(for: .seconds(loadDelay))
+        }
         return progressItems.values.filter { $0.progressKey == progressKey }
     }
 

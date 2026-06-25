@@ -12,6 +12,7 @@ public class StreakManager {
     public private(set) var currentStreakData: CurrentStreakData
     private var currentStreakListenerTask: Task<Void, Error>?
     private var listenerFailedToAttach: Bool = false
+    public private(set) var didLoad: Bool = false
 
     private var userId: String? {
         currentStreakData.userId
@@ -43,6 +44,7 @@ public class StreakManager {
 
         addCurrentStreakListener(userId: userId)
         calculateStreak(userId: userId)
+        didLoad = true
     }
 
     public func logOut() {
@@ -51,6 +53,7 @@ public class StreakManager {
         let blank = CurrentStreakData.blank(streakKey: configuration.streakKey)
         try? local.saveCurrentStreakData(streakKey: configuration.streakKey, blank)
         currentStreakData = blank
+        didLoad = false
     }
 
     private func addCurrentStreakListener(userId: String) {

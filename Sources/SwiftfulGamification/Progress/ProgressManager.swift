@@ -15,6 +15,7 @@ public class ProgressManager {
     private var userId: String?
     private var remoteListenerTask: Task<Void, Never>?
     private var listenerFailedToAttach: Bool = false
+    public private(set) var didLoad: Bool = false
 
     public init(
         services: ProgressServices,
@@ -68,6 +69,7 @@ public class ProgressManager {
         try? await local.deleteAllProgressItems(progressKey: configuration.progressKey)
         local.saveUserId("", progressKey: configuration.progressKey) // Clear by saving empty string
         progressCache.removeAll()
+        didLoad = false
     }
 
     // MARK: - Public API
@@ -306,6 +308,8 @@ public class ProgressManager {
         } catch {
             logger?.trackEvent(event: Event.bulkLoadFail(error: error))
         }
+
+        didLoad = true
     }
 
     private func uploadPendingWritesIfNeeded(userId: String) async {

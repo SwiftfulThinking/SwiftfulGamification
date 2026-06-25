@@ -11,8 +11,8 @@ public struct MockProgressServices: ProgressServices {
     public let remote: RemoteProgressService
     public let local: LocalProgressPersistence
 
-    public init(items: [ProgressItem] = []) {
-        self.remote = MockRemoteProgressService(items: items)
+    public init(items: [ProgressItem] = [], loadDelay: TimeInterval = 0) {
+        self.remote = MockRemoteProgressService(items: items, loadDelay: loadDelay)
         self.local = MockLocalProgressPersistence(items: items)
     }
 }
