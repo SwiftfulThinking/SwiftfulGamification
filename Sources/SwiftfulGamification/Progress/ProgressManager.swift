@@ -41,6 +41,11 @@ public class ProgressManager {
             for item in localItems {
                 progressCache[item.sanitizedId] = item
             }
+            // Local-first: ready as soon as on-disk data exists, without waiting
+            // for the remote bulk load. Empty local still waits for bulkLoad.
+            if !localItems.isEmpty {
+                didLoad = true
+            }
         }
     }
 
